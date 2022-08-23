@@ -62,27 +62,27 @@ class ArtemisScannerTracker:
 
         if debug:
             # setup debug fields for the scanner.
-            nb.Label(frame, text='Species').grid(row=current_row)
-            nb.Entry(frame, textvariable=self.AST_last_scan_plant).grid(row=current_row, column=1)
+            nb.Label(frame, text='Species').grid(row=current_row, sticky=tk.W)
+            nb.Entry(frame, textvariable=self.AST_last_scan_plant).grid(row=current_row, column=1, sticky=tk.W)
             current_row += 1  # Always increment our row counter, makes for far easier tkinter design.
             
-            nb.Label(frame, text='System of last Scan').grid(row=current_row)
-            nb.Entry(frame, textvariable=self.AST_last_scan_system).grid(row=current_row, column=1)
+            nb.Label(frame, text='System of last Scan').grid(row=current_row, sticky=tk.W)
+            nb.Entry(frame, textvariable=self.AST_last_scan_system).grid(row=current_row, column=1, sticky=tk.W)
             current_row += 1
             
-            nb.Label(frame, text='Body of last Scan').grid(row=current_row)
-            nb.Entry(frame, textvariable=self.AST_last_scan_body).grid(row=current_row, column=1)
+            nb.Label(frame, text='Body of last Scan').grid(row=current_row, sticky=tk.W)
+            nb.Entry(frame, textvariable=self.AST_last_scan_body).grid(row=current_row, column=1, sticky=tk.W)
             current_row += 1
 
-            nb.Label(frame, text='Scan progress').grid(row=current_row)
-            nb.Entry(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1)
+            nb.Label(frame, text='Scan progress').grid(row=current_row, sticky=tk.W)
+            nb.Entry(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1, sticky=tk.W)
             current_row += 1
 
-        nb.Label(frame, text='To reset the state of the plugin press the button Below').grid(row=current_row)
+        nb.Label(frame, text='to reset the state of the plugin press the button below').grid(row=current_row, sticky=tk.W)
         current_row += 1
-        nb.Label(frame, text='Info that is reset can not be restored.').grid(row=current_row)
+        nb.Label(frame, text='WARNING: Info that is reset can not be restored.').grid(row=current_row, sticky=tk.W)
         current_row += 2
-        nb.Button(frame, text="RESET", command= self.reset).grid(row=current_row)
+        nb.Button(frame, text="RESET", command= self.reset).grid(row=current_row, sticky=tk.W)
         current_row += 1
 
         return frame
@@ -99,7 +99,7 @@ class ArtemisScannerTracker:
         config.set('AST_last_scan_body', str(self.AST_last_scan_body.get()))
         config.set('AST_last_scan_plant', str(self.AST_last_scan_plant.get()))
         config.set('AST_state', str(self.AST_state.get()))
-        logger.info("ArtemisScannerTracker saved")
+        logger.debug("ArtemisScannerTracker saved preferences")
 
     def setup_main_ui(self, parent: tk.Frame) -> tk.Frame:
         """
@@ -110,46 +110,39 @@ class ArtemisScannerTracker:
         """
         current_row = 12
         frame = tk.Frame(parent)
-        """
-        old buttons
-        button = tk.Button(
-            frame,
-            text="Increment",
-            command=lambda: self.AST_current_scan_progress.set(str((int(self.AST_current_scan_progress.get()[0]) + 1) % 4) + str("/3"))
-        )
-        resetbutton = tk.Button(
-            frame,
-            text="Reset",
-            command=lambda: self.AST_current_scan_progress.set(str("0/3"))
-        )
-        #button.grid(row=current_row) # commented out -> no button to be shown
+
+        tk.Label(frame, text="Current Body:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=self.AST_current_body).grid(row=current_row, column=1, sticky=tk.W)
+
         current_row -= 1
-        #resetbutton.grid(row=current_row)
+        tk.Label(frame, text="Current System:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=self.AST_current_system).grid(row=current_row, column=1, sticky=tk.W)
+
         current_row -= 1
-        """
-        tk.Label(frame, text="Current Body:").grid(row=current_row)
-        tk.Label(frame, textvariable=self.AST_current_body).grid(row=current_row, column=1)
+        tk.Label(frame, text="Body of last Scan:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=self.AST_last_scan_body).grid(row=current_row, column=1, sticky=tk.W)
+
         current_row -= 1
-        tk.Label(frame, text="Current System:").grid(row=current_row)
-        tk.Label(frame, textvariable=self.AST_current_system).grid(row=current_row, column=1)
+        tk.Label(frame, text="System of last Scan:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=self.AST_last_scan_system).grid(row=current_row, column=1, sticky=tk.W)
+
         current_row -= 1
-        tk.Label(frame, text="Body of last Scan:").grid(row=current_row)
-        tk.Label(frame, textvariable=self.AST_last_scan_body).grid(row=current_row, column=1)
+        tk.Label(frame, text="Scan Progress:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1, sticky=tk.W)
+
         current_row -= 1
-        tk.Label(frame, text="System of last Scan:").grid(row=current_row)
-        tk.Label(frame, textvariable=self.AST_last_scan_system).grid(row=current_row, column=1)
+        tk.Label(frame, text="Species:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=self.AST_last_scan_plant).grid(row=current_row, column=1, sticky=tk.W)
+
         current_row -= 1
-        tk.Label(frame, text="Scan Progress:").grid(row=current_row)
-        tk.Label(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1)
-        current_row -= 1
-        tk.Label(frame, text="Species:").grid(row=current_row)
-        tk.Label(frame, textvariable=self.AST_last_scan_plant).grid(row=current_row, column=1)
-        current_row -= 1
-        tk.Label(frame, text="Last Exobioligy Scan:").grid(row=current_row)
-        tk.Label(frame, textvariable=self.AST_state).grid(row=current_row, column=1)
+        tk.Label(frame, text="Last Exobiology Scan:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=self.AST_state).grid(row=current_row, column=1, sticky=tk.W)
         return frame
 
     def reset(self):
+        """
+        Reset function of the Reset Button
+        """
         self.AST_current_scan_progress.set("0/3")
         self.AST_last_scan_system.set("None")
         self.AST_last_scan_body.set("None")
