@@ -1,5 +1,5 @@
 # ArtemisScannerTracker
- A EDMC plugin that keeps track of the Exobiology Scanner of a CMDRs Artemis suit in ED:Odyssey
+ An [EDMC](https://github.com/EDCD/EDMarketConnector) plugin that keeps track of the exobiology scanner of a CMDRs artemis suit in ED:Odyssey
 
 ## Installation
 
