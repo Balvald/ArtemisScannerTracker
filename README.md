@@ -21,3 +21,5 @@ Sadly that type of information is impossible to get from the Exobiology scanner 
 The only thing that it can tell us even despite not telling us _what_ or on which _body_ we last scanned is that the last scan is _incomplete_. The horror. Damn you Supratech! You damn Scoudrels!
 
 Anyway with this plugin those kind of problems are hopefully becoming a thing of the past for our all most favourite recreational activity of scanning space grass while binging Star Trek TNG I guess.
+
+Thats the current extent of this little project. Maybe it'll be extended with more exobiology related features.
