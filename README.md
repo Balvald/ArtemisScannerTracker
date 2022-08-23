@@ -13,6 +13,11 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 
 You have to do _nothing_ (yay) apart from having to play Elite Dangerous while using this plugin with EDMC.
 
-The plugin keeps track of the ArtemisScannerState through a Cmdr's journal entries that relais the information, which type of exobiological life the last scan was (Tussock, Bacteria, Aleoida, Stratum, Fungoida, etc. with corresponding colour variant.) where the last scan occurred (Star system and specific body within the system, (exact position's of former scans for a certain type of exobiological life to be added later)) and the current progression with the last exobiological scan. (If theres nothing on the Scanner, or if we got 1/3 Scans or 2/3 Scans done.) So you don't have to look at the Scanner led in game after returning to a session and wonder "Which goddamn plant was I scanning again?" while being several thousand lightyears away from Sol. Sadly that type of information isn't around so you can just look it up on dunno the Scanner. The one thing that even despite not telling me _what_ or _where_ I scanned still telling me that my Scan is _incomplete_. The horror. Damn you Supratech! You damn Scoudrels!
+The plugin keeps track of the Exobiology Scanner through a Cmdr's journal entries.
+It tracks which species (Tussock, Fungoida, ...), and on which body the last exobiology scan occurred (Futes A 2, Moriosong A 1 a, ...) and also the state of the progress of the last exobiological scan. (1/3 found, 2/3 found...)
+
+So you don't have to look at the Scanner LEDs in game after returning to a session and wonder "Which goddamn plant was I scanning again?" while being several thousand lightyears away from Sol.
+Sadly that type of information is impossible to get from the Exobiology scanner itself. 
+The only thing that it can tell us even despite not telling us _what_ or on which _body_ we last scanned is that the last scan is _incomplete_. The horror. Damn you Supratech! You damn Scoudrels!
 
 Anyway with this plugin those kind of problems are hopefully becoming a thing of the past for our all most favourite recreational activity of scanning space grass while binging Star Trek TNG I guess.
