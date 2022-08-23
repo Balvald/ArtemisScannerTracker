@@ -22,6 +22,16 @@ class ArtemisScannerTracker:
 
     def __init__(self) -> None:
         # Be sure to use names that wont collide in our config variables
+        # Bools for show hide checkboxes
+        self.AST_hide_fullscan: Optional[tk.IntVar] = tk.IntVar(value=config.get_int('AST_hide_fullscan'))
+        self.AST_hide_species: Optional[tk.IntVar] = tk.IntVar(value=config.get_int('AST_hide_species'))
+        self.AST_hide_progress: Optional[tk.IntVar] = tk.IntVar(value=config.get_int('AST_hide_progress'))
+        self.AST_hide_last_system: Optional[tk.IntVar] = tk.IntVar(value=config.get_int('AST_hide_last_system'))
+        self.AST_hide_last_body: Optional[tk.IntVar] = tk.IntVar(value=config.get_int('AST_hide_last_body'))
+        self.AST_hide_system: Optional[tk.IntVar] = tk.IntVar(value=config.get_int('AST_hide_system'))
+        self.AST_hide_body: Optional[tk.IntVar] = tk.IntVar(value=config.get_int('AST_hide_body'))
+    	
+        # Artemis Scanner State infos
         self.AST_last_scan_plant: Optional[tk.StringVar] = tk.StringVar(value=str(config.get_str('AST_last_scan_plant')))
         self.AST_last_scan_system: Optional[tk.StringVar] = tk.StringVar(value=str(config.get_str('AST_last_scan_system')))
         self.AST_last_scan_body: Optional[tk.StringVar] = tk.StringVar(value=str(config.get_str('AST_last_scan_body')))
@@ -59,7 +69,17 @@ class ArtemisScannerTracker:
         frame = nb.Frame(parent)
 
         # TODO create useful preferences for the plugin: i.e. tick boxes to show or hide certain info like current system and body
-
+        nb.Checkbutton(frame, text="Hide Full Status", variable=self.AST_hide_fullscan).grid(row=current_row, column=0, sticky="W")
+        current_row += 1
+        nb.Checkbutton(frame, text="Hide Species", variable=self.AST_hide_species).grid(row=current_row, column=0, sticky="W")
+        nb.Checkbutton(frame, text="Hide Scan Progress", variable=self.AST_hide_progress).grid(row=current_row, column=1, sticky="W")
+        current_row += 1
+        nb.Checkbutton(frame, text="Hide System of last Scan", variable=self.AST_hide_last_system).grid(row=current_row, column=0, sticky="W")
+        nb.Checkbutton(frame, text="Hide Body of last Scan", variable=self.AST_hide_last_body).grid(row=current_row, column=1, sticky="W")
+        current_row += 1
+        nb.Checkbutton(frame, text="Hide Current System", variable=self.AST_hide_system).grid(row=current_row, column=0, sticky="W")
+        nb.Checkbutton(frame, text="Hide Current Body", variable=self.AST_hide_body).grid(row=current_row, column=1, sticky="W")
+        current_row += 1
         if debug:
             # setup debug fields for the scanner.
             nb.Label(frame, text='Species').grid(row=current_row, sticky=tk.W)
@@ -78,7 +98,12 @@ class ArtemisScannerTracker:
             nb.Entry(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1, sticky=tk.W)
             current_row += 1
 
-        nb.Label(frame, text='to reset the state of the plugin press the button below').grid(row=current_row, sticky=tk.W)
+        nb.Label(frame, text='For these preferences to take effect please restart EDMC after closing the settings').grid(row=current_row, sticky=tk.W)
+        current_row += 1
+        nb.Label(frame, text='___________________________________________________________').grid(row=current_row, sticky=tk.W)
+        current_row += 1
+
+        nb.Label(frame, text='To reset the state of the plugin press the button below').grid(row=current_row, sticky=tk.W)
         current_row += 1
         nb.Label(frame, text='WARNING: Info that is reset can not be restored.').grid(row=current_row, sticky=tk.W)
         current_row += 2
@@ -99,6 +124,15 @@ class ArtemisScannerTracker:
         config.set('AST_last_scan_body', str(self.AST_last_scan_body.get()))
         config.set('AST_last_scan_plant', str(self.AST_last_scan_plant.get()))
         config.set('AST_state', str(self.AST_state.get()))
+
+        config.set('AST_hide_fullscan', int(self.AST_hide_fullscan.get()))
+        config.set('AST_hide_species', int(self.AST_hide_species.get()))
+        config.set('AST_hide_progress', int(self.AST_hide_progress.get()))
+        config.set('AST_hide_last_system', int(self.AST_hide_last_system.get()))
+        config.set('AST_hide_last_body', int(self.AST_hide_last_body.get()))
+        config.set('AST_hide_system', int(self.AST_hide_system.get()))
+        config.set('AST_hide_body', int(self.AST_hide_body.get()))
+
         logger.debug("ArtemisScannerTracker saved preferences")
 
     def setup_main_ui(self, parent: tk.Frame) -> tk.Frame:
@@ -111,32 +145,40 @@ class ArtemisScannerTracker:
         current_row = 12
         frame = tk.Frame(parent)
 
-        tk.Label(frame, text="Current Body:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=self.AST_current_body).grid(row=current_row, column=1, sticky=tk.W)
+        if self.AST_hide_body.get() != 1:
+            current_row -= 1
+            tk.Label(frame, text="Current Body:").grid(row=current_row, sticky=tk.W)
+            tk.Label(frame, textvariable=self.AST_current_body).grid(row=current_row, column=1, sticky=tk.W)
 
-        current_row -= 1
-        tk.Label(frame, text="Current System:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=self.AST_current_system).grid(row=current_row, column=1, sticky=tk.W)
+        if self.AST_hide_system.get() != 1:
+            current_row -= 1
+            tk.Label(frame, text="Current System:").grid(row=current_row, sticky=tk.W)
+            tk.Label(frame, textvariable=self.AST_current_system).grid(row=current_row, column=1, sticky=tk.W)
 
-        current_row -= 1
-        tk.Label(frame, text="Body of last Scan:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=self.AST_last_scan_body).grid(row=current_row, column=1, sticky=tk.W)
+        if self.AST_hide_last_body.get() != 1:
+            current_row -= 1
+            tk.Label(frame, text="Body of last Scan:").grid(row=current_row, sticky=tk.W)
+            tk.Label(frame, textvariable=self.AST_last_scan_body).grid(row=current_row, column=1, sticky=tk.W)
 
-        current_row -= 1
-        tk.Label(frame, text="System of last Scan:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=self.AST_last_scan_system).grid(row=current_row, column=1, sticky=tk.W)
+        if self.AST_hide_last_system.get() != 1:
+            current_row -= 1
+            tk.Label(frame, text="System of last Scan:").grid(row=current_row, sticky=tk.W)
+            tk.Label(frame, textvariable=self.AST_last_scan_system).grid(row=current_row, column=1, sticky=tk.W)
 
-        current_row -= 1
-        tk.Label(frame, text="Scan Progress:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1, sticky=tk.W)
+        if self.AST_hide_progress.get() != 1:
+            current_row -= 1
+            tk.Label(frame, text="Scan Progress:").grid(row=current_row, sticky=tk.W)
+            tk.Label(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1, sticky=tk.W)
 
-        current_row -= 1
-        tk.Label(frame, text="Species:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=self.AST_last_scan_plant).grid(row=current_row, column=1, sticky=tk.W)
+        if self.AST_hide_species.get() != 1:
+            current_row -= 1
+            tk.Label(frame, text="Species:").grid(row=current_row, sticky=tk.W)
+            tk.Label(frame, textvariable=self.AST_last_scan_plant).grid(row=current_row, column=1, sticky=tk.W)
 
-        current_row -= 1
-        tk.Label(frame, text="Last Exobiology Scan:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=self.AST_state).grid(row=current_row, column=1, sticky=tk.W)
+        if self.AST_hide_fullscan.get() != 1:
+            current_row -= 1
+            tk.Label(frame, text="Last Exobiology Scan:").grid(row=current_row, sticky=tk.W)
+            tk.Label(frame, textvariable=self.AST_state).grid(row=current_row, column=1, sticky=tk.W)
         return frame
 
     def reset(self):
