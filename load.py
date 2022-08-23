@@ -4,7 +4,6 @@ created from the EDMC example plugin.
 """
 
 import logging
-from pickle import FALSE
 import tkinter as tk
 from typing import Optional
 
@@ -59,8 +58,7 @@ class ArtemisScannerTracker:
         current_row = 0
         frame = nb.Frame(parent)
 
-        # TODO create useful preferences for the plugin: i.e. tick boxes to show or hide certain info like current system and body and a Reset state button.
-        # and remove the debug fields, where the user could just put anything in.
+        # TODO create useful preferences for the plugin: i.e. tick boxes to show or hide certain info like current system and body
 
         if debug:
             # setup debug fields for the scanner.
@@ -79,6 +77,13 @@ class ArtemisScannerTracker:
             nb.Label(frame, text='Scan progress').grid(row=current_row)
             nb.Entry(frame, textvariable=self.AST_current_scan_progress).grid(row=current_row, column=1)
             current_row += 1
+
+        nb.Label(frame, text='To reset the state of the plugin press the button Below').grid(row=current_row)
+        current_row += 1
+        nb.Label(frame, text='Info that is reset can not be restored.').grid(row=current_row)
+        current_row += 2
+        nb.Button(frame, text="RESET", command= self.reset).grid(row=current_row)
+        current_row += 1
 
         return frame
 
@@ -143,6 +148,13 @@ class ArtemisScannerTracker:
         tk.Label(frame, text="Last Exobioligy Scan:").grid(row=current_row)
         tk.Label(frame, textvariable=self.AST_state).grid(row=current_row, column=1)
         return frame
+
+    def reset(self):
+        self.AST_current_scan_progress.set("0/3")
+        self.AST_last_scan_system.set("None")
+        self.AST_last_scan_body.set("None")
+        self.AST_last_scan_plant.set("None")
+        self.AST_state.set("None")
     
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     """
@@ -171,7 +183,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         elif entry["ScanType"] == "Analyse":
             plugin.AST_current_scan_progress.set("3/3")
         else:
-            plugin.AST_current_scan_progress.set("Excuse me what the fuck") #Somethings horibly wrong if we end up here
+            plugin.AST_current_scan_progress.set("Excuse me what the fuck") #Somethings horribly wrong if we end up here
 
     if entry["event"] in ["Location", "Embark", "Disembark", "Touchdown", "Liftoff", "FSDJump"]:
         flag = True
