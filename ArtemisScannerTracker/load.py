@@ -468,13 +468,16 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
 
     if entry["event"] == "ScanOrganic":
         flag = True
+
         plugin.AST_last_scan_plant.set(entry["Species_Localised"])
+
         # In the eventuality that the user started EMDC after
         # the "Location" event happens and directly scans a plant
         # these lines wouldn"t be able to do anything but to
         # set the System and body of the last Scan to "None"
         plugin.AST_last_scan_system.set(plugin.AST_current_system.get())
         plugin.AST_last_scan_body.set(plugin.AST_current_body.get())
+
         if entry["ScanType"] == "Log":
             plugin.AST_current_scan_progress.set("1/3")
         elif entry["ScanType"] == "Sample":
@@ -488,15 +491,19 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
             plugin.AST_value.set(str(newvalue) + " Cr.")
         else:
             # Something is horribly wrong if we end up here
+            # If anyone ever sees "Excuse me what the fuck"
+            # we know they added a new ScanType, that we might need to handle
             plugin.AST_current_scan_progress.set("Excuse me what the fuck")
 
     if entry["event"] in ["Location", "Embark",
                           "Disembark", "Touchdown",
                           "Liftoff", "FSDJump"]:
         flag = True
+
         # Get current system name and body from events that needs to happen.
         plugin.AST_current_system.set(entry["StarSystem"])
         plugin.AST_current_body.set(entry["Body"])
+
         # To fix the aforementioned eventuality where the systems end up
         # being "None" we update the last scan location
         # When the CMDR gets another journal entry that tells us
@@ -507,7 +514,9 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
             plugin.AST_last_scan_body.set(entry["Body"])
 
     if entry["event"] == "SellOrganicData":
+        flag = True
         soldvalue = 0
+
         for biodata in entry["BioData"]:
             soldvalue += biodata["Value"]
             # If I add a counter for all biodata sold
@@ -520,6 +529,7 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
         plugin.AST_value.set(
             str(int(plugin.AST_value.get().split(" ")[0])
                 - soldvalue) + " Cr.")
+
         # No negative value of biodata could still be unsold on the Scanner
         # This means that there was data on the Scanner that
         # the plugin was unable to record by not being active.
@@ -532,6 +542,10 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
             plugin.AST_last_scan_plant.get()
             + " (" + plugin.AST_current_scan_progress.get()
             + ") on: " + plugin.AST_last_scan_body.get())
+
+        # save most recent relevant state so in case of crash of the system
+        # we still have a proper record as long as it finishes saving below.
+        plugin.on_preferences_closed(cmdr, is_beta)
 
 
 plugin = ArtemisScannerTracker()
