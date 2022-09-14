@@ -438,7 +438,7 @@ class ArtemisScannerTracker:
 
         return frame
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset function of the Reset Button."""
         self.AST_current_scan_progress.set("0/3")
         self.AST_last_scan_system.set("None")
@@ -450,7 +450,7 @@ class ArtemisScannerTracker:
 
 def journal_entry(cmdr, is_beta,  # noqa: CCR001
                   system, station,
-                  entry, state):
+                  entry, state) -> None:
     """
     React accordingly to events in the journal.
 
