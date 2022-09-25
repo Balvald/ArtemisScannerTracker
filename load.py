@@ -593,6 +593,8 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
             f.seek(0)
             json.dump(solddata, f, indent=4)
         # Clear notsoldbiodata.json
+        # TODO only clear the data that was sold
+        # This happens on a by system basis
         f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
         f.write(r"[]")
         f.close()
