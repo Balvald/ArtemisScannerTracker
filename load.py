@@ -4,7 +4,9 @@ Artemis Scanner Tracker by Balvald.
 created from the EDMC example plugin.
 """
 
+import json
 import logging
+import os
 import tkinter as tk
 from typing import Optional
 
@@ -12,6 +14,30 @@ import myNotebook as nb  # type: ignore # noqa: N813
 from config import appname, config  # type: ignore
 
 PLUGIN_NAME = "AST"
+
+# Gonna need the files directory to store data for full
+# tracking of all the biological things that the CMDR scans.
+directory, filename = os.path.split(os.path.realpath(__file__))
+
+if not os.path.exists(directory + "\\soldbiodata.json"):
+    firstrun = True
+    f = open(directory + "\\soldbiodata.json", "w", encoding="utf8")
+    f.write(r"[]")
+    f.close()
+
+if not os.path.exists(directory + "\\notsoldbiodata.json"):
+    firstrun = True
+    f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+    f.write(r"[]")
+    f.close()
+
+not_yet_sold_data = []
+currententrytowrite = {}
+
+# load notyetsolddata
+
+with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
+    not_yet_sold_data = json.load(f)
 
 # Shows debug fields in preferences when True
 debug = False
@@ -438,7 +464,7 @@ class ArtemisScannerTracker:
 
         return frame
 
-    def reset(self) -> None:
+    def reset(self):
         """Reset function of the Reset Button."""
         self.AST_current_scan_progress.set("0/3")
         self.AST_last_scan_system.set("None")
@@ -450,7 +476,7 @@ class ArtemisScannerTracker:
 
 def journal_entry(cmdr, is_beta,  # noqa: CCR001
                   system, station,
-                  entry, state) -> None:
+                  entry, state):
     """
     React accordingly to events in the journal.
 
@@ -464,7 +490,13 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
     :param entry: the current Journal entry
     :param state: unused
     """
+    global currententrytowrite, not_yet_sold_data
+
     flag = False
+
+    if entry["event"] == "Resurrect":
+        # Reset - player was unable to sell before death
+        not_yet_sold_data = []
 
     if entry["event"] == "ScanOrganic":
         flag = True
@@ -489,6 +521,18 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
             newvalue = int(plugin.AST_value.get().split(
                 " ")[0]) + int(vistagenomicsprices[entry["Species_Localised"]])
             plugin.AST_value.set(str(newvalue) + " Cr.")
+            currententrytowrite["species"] = entry["Species_Localised"]
+            currententrytowrite["system"] = plugin.AST_current_system.get()
+            currententrytowrite["body"] = plugin.AST_current_body.get()
+            not_yet_sold_data.append(currententrytowrite)
+            # Now write the date into the local file
+            file = directory + "\\notsoldbiodata.json"
+            with open(file, "r+", encoding="utf8") as f:
+                notsolddata = json.load(f)
+                notsolddata.append(currententrytowrite)
+                f.seek(0)
+                json.dump(notsolddata, f, indent=4)
+            currententrytowrite = {}
         else:
             # Something is horribly wrong if we end up here
             # If anyone ever sees "Excuse me what the fuck"
@@ -521,6 +565,9 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
             soldvalue += biodata["Value"]
             # If I add a counter for all biodata sold
             # I would also need to look at biodata["Bonus"]
+            # -> Nah its impossible to track bonus while not sold yet
+            # Could only be used for a profit since last reset
+            # metric.
 
         # Remove the value of what was sold from
         # the amount of the Scanned value.
@@ -535,6 +582,20 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
         # the plugin was unable to record by not being active.
         if int(plugin.AST_value.get().split(" ")[0]) < 0:
             plugin.AST_value.set("0 Cr.")
+        # Now write the date into the local file
+        file = directory + "\\soldbiodata.json"
+        with open(file, "r+", encoding="utf8") as f:
+            solddata = json.load(f)
+            if not_yet_sold_data != []:
+                for item in not_yet_sold_data:
+                    solddata.append(item)
+                not_yet_sold_data = []
+            f.seek(0)
+            json.dump(solddata, f, indent=4)
+        # Clear notsoldbiodata.json
+        f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+        f.write(r"[]")
+        f.close()
 
     if flag:
         # we changed a value so we update line.
