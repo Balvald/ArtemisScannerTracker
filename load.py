@@ -32,7 +32,9 @@ if not os.path.exists(directory + "\\notsoldbiodata.json"):
     f.close()
 
 not_yet_sold_data = []
+sold_exobiology = []
 currententrytowrite = {}
+lastsample = {"species": "Thargoid", "system": "Polaris", "body": "Raxxla"}
 
 # load notyetsolddata
 
@@ -490,7 +492,7 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
     :param entry: the current Journal entry
     :param state: unused
     """
-    global currententrytowrite, not_yet_sold_data
+    global currententrytowrite, not_yet_sold_data, lastsample, sold_exobiology
 
     flag = False
 
@@ -512,27 +514,45 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
 
         if entry["ScanType"] == "Log":
             plugin.AST_current_scan_progress.set("1/3")
-        elif entry["ScanType"] == "Sample":
-            plugin.AST_current_scan_progress.set("2/3")
-        elif entry["ScanType"] == "Analyse":
-            plugin.AST_current_scan_progress.set("3/3")
-            if plugin.AST_value.get() == "None":
-                plugin.AST_value.set("0 Cr.")
-            newvalue = int(plugin.AST_value.get().split(
-                " ")[0]) + int(vistagenomicsprices[entry["Species_Localised"]])
-            plugin.AST_value.set(str(newvalue) + " Cr.")
-            currententrytowrite["species"] = entry["Species_Localised"]
-            currententrytowrite["system"] = plugin.AST_current_system.get()
-            currententrytowrite["body"] = plugin.AST_current_body.get()
-            not_yet_sold_data.append(currententrytowrite)
-            # Now write the date into the local file
-            file = directory + "\\notsoldbiodata.json"
-            with open(file, "r+", encoding="utf8") as f:
-                notsolddata = json.load(f)
-                notsolddata.append(currententrytowrite)
-                f.seek(0)
-                json.dump(notsolddata, f, indent=4)
-            currententrytowrite = {}
+        elif entry["ScanType"] in ["Sample", "Analyse"]:
+            if (entry["ScanType"] == "Analyse"
+                    or
+                    (entry["Species_Localised"] == lastsample["species"]
+                     and
+                     plugin.AST_current_body.get() == lastsample["body"]
+                     and
+                     plugin.AST_current_system.get() == lastsample["system"])):
+
+                if plugin.AST_value.get() == "None":
+                    plugin.AST_value.set("0 Cr.")
+                newvalue = int(plugin.AST_value.get().split(" ")[0]) + \
+                    int(vistagenomicsprices[entry["Species_Localised"]])
+                plugin.AST_value.set(str(newvalue) + " Cr.")
+                # Found some cases where the analyse happened
+                # seemingly directly after a log.
+                plugin.AST_current_scan_progress.set("3/3")
+                currententrytowrite["species"] = entry["Species_Localised"]
+                currententrytowrite["system"] = plugin.AST_current_system.get()
+                currententrytowrite["body"] = plugin.AST_current_body.get()
+                if currententrytowrite not in not_yet_sold_data:
+                    # If there is no second Sample scantype event
+                    # we have to save the data here.
+                    not_yet_sold_data.append(currententrytowrite)
+                    file = directory + "\\notsoldbiodata.json"
+                    with open(file, "r+", encoding="utf8") as f:
+                        notsolddata = json.load(f)
+                        notsolddata.append(currententrytowrite)
+                        f.seek(0)
+                        json.dump(notsolddata, f, indent=4)
+                    currententrytowrite = {}
+                    lastsample = {"species": "Thargoid",
+                                  "system": "Polaris",
+                                  "body": "Raxxla"}
+            else:
+                plugin.AST_current_scan_progress.set("2/3")
+                lastsample["species"] = entry["Species_Localised"]
+                lastsample["system"] = plugin.AST_current_system.get()
+                lastsample["body"] = plugin.AST_current_body.get()
         else:
             # Something is horribly wrong if we end up here
             # If anyone ever sees "Excuse me what the fuck"
@@ -543,10 +563,13 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
                           "Disembark", "Touchdown",
                           "Liftoff", "FSDJump"]:
         flag = True
-
-        # Get current system name and body from events that needs to happen.
-        plugin.AST_current_system.set(entry["StarSystem"])
-        plugin.AST_current_body.set(entry["Body"])
+        try:
+            # Get current system name and body from events that need to happen.
+            plugin.AST_current_system.set(entry["StarSystem"])
+            plugin.AST_current_body.set(entry["Body"])
+        except KeyError:
+            # Could throw a KeyError in old Horizons versions
+            pass
 
         # To fix the aforementioned eventuality where the systems end up
         # being "None" we update the last scan location
@@ -560,14 +583,109 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
     if entry["event"] == "SellOrganicData":
         flag = True
         soldvalue = 0
+        currentbatch = {}
 
-        for biodata in entry["BioData"]:
-            soldvalue += biodata["Value"]
+        for sold in entry["BioData"]:
+            if sold["Species_Localised"] in currentbatch.keys():
+                currentbatch[sold["Species_Localised"]] += 1
+            else:
+                currentbatch[sold["Species_Localised"]] = 1
+            soldvalue += sold["Value"]
             # If I add a counter for all biodata sold
             # I would also need to look at biodata["Bonus"]
             # -> Nah its impossible to track bonus while not sold yet
             # Could only be used for a profit since last reset
             # metric.
+        bysystem = {}
+        for biodata in not_yet_sold_data:
+            if biodata["system"] in bysystem.keys():
+                if (biodata["species"]
+                        in bysystem[biodata["system"]].keys()):
+                    bysystem[
+                        biodata["system"]][biodata["species"]] += 1
+                else:
+                    bysystem[biodata["system"]][biodata["species"]] = 1
+            else:
+                bysystem[biodata["system"]] = {}
+                bysystem[biodata["system"]][biodata["species"]] = 1
+        soldbysystempossible = {}
+        for system in bysystem:
+            soldbysystempossible[system] = True
+            for species in currentbatch:
+                if species not in bysystem[system].keys():
+                    soldbysystempossible[system] = False
+                    break
+            if soldbysystempossible[system] is False:
+                continue
+            for species in bysystem[system]:
+                if bysystem[system][species] < currentbatch[species]:
+                    soldbysystempossible[system] = False
+                    break
+
+        # this is still not perfect because it cannot be.
+        # if the player sells the data by system and 2 systems
+        # have the same amount of the same species then no one can tell
+        # which system was actually sold at vista genomics.
+        # In described case whatever is the first system we encounter
+        # through iteration will be chosen as the system that was sold.
+        thesystem = ""
+        for system in soldbysystempossible:
+            if soldbysystempossible[system] is True:
+                # We always take the first system that is possible
+                # If there are two we cannot tell which one was sold
+                # Though it should not really matter as long as
+                # the CMDR hasn't died right after without selling
+                # the data aswell.
+                thesystem = system
+                break
+
+        if thesystem != "":
+            print("CMDR sold by system: " + thesystem)
+            i = 0
+            while i < len(not_yet_sold_data):
+                # Checking here more granularily which data was sold
+                # We do know though that the specifc data was sold only
+                # in one system that at this point is saved in
+                # the variable"thesystem"
+                if (not_yet_sold_data[i]["system"] == thesystem
+                        and not_yet_sold_data[i]
+                        not in sold_exobiology):
+                    if currentbatch[
+                            not_yet_sold_data[i]["species"]] > 0:
+                        sold_exobiology.append(not_yet_sold_data[i])
+                        currentbatch[not_yet_sold_data[i]
+                                     ["species"]] -= 1
+                        not_yet_sold_data.pop(i)
+                        continue
+                    else:
+                        print("Not all data from a single system "
+                              + "were sold. This means the CMDR "
+                              + "sold a singular bit of data")
+                i += 1
+            f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+            f.write(r"[]")
+            f.close()
+            if not_yet_sold_data != []:
+                file = directory + "\\notsoldbiodata.json"
+                with open(file, "r+", encoding="utf8") as f:
+                    notsolddata = json.load(f)
+                    for data in not_yet_sold_data:
+                        notsolddata.append(data)
+                    f.seek(0)
+                    json.dump(notsolddata, f, indent=4)
+
+        else:
+            print("CMDR sold the whole batch.")
+            for data in not_yet_sold_data:
+                if (data not in sold_exobiology
+                        and currentbatch[
+                            data["species"]] > 0):
+                    currentbatch[data["species"]] -= 1
+                    sold_exobiology.append(data)
+            not_yet_sold_data = []
+            f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+            f.write(r"[]")
+            f.close()
 
         # Remove the value of what was sold from
         # the amount of the Scanned value.
@@ -586,18 +704,12 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
         file = directory + "\\soldbiodata.json"
         with open(file, "r+", encoding="utf8") as f:
             solddata = json.load(f)
-            if not_yet_sold_data != []:
-                for item in not_yet_sold_data:
+            if sold_exobiology != []:
+                for item in sold_exobiology:
                     solddata.append(item)
-                not_yet_sold_data = []
+                sold_exobiology = []
             f.seek(0)
             json.dump(solddata, f, indent=4)
-        # Clear notsoldbiodata.json
-        # TODO only clear the data that was sold
-        # This happens on a by system basis
-        f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
-        f.write(r"[]")
-        f.close()
 
     if flag:
         # we changed a value so we update line.
