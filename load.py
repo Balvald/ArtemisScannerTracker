@@ -239,7 +239,7 @@ class ArtemisScannerTracker:
         setup_preferences is called by plugin_prefs below.
 
         It is where we can setup our
-        own settings page in EDMC"s settings window.
+        own settings page in EDMC's settings window.
         Our tab is defined for us.
 
         :param parent: the tkinter parent that our
@@ -515,16 +515,11 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
         if entry["ScanType"] == "Log":
             plugin.AST_current_scan_progress.set("1/3")
         elif entry["ScanType"] in ["Sample", "Analyse"]:
-            if (entry["ScanType"] == "Analyse"
-                    or
-                    (entry["Species_Localised"] == lastsample["species"]
-                     and
-                     plugin.AST_current_body.get() == lastsample["body"]
-                     and
-                     plugin.AST_current_system.get() == lastsample["system"])):
+            if (entry["ScanType"] == "Analyse"):
 
                 if plugin.AST_value.get() == "None":
                     plugin.AST_value.set("0 Cr.")
+                # Somehow we get here twice for each 3rd scan. idfk
                 newvalue = int(plugin.AST_value.get().split(" ")[0]) + \
                     int(vistagenomicsprices[entry["Species_Localised"]])
                 plugin.AST_value.set(str(newvalue) + " Cr.")
