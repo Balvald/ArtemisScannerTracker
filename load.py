@@ -8,10 +8,14 @@ import json
 import logging
 import os
 import tkinter as tk
+from theme import theme  # type: ignore # noqa: N813
 from typing import Optional
 
 import myNotebook as nb  # type: ignore # noqa: N813
 from config import appname, config  # type: ignore
+
+# globals as part of the plugin class?
+frame: Optional[tk.Frame] = None
 
 PLUGIN_NAME = "AST"
 
@@ -34,6 +38,7 @@ if not os.path.exists(directory + "\\notsoldbiodata.json"):
 not_yet_sold_data = []
 sold_exobiology = []
 currententrytowrite = {}
+# placeholder sample.
 lastsample = {"species": "Thargoid", "system": "Polaris", "body": "Raxxla"}
 
 # load notyetsolddata
@@ -492,6 +497,10 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
     :param entry: the current Journal entry
     :param state: unused
     """
+
+    # TODO: Refactor this behemoth into more manageable helper functions
+    # so it allows for easier additions later.
+
     global currententrytowrite, not_yet_sold_data, lastsample, sold_exobiology
 
     flag = False
@@ -695,7 +704,7 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
         # the plugin was unable to record by not being active.
         if int(plugin.AST_value.get().split(" ")[0]) < 0:
             plugin.AST_value.set("0 Cr.")
-        # Now write the date into the local file
+        # Now write the data into the local file
         file = directory + "\\soldbiodata.json"
         with open(file, "r+", encoding="utf8") as f:
             solddata = json.load(f)
@@ -727,7 +736,8 @@ def plugin_start3(plugin_dir: str) -> str:
 
     See PLUGINS.md#startup
     """
-    return plugin.on_load()
+    pluginname = plugin.on_load()
+    return pluginname
 
 
 def plugin_stop() -> None:
@@ -736,7 +746,8 @@ def plugin_stop() -> None:
 
     See PLUGINS.md#shutdown
     """
-    return plugin.on_unload()
+    plugin.on_unload()
+    return
 
 
 def plugin_prefs(parent: nb.Notebook,
@@ -746,7 +757,8 @@ def plugin_prefs(parent: nb.Notebook,
 
     See PLUGINS.md#configuration
     """
-    return plugin.setup_preferences(parent, cmdr, is_beta)
+    preferenceframe = plugin.setup_preferences(parent, cmdr, is_beta)
+    return preferenceframe
 
 
 def prefs_changed(cmdr: str, is_beta: bool) -> None:
@@ -755,13 +767,16 @@ def prefs_changed(cmdr: str, is_beta: bool) -> None:
 
     See PLUGINS.md#configuration
     """
-    return plugin.on_preferences_closed(cmdr, is_beta)
+    plugin.on_preferences_closed(cmdr, is_beta)
+    return
 
 
-def plugin_app(parent: tk.Frame) -> Optional[tk.Frame]:
+def plugin_app(parent: tk.Frame) -> tk.Frame:
     """
     Set up the UI of the plugin.
 
     See PLUGINS.md#display
     """
-    return plugin.setup_main_ui(parent)
+    global frame
+    frame = plugin.setup_main_ui(parent)
+    return frame
