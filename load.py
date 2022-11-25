@@ -8,11 +8,11 @@ import json
 import logging
 import os
 import tkinter as tk
-from theme import theme  # type: ignore # noqa: N813
 from typing import Optional
 
 import myNotebook as nb  # type: ignore # noqa: N813
 from config import appname, config  # type: ignore
+from theme import theme  # type: ignore # noqa: N813
 
 # globals as part of the plugin class?
 frame: Optional[tk.Frame] = None
@@ -51,6 +51,7 @@ debug = False
 
 logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
 
+# table from before U14
 vistagenomicsprices = {
     "Fonticulua Fluctus": 900000,
     "Tussock Stigmasis": 806300,
@@ -343,12 +344,6 @@ class ArtemisScannerTracker:
 
         nb.Label(
             frame,
-            text="For these preferences to take effect please restart"
-            + " EDMC after closing the settings").grid(
-            row=current_row, sticky=tk.W)
-        current_row += 1
-        nb.Label(
-            frame,
             text="___________________________________________________________"
         ).grid(row=current_row, sticky=tk.W)
         current_row += 1
@@ -411,63 +406,12 @@ class ArtemisScannerTracker:
         :param parent: EDMC main window Tk
         :return: Our frame
         """
-        current_row = 12
+
+        global frame
+
         frame = tk.Frame(parent)
 
-        if self.AST_hide_body.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="Current Body:").grid(
-                row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_current_body).grid(
-                row=current_row, column=1, sticky=tk.W)
-
-        if self.AST_hide_system.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="Current System:").grid(
-                row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_current_system).grid(
-                row=current_row, column=1, sticky=tk.W)
-
-        if self.AST_hide_value.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="Scanned Value:").grid(
-                row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_value).grid(
-                row=current_row, column=1, sticky=tk.W)
-
-        if self.AST_hide_last_body.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="Body of last Scan:").grid(
-                row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_last_scan_body).grid(
-                row=current_row, column=1, sticky=tk.W)
-
-        if self.AST_hide_last_system.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="System of last Scan:").grid(
-                row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_last_scan_system).grid(
-                row=current_row, column=1, sticky=tk.W)
-
-        if self.AST_hide_progress.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="Scan Progress:").grid(
-                row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_current_scan_progress).grid(
-                row=current_row, column=1, sticky=tk.W)
-
-        if self.AST_hide_species.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="Species:").grid(row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_last_scan_plant).grid(
-                row=current_row, column=1, sticky=tk.W)
-
-        if self.AST_hide_fullscan.get() != 1:
-            current_row -= 1
-            tk.Label(frame, text="Last Exobiology Scan:").grid(
-                row=current_row, sticky=tk.W)
-            tk.Label(frame, textvariable=self.AST_state).grid(
-                row=current_row, column=1, sticky=tk.W)
+        rebuild_ui(self)
 
         return frame
 
@@ -730,6 +674,60 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
 plugin = ArtemisScannerTracker()
 
 
+def rebuild_ui(plugin):
+    """Rebuild the UI in case of preferences change."""
+    global frame
+
+    # remove all labels from the frame
+    for label in frame.winfo_children():
+        label.destroy()
+
+    # recreate UI
+    current_row = 12
+
+    if plugin.AST_hide_body.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="Current Body:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_current_body).grid(row=current_row, column=1, sticky=tk.W)
+
+    if plugin.AST_hide_system.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="Current System:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_current_system).grid(row=current_row, column=1, sticky=tk.W)
+
+    if plugin.AST_hide_value.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="Scanned Value:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_value).grid(row=current_row, column=1, sticky=tk.W)
+
+    if plugin.AST_hide_last_body.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="Body of last Scan:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_last_scan_body).grid(row=current_row, column=1, sticky=tk.W)
+
+    if plugin.AST_hide_last_system.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="System of last Scan:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_last_scan_system).grid(row=current_row, column=1, sticky=tk.W)
+
+    if plugin.AST_hide_progress.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="Scan Progress:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_current_scan_progress).grid(row=current_row, column=1, sticky=tk.W)
+
+    if plugin.AST_hide_species.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="Species:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_last_scan_plant).grid(row=current_row, column=1, sticky=tk.W)
+
+    if plugin.AST_hide_fullscan.get() != 1:
+        current_row -= 1
+        tk.Label(frame, text="Last Exobiology Scan:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_state).grid(row=current_row, column=1, sticky=tk.W)
+
+    theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
+
+
 def plugin_start3(plugin_dir: str) -> str:
     """
     Handle start up of the plugin.
@@ -767,6 +765,8 @@ def prefs_changed(cmdr: str, is_beta: bool) -> None:
 
     See PLUGINS.md#configuration
     """
+    rebuild_ui(plugin)
+
     plugin.on_preferences_closed(cmdr, is_beta)
     return
 
