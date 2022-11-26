@@ -38,8 +38,8 @@ if not os.path.exists(directory + "\\notsoldbiodata.json"):
 not_yet_sold_data = []
 sold_exobiology = []
 currententrytowrite = {}
-# placeholder sample.
-lastsample = {"species": "Thargoid", "system": "Polaris", "body": "Raxxla"}
+
+plugin = None
 
 # load notyetsolddata
 
@@ -49,7 +49,7 @@ with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
 # Shows debug fields in preferences when True
 debug = False
 
-logger = logging.getLogger(f"{appname}.{PLUGIN_NAME}")
+logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
 # table from before U14
 vistagenomicsprices = {
@@ -205,8 +205,7 @@ class ArtemisScannerTracker:
         self.AST_last_scan_body: Optional[tk.StringVar] = tk.StringVar(
             value=str(config.get_str("AST_last_scan_body")))
         self.AST_current_scan_progress: Optional[tk.StringVar] = tk.StringVar(
-            value=(
-                str(config.get_int("AST_current_scan_progress")) + str("/3")))
+            value=(str(config.get_int("AST_current_scan_progress")) + str("/3")))
         self.AST_current_system: Optional[tk.StringVar] = tk.StringVar(
             value=str(config.get_str("AST_current_system")))
         self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(
@@ -397,7 +396,7 @@ class ArtemisScannerTracker:
 
         logger.debug("ArtemisScannerTracker saved preferences")
 
-    def setup_main_ui(self, parent: tk.Frame) -> tk.Frame:  # noqa: CCR001
+    def setup_main_ui(self, parent: tk.Frame) -> tk.Frame:
         """
         Create our entry on the main EDMC UI.
 
@@ -425,9 +424,7 @@ class ArtemisScannerTracker:
         self.AST_value.set("0 Cr.")
 
 
-def journal_entry(cmdr, is_beta,  # noqa: CCR001
-                  system, station,
-                  entry, state):
+def journal_entry(cmdr, is_beta, system, station, entry, state):
     """
     React accordingly to events in the journal.
 
@@ -441,223 +438,25 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
     :param entry: the current Journal entry
     :param state: unused
     """
-
-    # TODO: Refactor this behemoth into more manageable helper functions
-    # so it allows for easier additions later.
-
-    global currententrytowrite, not_yet_sold_data, lastsample, sold_exobiology
+    global plugin
 
     flag = False
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
-        not_yet_sold_data = []
+        resurrection_event()
 
     if entry["event"] == "ScanOrganic":
         flag = True
+        bioscan_event(entry)
 
-        plugin.AST_last_scan_plant.set(entry["Species_Localised"])
-
-        # In the eventuality that the user started EMDC after
-        # the "Location" event happens and directly scans a plant
-        # these lines wouldn"t be able to do anything but to
-        # set the System and body of the last Scan to "None"
-        plugin.AST_last_scan_system.set(plugin.AST_current_system.get())
-        plugin.AST_last_scan_body.set(plugin.AST_current_body.get())
-
-        if entry["ScanType"] == "Log":
-            plugin.AST_current_scan_progress.set("1/3")
-        elif entry["ScanType"] in ["Sample", "Analyse"]:
-            if (entry["ScanType"] == "Analyse"):
-
-                if plugin.AST_value.get() == "None":
-                    plugin.AST_value.set("0 Cr.")
-                # Somehow we get here twice for each 3rd scan. idfk
-                newvalue = int(plugin.AST_value.get().split(" ")[0]) + \
-                    int(vistagenomicsprices[entry["Species_Localised"]])
-                plugin.AST_value.set(str(newvalue) + " Cr.")
-                # Found some cases where the analyse happened
-                # seemingly directly after a log.
-                plugin.AST_current_scan_progress.set("3/3")
-                currententrytowrite["species"] = entry["Species_Localised"]
-                currententrytowrite["system"] = plugin.AST_current_system.get()
-                currententrytowrite["body"] = plugin.AST_current_body.get()
-                if currententrytowrite not in not_yet_sold_data:
-                    # If there is no second Sample scantype event
-                    # we have to save the data here.
-                    not_yet_sold_data.append(currententrytowrite)
-                    file = directory + "\\notsoldbiodata.json"
-                    with open(file, "r+", encoding="utf8") as f:
-                        notsolddata = json.load(f)
-                        notsolddata.append(currententrytowrite)
-                        f.seek(0)
-                        json.dump(notsolddata, f, indent=4)
-                    currententrytowrite = {}
-                    lastsample = {"species": "Thargoid",
-                                  "system": "Polaris",
-                                  "body": "Raxxla"}
-            else:
-                plugin.AST_current_scan_progress.set("2/3")
-                lastsample["species"] = entry["Species_Localised"]
-                lastsample["system"] = plugin.AST_current_system.get()
-                lastsample["body"] = plugin.AST_current_body.get()
-        else:
-            # Something is horribly wrong if we end up here
-            # If anyone ever sees "Excuse me what the fuck"
-            # we know they added a new ScanType, that we might need to handle
-            plugin.AST_current_scan_progress.set("Excuse me what the fuck")
-
-    if entry["event"] in ["Location", "Embark",
-                          "Disembark", "Touchdown",
-                          "Liftoff", "FSDJump"]:
+    if entry["event"] in ["Location", "Embark", "Disembark", "Touchdown", "Liftoff", "FSDJump"]:
         flag = True
-        try:
-            # Get current system name and body from events that need to happen.
-            plugin.AST_current_system.set(entry["StarSystem"])
-            plugin.AST_current_body.set(entry["Body"])
-        except KeyError:
-            # Could throw a KeyError in old Horizons versions
-            pass
-
-        # To fix the aforementioned eventuality where the systems end up
-        # being "None" we update the last scan location
-        # When the CMDR gets another journal entry that tells us
-        # the players location.
-        if ((plugin.AST_last_scan_system.get() == "None")
-                or (plugin.AST_last_scan_body.get() == "None")):
-            plugin.AST_last_scan_system.set(entry["StarSystem"])
-            plugin.AST_last_scan_body.set(entry["Body"])
+        system_body_change_event(entry)
 
     if entry["event"] == "SellOrganicData":
         flag = True
-        soldvalue = 0
-        currentbatch = {}
-
-        for sold in entry["BioData"]:
-            if sold["Species_Localised"] in currentbatch.keys():
-                currentbatch[sold["Species_Localised"]] += 1
-            else:
-                currentbatch[sold["Species_Localised"]] = 1
-            soldvalue += sold["Value"]
-            # If I add a counter for all biodata sold
-            # I would also need to look at biodata["Bonus"]
-            # -> Nah its impossible to track bonus while not sold yet
-            # Could only be used for a profit since last reset
-            # metric.
-        bysystem = {}
-        for biodata in not_yet_sold_data:
-            if biodata["system"] in bysystem.keys():
-                if (biodata["species"]
-                        in bysystem[biodata["system"]].keys()):
-                    bysystem[
-                        biodata["system"]][biodata["species"]] += 1
-                else:
-                    bysystem[biodata["system"]][biodata["species"]] = 1
-            else:
-                bysystem[biodata["system"]] = {}
-                bysystem[biodata["system"]][biodata["species"]] = 1
-        soldbysystempossible = {}
-        for system in bysystem:
-            soldbysystempossible[system] = True
-            for species in currentbatch:
-                if species not in bysystem[system].keys():
-                    soldbysystempossible[system] = False
-                    break
-            if soldbysystempossible[system] is False:
-                continue
-            for species in bysystem[system]:
-                if bysystem[system][species] < currentbatch[species]:
-                    soldbysystempossible[system] = False
-                    break
-
-        # this is still not perfect because it cannot be.
-        # if the player sells the data by system and 2 systems
-        # have the same amount of the same species then no one can tell
-        # which system was actually sold at vista genomics.
-        # In described case whatever is the first system we encounter
-        # through iteration will be chosen as the system that was sold.
-        thesystem = ""
-        for system in soldbysystempossible:
-            if soldbysystempossible[system] is True:
-                # We always take the first system that is possible
-                # If there are two we cannot tell which one was sold
-                # Though it should not really matter as long as
-                # the CMDR hasn't died right after without selling
-                # the data aswell.
-                thesystem = system
-                break
-
-        if thesystem != "":
-            print("CMDR sold by system: " + thesystem)
-            i = 0
-            while i < len(not_yet_sold_data):
-                # Checking here more granularily which data was sold
-                # We do know though that the specifc data was sold only
-                # in one system that at this point is saved in
-                # the variable"thesystem"
-                if (not_yet_sold_data[i]["system"] == thesystem
-                        and not_yet_sold_data[i]
-                        not in sold_exobiology):
-                    if currentbatch[
-                            not_yet_sold_data[i]["species"]] > 0:
-                        sold_exobiology.append(not_yet_sold_data[i])
-                        currentbatch[not_yet_sold_data[i]
-                                     ["species"]] -= 1
-                        not_yet_sold_data.pop(i)
-                        continue
-                    else:
-                        print("Not all data from a single system "
-                              + "were sold. This means the CMDR "
-                              + "sold a singular bit of data")
-                i += 1
-            f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
-            f.write(r"[]")
-            f.close()
-            if not_yet_sold_data != []:
-                file = directory + "\\notsoldbiodata.json"
-                with open(file, "r+", encoding="utf8") as f:
-                    notsolddata = json.load(f)
-                    for data in not_yet_sold_data:
-                        notsolddata.append(data)
-                    f.seek(0)
-                    json.dump(notsolddata, f, indent=4)
-
-        else:
-            print("CMDR sold the whole batch.")
-            for data in not_yet_sold_data:
-                if (data not in sold_exobiology
-                        and currentbatch[
-                            data["species"]] > 0):
-                    currentbatch[data["species"]] -= 1
-                    sold_exobiology.append(data)
-            not_yet_sold_data = []
-            f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
-            f.write(r"[]")
-            f.close()
-
-        # Remove the value of what was sold from
-        # the amount of the Scanned value.
-        # Specifically so that the plugin still keeps track properly,
-        # when the player sells on a by system basis.
-        plugin.AST_value.set(
-            str(int(plugin.AST_value.get().split(" ")[0])
-                - soldvalue) + " Cr.")
-
-        # No negative value of biodata could still be unsold on the Scanner
-        # This means that there was data on the Scanner that
-        # the plugin was unable to record by not being active.
-        if int(plugin.AST_value.get().split(" ")[0]) < 0:
-            plugin.AST_value.set("0 Cr.")
-        # Now write the data into the local file
-        file = directory + "\\soldbiodata.json"
-        with open(file, "r+", encoding="utf8") as f:
-            solddata = json.load(f)
-            if sold_exobiology != []:
-                for item in sold_exobiology:
-                    solddata.append(item)
-                sold_exobiology = []
-            f.seek(0)
-            json.dump(solddata, f, indent=4)
+        biosell_event(entry)
 
     if flag:
         # we changed a value so we update line.
@@ -669,6 +468,243 @@ def journal_entry(cmdr, is_beta,  # noqa: CCR001
         # save most recent relevant state so in case of crash of the system
         # we still have a proper record as long as it finishes saving below.
         plugin.on_preferences_closed(cmdr, is_beta)
+
+
+def resurrection_event():
+    global not_yet_sold_data
+    not_yet_sold_data = []
+    pass
+
+
+def bioscan_event(entry):
+    global currententrytowrite, plugin
+    plugin.AST_last_scan_plant.set(entry["Species_Localised"])
+
+    # In the eventuality that the user started EMDC after
+    # the "Location" event happens and directly scans a plant
+    # these lines wouldn"t be able to do anything but to
+    # set the System and body of the last Scan to "None"
+    plugin.AST_last_scan_system.set(plugin.AST_current_system.get())
+    plugin.AST_last_scan_body.set(plugin.AST_current_body.get())
+
+    if entry["ScanType"] == "Log":
+        plugin.AST_current_scan_progress.set("1/3")
+    elif entry["ScanType"] in ["Sample", "Analyse"]:
+        if (entry["ScanType"] == "Analyse"):
+
+            if plugin.AST_value.get() == "None":
+                plugin.AST_value.set("0 Cr.")
+            # Somehow we get here twice for each 3rd scan. idfk
+            newvalue = int(plugin.AST_value.get().split(" ")[0]) + \
+                int(vistagenomicsprices[entry["Species_Localised"]])
+            plugin.AST_value.set(str(newvalue) + " Cr.")
+            # Found some cases where the analyse happened
+            # seemingly directly after a log.
+            plugin.AST_current_scan_progress.set("3/3")
+            currententrytowrite["species"] = entry["Species_Localised"]
+            currententrytowrite["system"] = plugin.AST_current_system.get()
+            currententrytowrite["body"] = plugin.AST_current_body.get()
+            if currententrytowrite not in not_yet_sold_data:
+                # If there is no second Sample scantype event
+                # we have to save the data here.
+                not_yet_sold_data.append(currententrytowrite)
+                file = directory + "\\notsoldbiodata.json"
+                with open(file, "r+", encoding="utf8") as f:
+                    notsolddata = json.load(f)
+                    notsolddata.append(currententrytowrite)
+                    f.seek(0)
+                    json.dump(notsolddata, f, indent=4)
+                currententrytowrite = {}
+        else:
+            plugin.AST_current_scan_progress.set("2/3")
+    else:
+        # Something is horribly wrong if we end up here
+        # If anyone ever sees "Excuse me what the fuck"
+        # we know they added a new ScanType, that we might need to handle
+        plugin.AST_current_scan_progress.set("Excuse me what the fuck")
+
+
+def system_body_change_event(entry):
+    global plugin
+    try:
+        # Get current system name and body from events that need to happen.
+        plugin.AST_current_system.set(entry["StarSystem"])
+        plugin.AST_current_body.set(entry["Body"])
+    except KeyError:
+        # Could throw a KeyError in old Horizons versions
+        pass
+
+    # To fix the aforementioned eventuality where the systems end up
+    # being "None" we update the last scan location
+    # When the CMDR gets another journal entry that tells us
+    # the players location.
+    if ((plugin.AST_last_scan_system.get() == "None") or (plugin.AST_last_scan_body.get() == "None")):
+        plugin.AST_last_scan_system.set(entry["StarSystem"])
+        plugin.AST_last_scan_body.set(entry["Body"])
+
+
+def biosell_event(entry):
+    global currententrytowrite, not_yet_sold_data, sold_exobiology
+    soldvalue = 0
+
+    logger.info('called biosell_event')
+
+    # currentbatch describes which species we are selling.
+    # currentbatch has the form: {<species> : <amount> , ....}
+    currentbatch = {}
+
+    for sold in entry["BioData"]:
+        if sold["Species_Localised"] in currentbatch.keys():
+            # found that we are selling at least two of the same species
+            currentbatch[sold["Species_Localised"]] += 1
+        else:
+            currentbatch[sold["Species_Localised"]] = 1
+        # Adding the value of the sold species to the tally
+        soldvalue += sold["Value"]
+        # If I add a counter for all biodata sold
+        # I would also need to look at biodata["Bonus"]
+        # -> Nah its impossible to track bonus while not sold yet
+        # Could only be used for a profit since last reset
+        # metric.
+    # build by system dict, has the form of {<system> : {<species> : <amount>}}
+    logger.info(f'Value that was sold: {soldvalue}')
+    bysystem = {}
+    for biodata in not_yet_sold_data:
+        if biodata["system"] in bysystem.keys():
+            # We already know the system
+            if (biodata["species"] in bysystem[biodata["system"]].keys()):
+                # We also have found the same species before
+                # We've found atleast 2
+                bysystem[biodata["system"]][biodata["species"]] += 1
+            else:
+                # Species was not catologued in the bysystem structure
+                bysystem[biodata["system"]][biodata["species"]] = 1
+        else:
+            # create new entry for the system and add the single species to it
+            bysystem[biodata["system"]] = {}
+            bysystem[biodata["system"]][biodata["species"]] = 1
+
+    # Create a structure to check which system might be the one that we are selling
+    soldbysystempossible = {}
+
+    # Get every system
+    for system in bysystem:
+        # and we assume every system to be the one that was possibly sold from
+        soldbysystempossible[system] = True
+        for species in currentbatch:
+            if species not in bysystem[system].keys():
+                # Species that we are selling does not appear in its bysystem structure
+                # so it cant be the system that we sold from
+                soldbysystempossible[system] = False
+                # since we found out the system can't be the one we sold we break here
+                # and continue with the next system
+                break
+            if soldbysystempossible[system] is False:
+                continue
+            # Checking if we have any systems that have too few of a certain species
+            if bysystem[system][species] < currentbatch[species]:
+                soldbysystempossible[system] = False
+                break
+    logger.info(f'All possible systems: {soldbysystempossible}')
+    # this is still not perfect because it cannot be.
+    # if the player sells the data by system and 2 systems
+    # have the same amount of the same species then no one can tell
+    # which system was actually sold at vista genomics.
+    # In described case whatever is the first system we encounter
+    # through iteration will be chosen as the system that was sold.
+    thesystem = ""
+
+    amountpossiblesystems = sum(1 for value in soldbysystempossible.values() if value is True)
+
+    for system in soldbysystempossible:
+        if soldbysystempossible[system] is True:
+            if amountpossiblesystems > 1:
+                logger.warning('More than one system could have been the one getting sold.')
+                logger.warning('Please sell all other data before your next death.')
+                logger.warning('Otherwise the soldbiodata.json may have uncatchable discrepancies.')
+            # We always take the first system that is possible
+            # If there are two we cannot tell which one was sold
+            # Though it should not really matter as long as
+            # the CMDR hasn't died right after without selling
+            # the data aswell.
+            thesystem = system
+            logger.info(f'Likely system that was sold from: {thesystem}')
+            break
+
+    if thesystem != "":
+        # CMDR sold by system.
+        i = 0
+        while i < len(not_yet_sold_data):
+            # Check if were done with the batch we sold yet
+            done = True
+            for species in currentbatch:
+                if currentbatch[species] > 0:
+                    done = False
+            if done:
+                break
+
+            # Checking here more granularily which data was sold
+            # We do know though that the specifc data was sold only
+            # in one system that at this point is saved in
+            # the variable"thesystem"
+            if (not_yet_sold_data[i]["system"] == thesystem and not_yet_sold_data[i] not in sold_exobiology):
+                if currentbatch[not_yet_sold_data[i]["species"]] > 0:
+                    sold_exobiology.append(not_yet_sold_data[i])
+                    currentbatch[not_yet_sold_data[i]["species"]] -= 1
+                    not_yet_sold_data.pop(i)
+                    continue
+            i += 1
+
+        f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+        f.write(r"[]")
+        f.close()
+        if not_yet_sold_data != []:
+            file = directory + "\\notsoldbiodata.json"
+            with open(file, "r+", encoding="utf8") as f:
+                notsolddata = json.load(f)
+                for data in not_yet_sold_data:
+                    notsolddata.append(data)
+                f.seek(0)
+                json.dump(notsolddata, f, indent=4)
+    else:
+        # CMDR sold the whole batch.
+        for data in not_yet_sold_data:
+            if (data not in sold_exobiology and currentbatch[data["species"]] > 0):
+                currentbatch[data["species"]] -= 1
+                sold_exobiology.append(data)
+        not_yet_sold_data = []
+        # We can already reset to 0 to ensure that after selling all data at once
+        # we end up with a reset of the Scanned value metric
+        logger.info('Set Scanned Value to 0 Cr')
+        plugin.AST_value.set("0 Cr.")
+        f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+        f.write(r"[]")
+        f.close()
+
+    # Remove the value of what was sold from
+    # the amount of the Scanned value.
+    # Specifically so that the plugin still keeps track properly,
+    # when the player sells on a by system basis.
+    logger.info(f'Removing {soldvalue} from plugin value')
+    plugin.AST_value.set(str(int(plugin.AST_value.get().split(" ")[0]) - soldvalue) + " Cr.")
+
+    # No negative value of biodata could still be unsold on the Scanner
+    # This means that there was data on the Scanner that
+    # the plugin was unable to record by not being active.
+    # If the value was reset before we will reset it here again.
+    if int(plugin.AST_value.get().split(" ")[0]) < 0:
+        logger.info('Set Scanned Value to 0 Cr')
+        plugin.AST_value.set("0 Cr.")
+    # Now write the data into the local file
+    file = directory + "\\soldbiodata.json"
+    with open(file, "r+", encoding="utf8") as f:
+        solddata = json.load(f)
+        if sold_exobiology != []:
+            for item in sold_exobiology:
+                solddata.append(item)
+            sold_exobiology = []
+        f.seek(0)
+        json.dump(solddata, f, indent=4)
 
 
 plugin = ArtemisScannerTracker()

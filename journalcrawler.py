@@ -50,8 +50,6 @@ def build_biodata_json(gamejournaldir):
 
     edlogs = [f for f in os.listdir(journaldir) if f.endswith(".log")]
 
-    lastsample = {"species": "Thargoid", "system": "Polaris", "body": "Raxxla"}
-
     for filename in edlogs:
         f = os.path.join(journaldir, filename)
         print("Current file: " + f)
@@ -77,33 +75,13 @@ def build_biodata_json(gamejournaldir):
                 if entry["event"] == "ScanOrganic":
                     if entry["ScanType"] in ["Sample", "Analyse"]:
                         if entry["ScanType"] == "Analyse":
-                            currententrytowrite["species"] = entry[
-                                "Species_Localised"]
+                            currententrytowrite["species"] = entry["Species_Localised"]
                             currententrytowrite["system"] = currentsystem
                             currententrytowrite["body"] = currentbody
                             if currententrytowrite not in possibly_sold_data:
                                 possibly_sold_data.append(currententrytowrite)
                             currententrytowrite = {}
-                            lastsample = {"species": "Thargoid",
-                                          "system": "Polaris",
-                                          "body": "Raxxla"}
                             continue
-                        if (entry["Species_Localised"] == lastsample["species"]
-                                and currentbody == lastsample["body"]
-                                and currentsystem == lastsample["system"]):
-                            currententrytowrite["species"] = entry[
-                                "Species_Localised"]
-                            currententrytowrite["system"] = currentsystem
-                            currententrytowrite["body"] = currentbody
-                            possibly_sold_data.append(currententrytowrite)
-                            currententrytowrite = {}
-                            lastsample = {"species": "Thargoid",
-                                          "system": "Polaris",
-                                          "body": "Raxxla"}
-                        else:
-                            lastsample["species"] = entry["Species_Localised"]
-                            lastsample["system"] = currentsystem
-                            lastsample["body"] = currentbody
 
                 if entry["event"] == "Resurrect":
                     # Reset - player was unable to sell before death
@@ -122,28 +100,36 @@ def build_biodata_json(gamejournaldir):
                     bysystem = {}
                     for biodata in possibly_sold_data:
                         if biodata["system"] in bysystem.keys():
-                            if (biodata["species"]
-                                    in bysystem[biodata["system"]].keys()):
-                                bysystem[
-                                    biodata["system"]][biodata["species"]] += 1
+                            if (biodata["species"] in bysystem[biodata["system"]].keys()):
+                                bysystem[biodata["system"]][biodata["species"]] += 1
                             else:
-                                bysystem[biodata["system"]
-                                         ][biodata["species"]] = 1
+                                bysystem[biodata["system"]][biodata["species"]] = 1
                         else:
                             bysystem[biodata["system"]] = {}
                             bysystem[biodata["system"]][biodata["species"]] = 1
                     soldbysystempossible = {}
+                    print("bysystem:")
+                    print(bysystem)
+                    print("Currentbatch:")
+                    print(currentbatch)
+                    # input()
+
+                    # Get every system
                     for system in bysystem:
+                        # and we assume every system to be the one that was possibly sold from
                         soldbysystempossible[system] = True
                         for species in currentbatch:
                             if species not in bysystem[system].keys():
+                                # Species that we are selling does not appear in its bysystem structure
+                                # so it cant be the system that we sold from
                                 soldbysystempossible[system] = False
+                                # since we found out the system can't be the one we sold we break here
+                                # and continue with the next system
                                 break
-                        if soldbysystempossible[system] is False:
-                            continue
-                        for species in bysystem[system]:
-                            if (bysystem[system][species]
-                                    < currentbatch[species]):
+                            if soldbysystempossible[system] is False:
+                                continue
+                            # Checking if we have any systems that have too few of a certain species
+                            if bysystem[system][species] < currentbatch[species]:
                                 soldbysystempossible[system] = False
                                 break
 
@@ -166,26 +152,39 @@ def build_biodata_json(gamejournaldir):
                             thesystem = system
                             break
 
+                    # An eligible system was found and we selected the first
                     if thesystem != "":
                         print("CMDR sold by system: " + thesystem)
                         i = 0
                         while i < len(possibly_sold_data):
+                            # For the case when we are done when we havent sold everything
+                            done = True
+                            for species in currentbatch:
+                                if currentbatch[species] != 0:
+                                    done = False
+                            if done:
+                                break
+
+                            print(" i = " + str(i))
                             # Checking here more granularily
                             # which data was sold.
                             # We do know though that
                             # the specifc data was sold only
                             # in one system that at this point
                             # is saved in the variable "thesystem"
-                            if (possibly_sold_data[i]["system"] == thesystem
-                                    and possibly_sold_data[i]
-                                    not in sold_exobiology):
-                                if currentbatch[
-                                        possibly_sold_data[i]["species"]] > 0:
-                                    sold_exobiology.append(
-                                        possibly_sold_data[i])
-                                    currentbatch[possibly_sold_data[i]
-                                                 ["species"]] -= 1
-                                    possibly_sold_data.pop(i)
+                            print("possibly sold data")
+                            print(possibly_sold_data)
+                            print("current batch")
+                            print(currentbatch)
+                            if(possibly_sold_data[i]["system"] == thesystem
+                               and possibly_sold_data[i] not in sold_exobiology):
+                                if currentbatch[possibly_sold_data[i]["species"]] > 0:
+                                    sold_exobiology.append(possibly_sold_data[i])
+                                    currentbatch[possibly_sold_data[i]["species"]] -= 1
+                                    thing = possibly_sold_data.pop(i)
+                                    print("Sold:")
+                                    print(thing)
+                                    print(" i = " + str(i))
                                     continue
                                 else:
                                     print("Not all data from a single system "
@@ -194,10 +193,12 @@ def build_biodata_json(gamejournaldir):
                             i += 1
                     else:
                         print("CMDR sold the whole batch.")
+                        print("possibly sold data")
+                        print(possibly_sold_data)
+                        print("current batch")
+                        print(currentbatch)
                         for data in possibly_sold_data:
-                            if (data not in sold_exobiology
-                                    and currentbatch[
-                                        data["species"]] > 0):
+                            if (data not in sold_exobiology and currentbatch[data["species"]] > 0):
                                 currentbatch[data["species"]] -= 1
                                 sold_exobiology.append(data)
                         possibly_sold_data = []
