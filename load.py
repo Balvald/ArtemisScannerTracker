@@ -14,6 +14,9 @@ import myNotebook as nb  # type: ignore # noqa: N813
 from config import appname, config  # type: ignore
 from theme import theme  # type: ignore # noqa: N813
 
+from journalcrawler import build_biodata_json
+from organicinfo import getvistagenomicprices
+
 # globals as part of the plugin class?
 frame: Optional[tk.Frame] = None
 
@@ -51,7 +54,7 @@ debug = False
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
-# table from before U14
+"""# table from before U14
 vistagenomicsprices = {
     "Fonticulua Fluctus": 900000,
     "Tussock Stigmasis": 806300,
@@ -170,7 +173,9 @@ vistagenomicsprices = {
     "Tussock Pennatis": 59600,
     "Bacterium Vesicula": 56100,
     "Bacterium Acies": 50000
-}
+}"""
+
+vistagenomicsprices = getvistagenomicprices()
 
 
 class ArtemisScannerTracker:
@@ -256,14 +261,19 @@ class ArtemisScannerTracker:
         current_row = 0
         frame = nb.Frame(parent)
 
-        nb.Label(frame, text="Artemis Scanner Tracker by Balvald").grid(
+        nb.Label(frame, text="Artemis Scanner Tracker dev v0.1.2 by Balvald").grid(
             row=current_row, sticky=tk.W)
         current_row += 1
-
         nb.Label(
             frame,
             text="___________________________________________________________"
         ).grid(row=current_row, sticky=tk.W)
+
+        nb.Label(
+            frame,
+            text="___________________________________________________________"
+        ).grid(row=current_row, column=1, sticky=tk.W)
+
         current_row += 1
 
         nb.Checkbutton(
@@ -273,7 +283,7 @@ class ArtemisScannerTracker:
             row=current_row, column=0, sticky="W")
         nb.Checkbutton(
             frame,
-            text="Hide Scanned Value",
+            text="Hide Unsold Scans Value",
             variable=self.AST_hide_value).grid(
             row=current_row, column=1, sticky="W")
         current_row += 1
@@ -345,16 +355,48 @@ class ArtemisScannerTracker:
             frame,
             text="___________________________________________________________"
         ).grid(row=current_row, sticky=tk.W)
+
+        nb.Label(
+            frame,
+            text="___________________________________________________________"
+        ).grid(row=current_row, column=1, sticky=tk.W)
+
+        current_row += 1
+
+        nb.Button(
+            frame,
+            text="Scan game journals for sold exobiology",
+            command=self.buildsoldbiodatajson).grid(
+            row=current_row, column=0, sticky=tk.W)
+
+        nb.Button(
+            frame,
+            text="Scan local journal folder for sold exobiology",
+            command=self.buildsoldbiodatajsonlocal).grid(
+            row=current_row, column=1, sticky=tk.W)
+
         current_row += 1
 
         nb.Label(
             frame,
-            text="To reset the state of the plugin press the button below"
+            text="___________________________________________________________"
+        ).grid(row=current_row, sticky=tk.W)
+
+        nb.Label(
+            frame,
+            text="___________________________________________________________"
+        ).grid(row=current_row, column=1, sticky=tk.W)
+
+        current_row += 1
+
+        nb.Label(
+            frame,
+            text="To reset the status, body, system and species"
         ).grid(row=current_row, sticky=tk.W)
         current_row += 1
         nb.Label(
             frame,
-            text="WARNING: Info that is reset can not be restored.").grid(
+            text="of the last scan press the button below").grid(
             row=current_row, sticky=tk.W)
         current_row += 2
         nb.Button(
@@ -405,7 +447,6 @@ class ArtemisScannerTracker:
         :param parent: EDMC main window Tk
         :return: Our frame
         """
-
         global frame
 
         frame = tk.Frame(parent)
@@ -422,6 +463,18 @@ class ArtemisScannerTracker:
         self.AST_last_scan_plant.set("None")
         self.AST_state.set("None")
         self.AST_value.set("0 Cr.")
+
+    def buildsoldbiodatajsonlocal(self):
+        """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
+        # Always uses the game journal directory
+        global logger
+        build_biodata_json(False, logger)
+
+    def buildsoldbiodatajson(self):
+        """Build the soldbiodata.json using the neighboring journalcrawler.py."""
+        # Always uses the game journal directory
+        global logger
+        build_biodata_json(True, logger)
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
@@ -471,12 +524,14 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
 
 def resurrection_event():
+    """Handle resurrection event aka dying."""
     global not_yet_sold_data
     not_yet_sold_data = []
     pass
 
 
 def bioscan_event(entry):
+    """Handle the ScanOrganic event."""
     global currententrytowrite, plugin
     plugin.AST_last_scan_plant.set(entry["Species_Localised"])
 
@@ -525,6 +580,7 @@ def bioscan_event(entry):
 
 
 def system_body_change_event(entry):
+    """Handle all events that give a tell in which system we are or on what planet we are on."""
     global plugin
     try:
         # Get current system name and body from events that need to happen.
@@ -544,6 +600,7 @@ def system_body_change_event(entry):
 
 
 def biosell_event(entry):
+    """Handle the SellOrganicData event."""
     global currententrytowrite, not_yet_sold_data, sold_exobiology
     soldvalue = 0
 
@@ -647,7 +704,10 @@ def biosell_event(entry):
             # We do know though that the specifc data was sold only
             # in one system that at this point is saved in
             # the variable"thesystem"
-            if (not_yet_sold_data[i]["system"] == thesystem and not_yet_sold_data[i] not in sold_exobiology):
+            check = (not_yet_sold_data[i]["system"] == thesystem
+                     and not_yet_sold_data[i] not in sold_exobiology
+                     and not_yet_sold_data[i]["species"] in currentbatch.keys())
+            if check:
                 if currentbatch[not_yet_sold_data[i]["species"]] > 0:
                     sold_exobiology.append(not_yet_sold_data[i])
                     currentbatch[not_yet_sold_data[i]["species"]] -= 1
@@ -675,7 +735,7 @@ def biosell_event(entry):
         not_yet_sold_data = []
         # We can already reset to 0 to ensure that after selling all data at once
         # we end up with a reset of the Scanned value metric
-        logger.info('Set Scanned Value to 0 Cr')
+        logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
         f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
         f.write(r"[]")
@@ -693,7 +753,7 @@ def biosell_event(entry):
     # the plugin was unable to record by not being active.
     # If the value was reset before we will reset it here again.
     if int(plugin.AST_value.get().split(" ")[0]) < 0:
-        logger.info('Set Scanned Value to 0 Cr')
+        logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
     # Now write the data into the local file
     file = directory + "\\soldbiodata.json"
@@ -733,7 +793,7 @@ def rebuild_ui(plugin):
 
     if plugin.AST_hide_value.get() != 1:
         current_row -= 1
-        tk.Label(frame, text="Scanned Value:").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, text="Unsold Scan Value:").grid(row=current_row, sticky=tk.W)
         tk.Label(frame, textvariable=plugin.AST_value).grid(row=current_row, column=1, sticky=tk.W)
 
     if plugin.AST_hide_last_body.get() != 1:

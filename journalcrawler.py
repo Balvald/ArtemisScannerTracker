@@ -17,7 +17,7 @@ import os
 # For best results you can put your whole selection of journals
 # downloaded from Journal limpet into the journaldir
 
-def build_biodata_json(gamejournaldir):
+def build_biodata_json(gamejournaldir, logger):
     """test."""
     directory, filename = os.path.split(os.path.realpath(__file__))
 
@@ -32,7 +32,7 @@ def build_biodata_json(gamejournaldir):
 
     currententrytowrite = {}
 
-    print(directory)
+    logger.info(directory)
 
     sold_exobiology = []
     possibly_sold_data = []
@@ -44,15 +44,15 @@ def build_biodata_json(gamejournaldir):
 
     with open(directory + "\\soldbiodata.json", "r", encoding="utf8") as f:
         sold_exobiology = json.load(f)
-        # print(sold_exobiology)
-        # print(len(sold_exobiology))
+        # logger.info(sold_exobiology)
+        # logger.info(len(sold_exobiology))
         pass
 
     edlogs = [f for f in os.listdir(journaldir) if f.endswith(".log")]
 
     for filename in edlogs:
         f = os.path.join(journaldir, filename)
-        print("Current file: " + f)
+        logger.info("Current file: " + f)
         # checking if it is a file
         if os.path.isfile(f):
             file = open(f, "r", encoding="utf8")
@@ -69,9 +69,9 @@ def build_biodata_json(gamejournaldir):
                     except KeyError:
                         # Was playing in old Horizons so
                         # Touchdown and Liftoff don't have body nor system
-                        print("We've encountered a KeyError in the code "
-                              + "for updating the current system and body.")
-                        print(entry)
+                        logger.info("We've encountered a KeyError in the code "
+                                    + "for updating the current system and body.")
+                        logger.info(entry)
                 if entry["event"] == "ScanOrganic":
                     if entry["ScanType"] in ["Sample", "Analyse"]:
                         if entry["ScanType"] == "Analyse":
@@ -85,7 +85,7 @@ def build_biodata_json(gamejournaldir):
 
                 if entry["event"] == "Resurrect":
                     # Reset - player was unable to sell before death
-                    print("We died")
+                    logger.info("We died")
                     possibly_sold_data = []
 
                 if entry["event"] == "SellOrganicData":
@@ -108,10 +108,10 @@ def build_biodata_json(gamejournaldir):
                             bysystem[biodata["system"]] = {}
                             bysystem[biodata["system"]][biodata["species"]] = 1
                     soldbysystempossible = {}
-                    print("bysystem:")
-                    print(bysystem)
-                    print("Currentbatch:")
-                    print(currentbatch)
+                    logger.info("bysystem:")
+                    logger.info(bysystem)
+                    logger.info("Currentbatch:")
+                    logger.info(currentbatch)
                     # input()
 
                     # Get every system
@@ -154,7 +154,7 @@ def build_biodata_json(gamejournaldir):
 
                     # An eligible system was found and we selected the first
                     if thesystem != "":
-                        print("CMDR sold by system: " + thesystem)
+                        logger.info("CMDR sold by system: " + thesystem)
                         i = 0
                         while i < len(possibly_sold_data):
                             # For the case when we are done when we havent sold everything
@@ -165,38 +165,41 @@ def build_biodata_json(gamejournaldir):
                             if done:
                                 break
 
-                            print(" i = " + str(i))
+                            logger.info(" i = " + str(i))
                             # Checking here more granularily
                             # which data was sold.
                             # We do know though that
                             # the specifc data was sold only
                             # in one system that at this point
                             # is saved in the variable "thesystem"
-                            print("possibly sold data")
-                            print(possibly_sold_data)
-                            print("current batch")
-                            print(currentbatch)
-                            if(possibly_sold_data[i]["system"] == thesystem
-                               and possibly_sold_data[i] not in sold_exobiology):
+                            logger.info("possibly sold data")
+                            logger.info(possibly_sold_data)
+                            logger.info("current batch")
+                            logger.info(currentbatch)
+
+                            check = (possibly_sold_data[i]["system"] == thesystem
+                                     and possibly_sold_data[i] not in sold_exobiology
+                                     and possibly_sold_data[i]["species"] in currentbatch.keys())
+                            if check:
                                 if currentbatch[possibly_sold_data[i]["species"]] > 0:
                                     sold_exobiology.append(possibly_sold_data[i])
                                     currentbatch[possibly_sold_data[i]["species"]] -= 1
                                     thing = possibly_sold_data.pop(i)
-                                    print("Sold:")
-                                    print(thing)
-                                    print(" i = " + str(i))
+                                    logger.info("Sold:")
+                                    logger.info(thing)
+                                    logger.info(" i = " + str(i))
                                     continue
                                 else:
-                                    print("Not all data from a single system "
-                                          + "were sold. This means the CMDR "
-                                          + "sold a singular bit of data")
+                                    logger.info("Not all data from a single system "
+                                                + "were sold. This means the CMDR "
+                                                + "sold a singular bit of data")
                             i += 1
                     else:
-                        print("CMDR sold the whole batch.")
-                        print("possibly sold data")
-                        print(possibly_sold_data)
-                        print("current batch")
-                        print(currentbatch)
+                        logger.info("CMDR sold the whole batch.")
+                        logger.info("possibly sold data")
+                        logger.info(possibly_sold_data)
+                        logger.info("current batch")
+                        logger.info(currentbatch)
                         for data in possibly_sold_data:
                             if (data not in sold_exobiology and currentbatch[data["species"]] > 0):
                                 currentbatch[data["species"]] -= 1
@@ -204,6 +207,8 @@ def build_biodata_json(gamejournaldir):
                         possibly_sold_data = []
 
             file.close()
+
+    logger.info("Saving file now")
 
     with open(directory + "\\soldbiodata.json", "r+", encoding="utf8") as f:
         # f.write(json.dumps(sold_exobiology))
@@ -213,7 +218,7 @@ def build_biodata_json(gamejournaldir):
         f.close()
 
 
-if __name__ == "__main__":
-    build_biodata_json(True)
-    build_biodata_json(False)
-    input("Press any key to exit.")
+"""if __name__ == "__main__":
+    build_biodata_json(True, 2)
+    # build_biodata_json(False)
+    input("Press any key to exit.")"""
