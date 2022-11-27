@@ -216,9 +216,3 @@ def build_biodata_json(gamejournaldir, logger):
         # and aren't as human readable
         f.write(json.dumps(sold_exobiology, indent=4))
         f.close()
-
-
-"""if __name__ == "__main__":
-    build_biodata_json(True, 2)
-    # build_biodata_json(False)
-    input("Press any key to exit.")"""
