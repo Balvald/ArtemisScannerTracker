@@ -80,6 +80,8 @@ class ArtemisScannerTracker:
             value=config.get_int("AST_hide_body"))
         self.AST_hide_value: Optional[tk.IntVar] = tk.IntVar(
             value=config.get_int("AST_hide_value"))
+        self.AST_hide_sold_bio: Optional[tk.IntVar] = tk.IntVar(
+            value=config.get_int("AST_hide_sold_bio"))
 
         # Artemis Scanner State infos
         self.AST_last_scan_plant: Optional[tk.StringVar] = tk.StringVar(
@@ -199,6 +201,12 @@ class ArtemisScannerTracker:
             variable=self.AST_hide_body).grid(
             row=current_row, column=1, sticky="W")
         current_row += 1
+        nb.Checkbutton(
+            frame,
+            text="Hide Sold species",
+            variable=self.AST_hide_sold_bio).grid(
+            row=current_row, column=0, sticky="W")
+        current_row += 1
         if debug:
             # setup debug fields for the scanner.
             nb.Label(frame, text="Species").grid(row=current_row, sticky=tk.W)
@@ -314,6 +322,7 @@ class ArtemisScannerTracker:
         config.set("AST_hide_last_body", int(self.AST_hide_last_body.get()))
         config.set("AST_hide_system", int(self.AST_hide_system.get()))
         config.set("AST_hide_body", int(self.AST_hide_body.get()))
+        config.set("AST_hide_sold_bio", int(self.AST_hide_sold_bio.get()))
 
         logger.debug("ArtemisScannerTracker saved preferences")
 
@@ -347,13 +356,14 @@ class ArtemisScannerTracker:
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
         # Always uses the game journal directory
         global logger
-        build_biodata_json(False, logger)
+        directory, filename = os.path.split(os.path.realpath(__file__))
+        build_biodata_json(logger, os.path.join(directory, "journals"))
 
     def buildsoldbiodatajson(self):
         """Build the soldbiodata.json using the neighboring journalcrawler.py."""
         # Always uses the game journal directory
         global logger
-        build_biodata_json(True, logger)
+        build_biodata_json(logger, config.default_journal_dir)
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
@@ -461,7 +471,12 @@ def bioscan_event(entry):
 def system_body_change_event(entry):
     """Handle all events that give a tell in which system we are or on what planet we are on."""
     global plugin
+
+    systemchange = False
+
     try:
+        if plugin.AST_current_system.get() != entry["StarSystem"]:
+            systemchange = True
         # Get current system name and body from events that need to happen.
         plugin.AST_current_system.set(entry["StarSystem"])
         plugin.AST_current_body.set(entry["Body"])
@@ -469,10 +484,14 @@ def system_body_change_event(entry):
         # Could throw a KeyError in old Horizons versions
         pass
 
+    if systemchange:
+        rebuild_ui(plugin)
+
     # To fix the aforementioned eventuality where the systems end up
     # being "None" we update the last scan location
     # When the CMDR gets another journal entry that tells us
     # the players location.
+
     if ((plugin.AST_last_scan_system.get() == "None") or (plugin.AST_last_scan_body.get() == "None")):
         plugin.AST_last_scan_system.set(entry["StarSystem"])
         plugin.AST_last_scan_body.set(entry["Body"])
@@ -649,13 +668,18 @@ def biosell_event(entry):
 plugin = ArtemisScannerTracker()
 
 
+def clear_ui():
+    global frame
+    # remove all labels from the frame
+    for label in frame.winfo_children():
+        label.destroy()
+
+
 def rebuild_ui(plugin):
     """Rebuild the UI in case of preferences change."""
     global frame
 
-    # remove all labels from the frame
-    for label in frame.winfo_children():
-        label.destroy()
+    clear_ui()
 
     # recreate UI
     current_row = 12
@@ -700,7 +724,54 @@ def rebuild_ui(plugin):
         tk.Label(frame, text="Last Exobiology Scan:").grid(row=current_row, sticky=tk.W)
         tk.Label(frame, textvariable=plugin.AST_state).grid(row=current_row, column=1, sticky=tk.W)
 
+    # Clonal Colonial Range here.
+
+    # Tracked sold bio scans as the last thing to add to the UI
+    if plugin.AST_hide_sold_bio.get() != 1:
+        build_sold_bio_ui(plugin)
+
     theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
+
+
+def build_sold_bio_ui(plugin):
+    # Button to make it shorter?
+    file = directory + "\\soldbiodata.json"
+    with open(file, "r+", encoding="utf8") as f:
+        soldbiodata = json.load(f)
+
+    current_row = 14
+    tk.Label(frame, text="Sold Scans in System:").grid(row=current_row, sticky=tk.W)
+
+    bodylistofspecies = {}
+
+    for sold in soldbiodata:
+        if sold["system"] == plugin.AST_current_system.get():
+
+            bodyname = ""
+
+            # Check if body has a special name or if we have standardized names
+            if sold["system"] in sold["body"]:
+                # no special name for planet
+                bodyname = sold["body"].replace(sold["system"], "")
+            else:
+                bodyname = sold["body"]
+
+            if sold["species"] not in bodylistofspecies.keys():
+                bodylistofspecies[sold["species"]] = [bodyname]
+            else:
+                bodylistofspecies[sold["species"]].append(bodyname)
+
+    for species in bodylistofspecies.keys():
+        current_row += 1
+        tk.Label(frame, text=species).grid(row=current_row, column=0, sticky=tk.W)
+        bodies = ""
+        for body in bodylistofspecies[species]:
+            bodies = bodies + body + ", "
+            pass
+        if len(bodies) > 3:
+            bodies = bodies[:-2]
+
+        tk.Label(frame, text=bodies).grid(row=current_row, column=1, sticky=tk.W)
 
 
 def plugin_start3(plugin_dir: str) -> str:
@@ -740,6 +811,7 @@ def prefs_changed(cmdr: str, is_beta: bool) -> None:
 
     See PLUGINS.md#configuration
     """
+
     rebuild_ui(plugin)
 
     plugin.on_preferences_closed(cmdr, is_beta)

@@ -17,15 +17,9 @@ import os
 # For best results you can put your whole selection of journals
 # downloaded from Journal limpet into the journaldir
 
-def build_biodata_json(gamejournaldir, logger):
+def build_biodata_json(logger, journaldir):
     """test."""
     directory, filename = os.path.split(os.path.realpath(__file__))
-
-    journaldir = os.path.join(directory, "journals")
-
-    if gamejournaldir is True:
-        journaldir = str(os.environ['USERPROFILE']) + \
-            "\\Saved Games\\Frontier Developments\\Elite Dangerous"
 
     currentsystem = ""
     currentbody = ""
