@@ -15,7 +15,7 @@ from config import appname, config  # type: ignore
 from theme import theme  # type: ignore # noqa: N813
 
 from journalcrawler import build_biodata_json
-from organicinfo import getvistagenomicprices
+from organicinfo import getu14vistagenomicprices
 
 # globals as part of the plugin class?
 frame: Optional[tk.Frame] = None
@@ -54,7 +54,7 @@ debug = False
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
-vistagenomicsprices = getvistagenomicprices()
+vistagenomicsprices = getu14vistagenomicprices()
 
 
 class ArtemisScannerTracker:
