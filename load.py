@@ -459,6 +459,7 @@ def bioscan_event(entry):
                     f.seek(0)
                     json.dump(notsolddata, f, indent=4)
                 currententrytowrite = {}
+            rebuild_ui(plugin)
         else:
             plugin.AST_current_scan_progress.set("2/3")
     else:
@@ -664,6 +665,11 @@ def biosell_event(entry):
         f.seek(0)
         json.dump(solddata, f, indent=4)
 
+    # If we sell the exobiodata in the same system as where we currently are
+    # Then we want to remove the "*" around the body names of the newly sold biodata
+    # So just rebuild the ui for good measure.
+    rebuild_ui(plugin)
+
 
 plugin = ArtemisScannerTracker()
 
@@ -734,13 +740,20 @@ def rebuild_ui(plugin):
 
 
 def build_sold_bio_ui(plugin):
-    # Button to make it shorter?
+    # Create a Button to make it shorter?
+    soldbiodata = []
+    notsoldbiodata = []
+
     file = directory + "\\soldbiodata.json"
     with open(file, "r+", encoding="utf8") as f:
         soldbiodata = json.load(f)
 
+    file = directory + "\\notsoldbiodata.json"
+    with open(file, "r+", encoding="utf8") as f:
+        notsoldbiodata = json.load(f)
+
     current_row = 14
-    tk.Label(frame, text="Sold Scans in System:").grid(row=current_row, sticky=tk.W)
+    tk.Label(frame, text="Scans in this System:").grid(row=current_row, sticky=tk.W)
 
     bodylistofspecies = {}
 
@@ -752,22 +765,41 @@ def build_sold_bio_ui(plugin):
             # Check if body has a special name or if we have standardized names
             if sold["system"] in sold["body"]:
                 # no special name for planet
-                bodyname = sold["body"].replace(sold["system"], "")
+                bodyname = sold["body"].replace(sold["system"], "")[1:]
             else:
                 bodyname = sold["body"]
 
             if sold["species"] not in bodylistofspecies.keys():
-                bodylistofspecies[sold["species"]] = [bodyname]
+                bodylistofspecies[sold["species"]] = [[bodyname, True]]
             else:
-                bodylistofspecies[sold["species"]].append(bodyname)
+                bodylistofspecies[sold["species"]].append([bodyname, True])
+
+    for notsold in notsoldbiodata:
+        if notsold["system"] == plugin.AST_current_system.get():
+
+            bodyname = ""
+
+            # Check if body has a special name or if we have standardized names
+            if notsold["system"] in notsold["body"]:
+                # no special name for planet
+                bodyname = notsold["body"].replace(notsold["system"], "")[1:]
+            else:
+                bodyname = notsold["body"]
+
+            if notsold["species"] not in bodylistofspecies.keys():
+                bodylistofspecies[notsold["species"]] = [[bodyname, False]]
+            else:
+                bodylistofspecies[notsold["species"]].append([bodyname, False])
 
     for species in bodylistofspecies.keys():
         current_row += 1
         tk.Label(frame, text=species).grid(row=current_row, column=0, sticky=tk.W)
         bodies = ""
         for body in bodylistofspecies[species]:
-            bodies = bodies + body + ", "
-            pass
+            if body[1]:
+                bodies = bodies + body[0] + ", "
+            else:
+                bodies = bodies + "*" + body[0] + "*, "
         if len(bodies) > 3:
             bodies = bodies[:-2]
 
