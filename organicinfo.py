@@ -86,7 +86,7 @@ u14vistagenomicsprices = {
     "Frutexa Metallicum": 3632700,
     "Frutexa Fera": 3632700,
     "Crystalline Shards": 3626400,
-    "Amphora Plant": 117900,
+    "Amphora Plant": 3626400,
     "Viride Brain Tree": 3565100,
     "Roseum Brain Tree": 3565100,
     "Puniceum Brain Tree": 3565100,
@@ -95,14 +95,14 @@ u14vistagenomicsprices = {
     "Lindigoticum Brain Tree": 3565100,
     "Gypseeum Brain Tree": 3565100,
     "Aureum Brain Tree": 3565100,
-    "Viride Sinuous Tubers": 111300,
-    "Violaceum Sinuous Tubers": 111300,
-    "Roseum Sinuous Tubers": 111300,
-    "Prasinum Sinuous Tubers": 111300,
-    "Lindigoticum Sinuous Tubers": 111300,
-    "Caeruleum Sinuous Tubers": 111300,
-    "Blatteum Sinuous Tubers": 111300,
-    "Albidum Sinuous Tubers": 111300,
+    "Viride Sinuous Tubers": 3425600,
+    "Violaceum Sinuous Tubers": 3425600,
+    "Roseum Sinuous Tubers": 3425600,
+    "Prasinum Sinuous Tubers": 3425600,
+    "Lindigoticum Sinuous Tubers": 3425600,
+    "Caeruleum Sinuous Tubers": 3425600,
+    "Blatteum Sinuous Tubers": 3425600,
+    "Albidum Sinuous Tubers": 3425600,
     "Rubeum Bioluminescent Anemone": 3399800,
     "Roseum Bioluminescent Anemone": 3399800,
     "Roseum Anemone": 3399800,
@@ -392,7 +392,7 @@ clonalcolonialranges = {
     "Frutexa": 150,
     "Tussock": 200,
     "Crystalline Shards": None,  # fix pl0x, Check Range
-    "Amphora Plant": None  # fix pl0x, Check Range
+    "Amphora Plant": 100
 }
 
 
