@@ -1,5 +1,7 @@
 """
-Here resides the journalcrawler that can read through all the journal files and retrace all exobiology scans and sell actions
+Here resides the journalcrawler that can read through all the journal files.
+
+It retraces all exobiology scans and sell actions.
 """
 import json
 import os
@@ -22,7 +24,7 @@ from organicinfo import generaltolocalised
 # downloaded from Journal limpet into the journaldir
 
 def build_biodata_json(logger, journaldir):
-    """builds a soldbiodata.json that includes all sold organic scans that the player sold."""
+    """Builds a soldbiodata.json that includes all sold organic scans that the player sold."""
     directory, filename = os.path.split(os.path.realpath(__file__))
 
     currentsystem = ""
@@ -183,14 +185,13 @@ def build_biodata_json(logger, journaldir):
                                     sold_exobiology.append(possibly_sold_data[i])
                                     currentbatch[possibly_sold_data[i]["species"]] -= 1
                                     thing = possibly_sold_data.pop(i)
-                                    logger.info("Sold:")
-                                    logger.info(thing)
-                                    logger.info(" i = " + str(i))
+                                    logger.debug("Sold:")
+                                    logger.debug(thing)
+                                    logger.debug(" i = " + str(i))
                                     continue
                                 else:
-                                    logger.info("Not all data from a single system "
-                                                + "were sold. This means the CMDR "
-                                                + "sold a singular bit of data")
+                                    logger.error("currentbatch has negative amount for some species"
+                                                 + " this is a problem")
                             i += 1
                     else:
                         logger.info("CMDR sold the whole batch.")

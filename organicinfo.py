@@ -4,7 +4,7 @@ Contains the info for exobiology for the Artemis Scanner Tracker.
 Such as prices for different types of organic scans and colonial range.
 """
 
-# new prices, missing sinouos tubers, bark mounds, amphora plant and crystalline shards
+# new prices, only missing sinouos tubers and amphora plant
 u14vistagenomicsprices = {
     "Fonticulua Fluctus": 16777215,
     "Tussock Stigmasis": 16777215,
@@ -85,7 +85,7 @@ u14vistagenomicsprices = {
     "Frutexa Collum": 3645500,
     "Frutexa Metallicum": 3632700,
     "Frutexa Fera": 3632700,
-    "Crystalline Shards": 117900,
+    "Crystalline Shards": 3626400,
     "Amphora Plant": 117900,
     "Viride Brain Tree": 3565100,
     "Roseum Brain Tree": 3565100,
@@ -112,7 +112,7 @@ u14vistagenomicsprices = {
     "Croceum Anemone": 3399800,
     "Blatteum Bioluminescent Anemone": 3399800,
     "Osseus Cornibus": 3369700,
-    "Bark Mounds": 108900,
+    "Bark Mounds": 3350000,
     "Tubus Compagibus": 12323000,
     "Stratum Paleas": 3152500,
     "Stratum Limaxus": 3152500,
