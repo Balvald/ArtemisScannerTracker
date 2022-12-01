@@ -142,7 +142,7 @@ class ArtemisScannerTracker:
         current_row = 0
         frame = nb.Frame(parent)
 
-        nb.Label(frame, text="Artemis Scanner Tracker dev v0.1.2 by Balvald").grid(
+        nb.Label(frame, text="Artemis Scanner Tracker v0.1.2 by Balvald").grid(
             row=current_row, sticky=tk.W)
         current_row += 1
         nb.Label(
