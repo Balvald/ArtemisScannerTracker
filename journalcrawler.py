@@ -1,6 +1,10 @@
-"""test."""
+"""
+Here resides the journalcrawler that can read through all the journal files and retrace all exobiology scans and sell actions
+"""
 import json
 import os
+
+from organicinfo import generaltolocalised
 
 # This goes through a folder of journals that it'll parse
 # and check for analysed bio signals and the selling of it.
@@ -18,7 +22,7 @@ import os
 # downloaded from Journal limpet into the journaldir
 
 def build_biodata_json(logger, journaldir):
-    """test."""
+    """builds a soldbiodata.json that includes all sold organic scans that the player sold."""
     directory, filename = os.path.split(os.path.realpath(__file__))
 
     currentsystem = ""
@@ -69,7 +73,7 @@ def build_biodata_json(logger, journaldir):
                 if entry["event"] == "ScanOrganic":
                     if entry["ScanType"] in ["Sample", "Analyse"]:
                         if entry["ScanType"] == "Analyse":
-                            currententrytowrite["species"] = entry["Species_Localised"]
+                            currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
                             currententrytowrite["system"] = currentsystem
                             currententrytowrite["body"] = currentbody
                             if currententrytowrite not in possibly_sold_data:

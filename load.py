@@ -15,7 +15,7 @@ from config import appname, config  # type: ignore
 from theme import theme  # type: ignore # noqa: N813
 
 from journalcrawler import build_biodata_json
-from organicinfo import getu14vistagenomicprices
+from organicinfo import getu14vistagenomicprices, generaltolocalised
 
 # globals as part of the plugin class?
 frame: Optional[tk.Frame] = None
@@ -422,7 +422,7 @@ def resurrection_event():
 def bioscan_event(entry):
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin
-    plugin.AST_last_scan_plant.set(entry["Species_Localised"])
+    plugin.AST_last_scan_plant.set(generaltolocalised(entry["Species"].lower()))
 
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
@@ -440,12 +440,12 @@ def bioscan_event(entry):
                 plugin.AST_value.set("0 Cr.")
             # Somehow we get here twice for each 3rd scan. idfk
             newvalue = int(plugin.AST_value.get().split(" ")[0]) + \
-                int(vistagenomicsprices[entry["Species_Localised"]])
+                int(vistagenomicsprices[generaltolocalised(entry["Species"].lower())])
             plugin.AST_value.set(str(newvalue) + " Cr.")
             # Found some cases where the analyse happened
             # seemingly directly after a log.
             plugin.AST_current_scan_progress.set("3/3")
-            currententrytowrite["species"] = entry["Species_Localised"]
+            currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
             currententrytowrite["system"] = plugin.AST_current_system.get()
             currententrytowrite["body"] = plugin.AST_current_body.get()
             if currententrytowrite not in not_yet_sold_data:

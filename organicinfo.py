@@ -4,7 +4,7 @@ Contains the info for exobiology for the Artemis Scanner Tracker.
 Such as prices for different types of organic scans and colonial range.
 """
 
-# new prices, missing sinuos tubers, bark mounds, amphora plant and crystalline shards
+# new prices, missing sinouos tubers, bark mounds, amphora plant and crystalline shards
 u14vistagenomicsprices = {
     "Fonticulua Fluctus": 16777215,
     "Tussock Stigmasis": 16777215,
@@ -246,7 +246,131 @@ vistagenomicsprices = {
     "Bacterium Acies": 50000
 }
 
-# Colonial ranges in m
+# Journal name translation
+
+organicnamesjournaltolocal = {
+    "$codex_ent_fonticulus_05_name;": "Fonticulua Fluctus",
+    "$codex_ent_tussocks_13_name;": "Tussock Stigmasis",
+    "$codex_ent_stratum_07_name;": "Stratum Tectonicas",
+    "$codex_ent_fonticulus_01_name;": "Fonticulua Segmentatus",
+    "$codex_ent_conchas_04_name;": "Concha Biconcavis",
+    "$codex_ent_stratum_06_name;": "Stratum Cucumisis",
+    "$codex_ent_recepta_02_name;": "Recepta Deltahedronix",
+    "$codex_Ent_fumerolas_02_name;": "Fumerola Extremus",
+    "$codex_ent_clypeus_03_name;": "Clypeus Speculumi",
+    "$codex_ent_cactoid_03_name;": "Cactoida Vermis",
+    "$codex_ent_tussocks_14_name;": "Tussock Virgam",
+    "$codex_ent_recepta_03_name;": "Recepta Conditivus",
+    "$codex_ent_recepta_01_name;": "Recepta Umbrux",
+    "$codex_ent_osseus_02_name;": "Osseus Discus",
+    "$codex_ent_aleoids_05_name;": "Aleoida Gravis",
+    "$codex_ent_tubus_02_name;": "Tubus Sororibus",
+    "$codex_ent_clypeus_02_name;": "Clypeus Margaritus",
+    "$codex_ent_shrubs_04_name;": "Frutexa Flammasis",
+    "$codex_ent_osseus_06_name;": "Osseus Pellebantus",
+    "$codex_ent_clypeus_01_name;": "Clypeus Lacrimam",
+    "$codex_ent_bacterial_08_name;": "Bacterium Informem",
+    "$codex_ent_tussocks_12_name;": "Tussock Triticum",
+    "$codex_ent_tubus_04_name;": "Tubus Rosarium",
+    "$codex_ent_shrubs_02_name;": "Frutexa Acus",
+    "$codex_ent_conchas_02_name;": "Concha Aureolas",
+    "$codex_ent_bacterial_09_name;": "Bacterium Volu",
+    "$codex_Ent_fumerolas_03_name;": "Fumerola Nitris",
+    "$codex_ent_aleoids_01_name;": "Aleoida Arcus",
+    "$codex_ent_tussocks_15_name;": "Tussock Capillum",
+    "$codex_Ent_fumerolas_01_name;": "Fumerola Carbosis",
+    "$codex_Ent_fumerolas_04_name;": "Fumerola Aquatis",
+    "$codex_ent_electricae_02_name;": "Electricae Radialem",
+    "$codex_ent_electricae_01_name;": "Electricae Pluma",
+    "$codex_ent_aleoids_02_name;": "Aleoida Coronamus",
+    "$codex_ent_shrubs_06_name;": "Frutexa Sponsae",
+    "$codex_ent_tussocks_01_name;": "Tussock Pennata",
+    "$codex_ent_tubus_01_name;": "Tubus Conifer",
+    "$codex_ent_fonticulus_03_name;": "Fonticulua Upupam",
+    "$codex_ent_bacterial_02_name;": "Bacterium Nebulus",
+    "$codex_ent_bacterial_03_name;": "Bacterium Scopulum",
+    "$codex_ent_bacterial_11_name;": "Bacterium Omentum",
+    "$codex_ent_conchas_01_name;": "Concha Renibus",
+    "$codex_ent_tussocks_07_name;": "Tussock Serrati",
+    "$codex_ent_osseus_01_name;": "Osseus Fractus",
+    "$codex_ent_bacterial_13_name;": "Bacterium Verrata",
+    "$codex_ent_fungoids_03_name;": "Fungoida Bullarum",
+    "$codex_ent_cactoid_04_name;": "Cactoida Pullulanta",
+    "$codex_ent_cactoid_01_name;": "Cactoida Cortexum",
+    "$codex_ent_tussocks_11_name;": "Tussock Caputus",
+    "$codex_ent_aleoids_03_name;": "Aleoida Spica",
+    "$codex_ent_aleoids_04_name;": "Aleoida Laminiae",
+    "$codex_ent_fungoids_04_name;": "Fungoida Gelata",
+    "$codex_ent_tussocks_08_name;": "Tussock Albata",
+    "$codex_ent_tussocks_02_name;": "Tussock Ventusa",
+    "$codex_ent_osseus_04_name;": "Osseus Pumice",
+    "$codex_ent_fonticulus_04_name;": "Fonticulua Lapida",
+    "$codex_ent_stratum_03_name;": "Stratum Laminamus",
+    "$codex_ent_fungoids_02_name;": "Fungoida Stabitis",
+    "$codex_ent_tubus_03_name;": "Tubus Cavas",
+    "$codex_ent_stratum_08_name;": "Stratum Frigus",
+    "$codex_ent_cactoid_05_name;": "Cactoida Peperatis",
+    "$codex_ent_cactoid_02_name;": "Cactoida Lapis",
+    "$codex_ent_stratum_01_name;": "Stratum Excutitus",
+    "$codex_ent_stratum_04_name;": "Stratum Araneamus",
+    "$codex_ent_osseus_03_name;": "Osseus Spiralis",
+    "$codex_ent_conchas_03_name;": "Concha Labiata",
+    "$codex_ent_bacterial_07_name;": "Bacterium Tela",
+    "$codex_ent_tussocks_03_name;": "Tussock Ignis",
+    "$codex_ent_shrubs_01_name;": "Frutexa Flabellum",
+    "$codex_ent_fonticulus_06_name;": "Fonticulua Digitos",
+    "$codex_ent_tussocks_10_name;": "Tussock Divisa",
+    "$codex_ent_tussocks_04_name;": "Tussock Cultro",
+    "$codex_ent_tussocks_05_name;": "Tussock Catena",
+    "$codex_ent_bacterial_12_name;": "Bacterium Cerbrus",
+    "$codex_ent_fungoids_01_name;": "Fungoida Setisis",
+    "$codex_ent_bacterial_06_name;": "Bacterium Alcyoneum",
+    "$codex_ent_shrubs_07_name;": "Frutexa Collum",
+    "$codex_ent_shrubs_03_name;": "Frutexa Metallicum",
+    "$codex_ent_shrubs_05_name;": "Frutexa Fera",
+    "$codex_ent_ground_struct_ice_name;": "Crystalline Shards",
+    "$codex_ent_vents_name;": "Amphora Plant",
+    "$codex_ent_seedabcd_03_name;": "Viride Brain Tree",
+    "$codex_ent_seed_name;": "Roseum Brain Tree",
+    "$codex_ent_seedefgh_02_name;": "Puniceum Brain Tree",
+    "$codex_ent_seedabcd_02_name;": "Ostrinum Brain Tree",
+    "$codex_ent_seedefgh_name;": "Lividum Brain Tree",
+    "$codex_ent_seedefgh_03_name;": "Lindigoticum Brain Tree",
+    "$codex_ent_seedabcd_01_name;": "Gypseeum Brain Tree",
+    "$codex_ent_seedefgh_01_name;": "Aureum Brain Tree",
+    "$codex_ent_tubeefgh_03_name;": "Viride Sinuous Tubers",
+    "$codex_ent_tubeefgh_02_name;": "Violaceum Sinuous Tubers",
+    "$codex_ent_tube_name;": "Roseum Sinuous Tubers",
+    "$codex_ent_tubeabcd_01_name;": "Prasinum Sinuous Tubers",
+    "$codex_ent_tubeefgh_01_name;": "Lindigoticum Sinuous Tubers",
+    "$codex_ent_tubeabcd_03_name;": "Caeruleum Sinuous Tubers",
+    "$codex_ent_tubeefgh_name;": "Blatteum Sinuous Tubers",
+    "$codex_ent_tubeabcd_02_name;": "Albidum Sinuous Tubers",
+    "$codex_ent_sphereefgh_01_name;": "Rubeum Bioluminescent Anemone",
+    "$codex_ent_sphereefgh_03_name;": "Roseum Bioluminescent Anemone",
+    "$codex_ent_sphereabcd_03_name;": "Roseum Anemone",
+    "$codex_ent_sphereabcd_02_name;": "Puniceum Anemone",
+    "$codex_ent_sphereefgh_02_name;": "Prasinum Bioluminescent Anemone",
+    "$codex_ent_sphere_name;": "Luteolum Anemone",
+    "$codex_ent_sphereabcd_01_name;": "Croceum Anemone",
+    "$codex_ent_sphereefgh_name;": "Blatteum Bioluminescent Anemone",
+    "$codex_ent_osseus_05_name;": "Osseus Cornibus",
+    "$codex_ent_cone_name;": "Bark Mounds",
+    "$codex_ent_tubus_05_name;": "Tubus Compagibus",
+    "$codex_ent_stratum_02_name;": "Stratum Paleas",
+    "$codex_ent_stratum_05_name;": "Stratum Limaxus",
+    "$codex_ent_bacterial_10_name;": "Bacterium Bullaris",
+    "$codex_ent_bacterial_01_name;": "Bacterium Aurasus",
+    "$codex_ent_tussocks_09_name;": "Tussock Propagito",
+    "$codex_ent_fonticulus_02_name;": "Fonticulua Campestris",
+    "$codex_ent_tussocks_06_name;": "Tussock Pennatis",
+    "$codex_ent_bacterial_05_name;": "Bacterium Vesicula",
+    "$codex_ent_bacterial_04_name;": "Bacterium Acies"
+}
+
+
+# Colonial ranges in m, TODO: find clonal colonial ranges for missing bio types
+# later check if any of these is in the localised name of the space plant as in the key being a substring.
 clonalcolonialranges = {
     "Brain Tree": 100,
     "Bark Mound": 100,
@@ -266,7 +390,9 @@ clonalcolonialranges = {
     "Stratum": 500,
     "Tubus": 800,
     "Frutexa": 150,
-    "Tussock": 200
+    "Tussock": 200,
+    "Crystalline Shards": None,  # fix pl0x, Check Range
+    "Amphora Plant": None  # fix pl0x, Check Range
 }
 
 
@@ -283,3 +409,12 @@ def getu14vistagenomicprices():
 def getclonalcolonialranges():
     """Get clonal colonial ranges in m."""
     return clonalcolonialranges
+
+
+def generaltolocalised(name):
+    """
+    Translate journal name to localised name for organic scan.
+
+    expects the full journal name with preceding "$" in all lowercase letters
+    """
+    return organicnamesjournaltolocal[name]
