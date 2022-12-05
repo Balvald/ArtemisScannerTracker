@@ -806,41 +806,57 @@ def build_sold_bio_ui(plugin, cmdr):
     current_row = 14
     tk.Label(frame, text="Scans in this System:").grid(row=current_row, sticky=tk.W)
 
+    # Check if we even got a cmdr yet!
+    logger.info(f"Commander: {cmdr}. attempting to access")
+
     bodylistofspecies = {}
 
-    for sold in soldbiodata[cmdr]:
-        if sold["system"] == plugin.AST_current_system.get():
+    try:
+        for sold in soldbiodata[cmdr]:
+            if sold["system"] == plugin.AST_current_system.get():
 
-            bodyname = ""
+                bodyname = ""
 
-            # Check if body has a special name or if we have standardized names
-            if sold["system"] in sold["body"]:
-                # no special name for planet
-                bodyname = sold["body"].replace(sold["system"], "")[1:]
-            else:
-                bodyname = sold["body"]
+                # Check if body has a special name or if we have standardized names
+                if sold["system"] in sold["body"]:
+                    # no special name for planet
+                    bodyname = sold["body"].replace(sold["system"], "")[1:]
+                else:
+                    bodyname = sold["body"]
 
-            if sold["species"] not in bodylistofspecies.keys():
-                bodylistofspecies[sold["species"]] = [[bodyname, True]]
-            else:
-                bodylistofspecies[sold["species"]].append([bodyname, True])
+                if sold["species"] not in bodylistofspecies.keys():
+                    bodylistofspecies[sold["species"]] = [[bodyname, True]]
+                else:
+                    bodylistofspecies[sold["species"]].append([bodyname, True])
 
-    for notsold in notsoldbiodata[cmdr]:
-        if notsold["system"] == plugin.AST_current_system.get():
+    except KeyError:
+        # if we don't have the cmdr in the sold data yet we just pass all sold data.
+        pass
 
-            bodyname = ""
+    try:
+        for notsold in notsoldbiodata[cmdr]:
+            if notsold["system"] == plugin.AST_current_system.get():
 
-            # Check if body has a special name or if we have standardized names
-            if notsold["system"] in notsold["body"]:
-                # no special name for planet
-                bodyname = notsold["body"].replace(notsold["system"], "")[1:]
-            else:
-                bodyname = notsold["body"]
+                bodyname = ""
 
-            if notsold["species"] not in bodylistofspecies.keys():
-                bodylistofspecies[notsold["species"]] = [[bodyname, False]]
-            else:
-                bodylistofspecies[notsold["species"]].append([bodyname, False])
+                # Check if body has a special name or if we have standardized names
+                if notsold["system"] in notsold["body"]:
+                    # no special name for planet
+                    bodyname = notsold["body"].replace(notsold["system"], "")[1:]
+                else:
+                    bodyname = notsold["body"]
+
+                if notsold["species"] not in bodylistofspecies.keys():
+                    bodylistofspecies[notsold["species"]] = [[bodyname, False]]
+                else:
+                    bodylistofspecies[notsold["species"]].append([bodyname, False])
+
+    except KeyError:
+        # if we don't have the cmdr in the notsold data yet we just pass.
+        pass
+
+    if bodylistofspecies == {}:
+        tk.Label(frame, text="None").grid(row=current_row, column=1, sticky=tk.W)
 
     for species in bodylistofspecies.keys():
         current_row += 1
