@@ -25,8 +25,11 @@ from organicinfo import generaltolocalised
 
 def build_biodata_json(logger, journaldir):
     """Builds a soldbiodata.json that includes all sold organic scans that the player sold."""
-    directory, filename = os.path.split(os.path.realpath(__file__))
+    logger.info("start logging")
 
+    directory, sourcename = os.path.split(os.path.realpath(__file__))
+
+    currentcommander = ""
     currentsystem = ""
     currentbody = ""
 
@@ -34,12 +37,12 @@ def build_biodata_json(logger, journaldir):
 
     logger.info(directory)
 
-    sold_exobiology = []
+    sold_exobiology = {}
     possibly_sold_data = []
 
     if not os.path.exists(directory + "\\soldbiodata.json"):
         f = open(directory + "\\soldbiodata.json", "w", encoding="utf8")
-        f.write(r"[]")
+        f.write(r"{}")
         f.close()
 
     with open(directory + "\\soldbiodata.json", "r", encoding="utf8") as f:
@@ -59,6 +62,15 @@ def build_biodata_json(logger, journaldir):
             lines = file.readlines()
             for line in lines:
                 entry = json.loads(line)
+
+                if entry["event"] in ["LoadGame", "Commander"]:
+                    if entry["event"] == "Commander":
+                        currentcommander = entry["Name"]
+                    else:
+                        currentcommander = entry["Commander"]
+
+                    if currentcommander != "" and currentcommander not in sold_exobiology.keys():
+                        sold_exobiology[currentcommander] = []
 
                 if entry["event"] in ["Location", "Embark",
                                       "Disembark", "Touchdown",
@@ -178,11 +190,11 @@ def build_biodata_json(logger, journaldir):
                             logger.info(currentbatch)
 
                             check = (possibly_sold_data[i]["system"] == thesystem
-                                     and possibly_sold_data[i] not in sold_exobiology
+                                     and possibly_sold_data[i] not in sold_exobiology[currentcommander]
                                      and possibly_sold_data[i]["species"] in currentbatch.keys())
                             if check:
                                 if currentbatch[possibly_sold_data[i]["species"]] > 0:
-                                    sold_exobiology.append(possibly_sold_data[i])
+                                    sold_exobiology[currentcommander].append(possibly_sold_data[i])
                                     currentbatch[possibly_sold_data[i]["species"]] -= 1
                                     thing = possibly_sold_data.pop(i)
                                     logger.debug("Sold:")
@@ -200,9 +212,9 @@ def build_biodata_json(logger, journaldir):
                         logger.info("current batch")
                         logger.info(currentbatch)
                         for data in possibly_sold_data:
-                            if (data not in sold_exobiology and currentbatch[data["species"]] > 0):
+                            if (data not in sold_exobiology[currentcommander] and currentbatch[data["species"]] > 0):
                                 currentbatch[data["species"]] -= 1
-                                sold_exobiology.append(data)
+                                sold_exobiology[currentcommander].append(data)
                         possibly_sold_data = []
 
             file.close()
@@ -215,3 +227,9 @@ def build_biodata_json(logger, journaldir):
         # and aren't as human readable
         f.write(json.dumps(sold_exobiology, indent=4))
         f.close()
+
+
+# if __name__ == "__main__":
+#     logger = logging.getLogger(f"test.{os.path.basename(os.path.dirname(__file__))}")
+#     # build_biodata_json(logger, "C:\\Users\\flori\\Saved Games\\Frontier Developments\\Elite Dangerous")
+#     build_biodata_json(logger, "C:\\Users\\flori\\AppData\\Local\\EDMarketConnector\\plugins\\ArtemisScannerTracker\\journals")

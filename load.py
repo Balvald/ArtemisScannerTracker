@@ -27,17 +27,17 @@ directory, filename = os.path.split(os.path.realpath(__file__))
 if not os.path.exists(directory + "\\soldbiodata.json"):
     firstrun = True
     f = open(directory + "\\soldbiodata.json", "w", encoding="utf8")
-    f.write(r"[]")
+    f.write(r"{}")
     f.close()
 
 if not os.path.exists(directory + "\\notsoldbiodata.json"):
     firstrun = True
     f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
-    f.write(r"[]")
+    f.write(r"{}")
     f.close()
 
-not_yet_sold_data = []
-sold_exobiology = []
+not_yet_sold_data = {}
+sold_exobiology = {}
 currententrytowrite = {}
 
 plugin = None
@@ -62,6 +62,7 @@ class ArtemisScannerTracker:
         """Initialize the plugin by getting values from the config file."""
         # Be sure to use names that wont collide in our config variables
         # Bools for show hide checkboxes
+
         self.AST_hide_fullscan: Optional[tk.IntVar] = tk.IntVar(
             value=config.get_int("AST_hide_fullscan"))
         self.AST_hide_species: Optional[tk.IntVar] = tk.IntVar(
@@ -356,20 +357,24 @@ class ArtemisScannerTracker:
     def buildsoldbiodatajsonlocal(self):
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
         # Always uses the game journal directory
+
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
+
         build_biodata_json(logger, os.path.join(directory, "journals"))
 
     def buildsoldbiodatajson(self):
         """Build the soldbiodata.json using the neighboring journalcrawler.py."""
         # Always uses the game journal directory
+
         global logger
+
         build_biodata_json(logger, config.default_journal_dir)
 
 
 def dashboard_entry(cmdr, is_beta, entry):
     """
-    React to changes in the CMDRs status (Movement for CCR feature)
+    React to changes in the CMDRs status (Movement for CCR feature).
 
     :param cmdr: The current ED Commander
     :param is_beta: Is the game currently in beta
@@ -395,11 +400,14 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     """
     global plugin
 
-    logger.debug(f'The value cmdr in journal_entry is: {cmdr}')
-    logger.debug(f'The value is_beta in journal_entry is: {is_beta}')
-    logger.debug(f'The value system in journal_entry is: {system}')
-    logger.debug(f'The value station in journal_entry is: {station}')
-    logger.debug(f'The value state in journal_entry is: {state}')
+    if plugin.AST_current_system.get() == "None":
+        plugin.AST_current_system.set(str(system))
+
+    # logger.debug(f'The value cmdr in journal_entry is: {cmdr}')
+    # logger.debug(f'The value is_beta in journal_entry is: {is_beta}')
+    # logger.debug(f'The value system in journal_entry is: {system}')
+    # logger.debug(f'The value station in journal_entry is: {station}')
+    # logger.debug(f'The value state in journal_entry is: {state}')
 
     flag = False
 
@@ -410,7 +418,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
-        resurrection_event()
+        resurrection_event(cmdr)
 
     if entry["event"] == "ScanOrganic":
         flag = True
@@ -436,14 +444,14 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         plugin.on_preferences_closed(cmdr, is_beta)
 
 
-def resurrection_event():
+def resurrection_event(cmdr):
     """Handle resurrection event aka dying."""
     global not_yet_sold_data
-    not_yet_sold_data = []
+    not_yet_sold_data[cmdr] = []
     pass
 
 
-def bioscan_event(entry):
+def bioscan_event(cmdr, entry):
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin
     plugin.AST_last_scan_plant.set(generaltolocalised(entry["Species"].lower()))
@@ -472,10 +480,10 @@ def bioscan_event(entry):
             currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
             currententrytowrite["system"] = plugin.AST_current_system.get()
             currententrytowrite["body"] = plugin.AST_current_body.get()
-            if currententrytowrite not in not_yet_sold_data:
+            if currententrytowrite not in not_yet_sold_data[cmdr]:
                 # If there is no second Sample scantype event
                 # we have to save the data here.
-                not_yet_sold_data.append(currententrytowrite)
+                not_yet_sold_data[cmdr].append(currententrytowrite)
                 file = directory + "\\notsoldbiodata.json"
                 with open(file, "r+", encoding="utf8") as f:
                     notsolddata = json.load(f)
@@ -522,7 +530,7 @@ def system_body_change_event(entry):
         plugin.AST_last_scan_body.set(entry["Body"])
 
 
-def biosell_event(entry):
+def biosell_event(cmdr, entry):
     """Handle the SellOrganicData event."""
     global currententrytowrite, not_yet_sold_data, sold_exobiology
     soldvalue = 0
@@ -549,7 +557,7 @@ def biosell_event(entry):
     # build by system dict, has the form of {<system> : {<species> : <amount>}}
     logger.info(f'Value that was sold: {soldvalue}')
     bysystem = {}
-    for biodata in not_yet_sold_data:
+    for biodata in not_yet_sold_data[cmdr]:
         if biodata["system"] in bysystem.keys():
             # We already know the system
             if (biodata["species"] in bysystem[biodata["system"]].keys()):
@@ -614,7 +622,7 @@ def biosell_event(entry):
     if thesystem != "":
         # CMDR sold by system.
         i = 0
-        while i < len(not_yet_sold_data):
+        while i < len(not_yet_sold_data[cmdr]):
             # Check if were done with the batch we sold yet
             done = True
             for species in currentbatch:
@@ -627,41 +635,44 @@ def biosell_event(entry):
             # We do know though that the specifc data was sold only
             # in one system that at this point is saved in
             # the variable"thesystem"
-            check = (not_yet_sold_data[i]["system"] == thesystem
-                     and not_yet_sold_data[i] not in sold_exobiology
-                     and not_yet_sold_data[i]["species"] in currentbatch.keys())
+            check = (not_yet_sold_data[cmdr][i]["system"] == thesystem
+                     and not_yet_sold_data[cmdr][i] not in sold_exobiology[cmdr]
+                     and not_yet_sold_data[cmdr][i]["species"] in currentbatch.keys())
             if check:
-                if currentbatch[not_yet_sold_data[i]["species"]] > 0:
-                    sold_exobiology.append(not_yet_sold_data[i])
-                    currentbatch[not_yet_sold_data[i]["species"]] -= 1
-                    not_yet_sold_data.pop(i)
+                if currentbatch[not_yet_sold_data[cmdr][i]["species"]] > 0:
+                    sold_exobiology[cmdr].append(not_yet_sold_data[cmdr][i])
+                    currentbatch[not_yet_sold_data[cmdr][i]["species"]] -= 1
+                    not_yet_sold_data[cmdr].pop(i)
                     continue
             i += 1
 
         f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
         f.write(r"[]")
         f.close()
-        if not_yet_sold_data != []:
+        if not_yet_sold_data[cmdr] != []:
             file = directory + "\\notsoldbiodata.json"
             with open(file, "r+", encoding="utf8") as f:
                 notsolddata = json.load(f)
-                for data in not_yet_sold_data:
+                for data in not_yet_sold_data[cmdr]:
                     notsolddata.append(data)
                 f.seek(0)
                 json.dump(notsolddata, f, indent=4)
     else:
         # CMDR sold the whole batch.
-        for data in not_yet_sold_data:
-            if (data not in sold_exobiology and currentbatch[data["species"]] > 0):
+        for data in not_yet_sold_data[cmdr]:
+            if (data not in sold_exobiology[cmdr] and currentbatch[data["species"]] > 0):
                 currentbatch[data["species"]] -= 1
-                sold_exobiology.append(data)
-        not_yet_sold_data = []
+                sold_exobiology[cmdr].append(data)
+        not_yet_sold_data[cmdr] = []
         # We can already reset to 0 to ensure that after selling all data at once
         # we end up with a reset of the Scanned value metric
         logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
         f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
-        f.write(r"[]")
+        scanneddata = json.load(f)
+        scanneddata[cmdr] = []
+        f.seek(0)
+        json.dump(scanneddata, f, indent=4)
         f.close()
 
     # Remove the value of what was sold from
@@ -682,10 +693,14 @@ def biosell_event(entry):
     file = directory + "\\soldbiodata.json"
     with open(file, "r+", encoding="utf8") as f:
         solddata = json.load(f)
-        if sold_exobiology != []:
-            for item in sold_exobiology:
-                solddata.append(item)
-            sold_exobiology = []
+
+        if cmdr not in solddata.keys():
+            solddata[cmdr] = []
+
+        if sold_exobiology[cmdr] != []:
+            for item in sold_exobiology[cmdr]:
+                solddata[cmdr].append(item)
+            sold_exobiology[cmdr] = []
         f.seek(0)
         json.dump(solddata, f, indent=4)
 
@@ -699,6 +714,7 @@ plugin = ArtemisScannerTracker()
 
 
 def clear_ui():
+    """Remove all labels from this plugin."""
     global frame
     # remove all labels from the frame
     for label in frame.winfo_children():
@@ -867,7 +883,6 @@ def prefs_changed(cmdr: str, is_beta: bool) -> None:
 
     See PLUGINS.md#configuration
     """
-
     rebuild_ui(plugin)
 
     plugin.on_preferences_closed(cmdr, is_beta)
