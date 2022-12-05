@@ -422,7 +422,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
     if entry["event"] == "ScanOrganic":
         flag = True
-        bioscan_event(entry)
+        bioscan_event(cmdr, entry)
 
     if entry["event"] in ["Location", "Embark", "Disembark", "Touchdown", "Liftoff", "FSDJump"]:
         flag = True
@@ -430,7 +430,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
     if entry["event"] == "SellOrganicData":
         flag = True
-        biosell_event(entry)
+        biosell_event(cmdr, entry)
 
     if flag:
         # we changed a value so we update line.
