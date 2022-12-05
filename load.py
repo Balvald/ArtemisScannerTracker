@@ -40,6 +40,8 @@ not_yet_sold_data = {}
 sold_exobiology = {}
 currententrytowrite = {}
 
+currentcommander = ""
+
 plugin = None
 
 # load notyetsolddata
@@ -139,6 +141,9 @@ class ArtemisScannerTracker:
         :param is_beta: Whether or not EDMC is currently marked as in beta mode
         :return: The frame to add to the settings window
         """
+        global currentcommander
+        currentcommander = cmdr
+
         current_row = 0
         frame = nb.Frame(parent)
 
@@ -337,11 +342,11 @@ class ArtemisScannerTracker:
         :param parent: EDMC main window Tk
         :return: Our frame
         """
-        global frame
+        global frame, currentcommander
 
         frame = tk.Frame(parent)
 
-        rebuild_ui(self)
+        rebuild_ui(self, currentcommander)
 
         return frame
 
@@ -398,7 +403,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     :param entry: the current Journal entry
     :param state: More info about the commander, their ship, and their cargo
     """
-    global plugin
+    global plugin, currentcommander
+    currentcommander = cmdr
 
     if plugin.AST_current_system.get() == "None":
         plugin.AST_current_system.set(str(system))
@@ -426,7 +432,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
     if entry["event"] in ["Location", "Embark", "Disembark", "Touchdown", "Liftoff", "FSDJump"]:
         flag = True
-        system_body_change_event(entry)
+        system_body_change_event(cmdr, entry)
 
     if entry["event"] == "SellOrganicData":
         flag = True
@@ -491,7 +497,7 @@ def bioscan_event(cmdr, entry):
                     f.seek(0)
                     json.dump(notsolddata, f, indent=4)
                 currententrytowrite = {}
-            rebuild_ui(plugin)
+            rebuild_ui(plugin, cmdr)
         else:
             plugin.AST_current_scan_progress.set("2/3")
     else:
@@ -501,7 +507,7 @@ def bioscan_event(cmdr, entry):
         plugin.AST_current_scan_progress.set("Excuse me what the fuck")
 
 
-def system_body_change_event(entry):
+def system_body_change_event(cmdr, entry):
     """Handle all events that give a tell in which system we are or on what planet we are on."""
     global plugin
 
@@ -518,7 +524,7 @@ def system_body_change_event(entry):
         pass
 
     if systemchange:
-        rebuild_ui(plugin)
+        rebuild_ui(plugin, cmdr)
 
     # To fix the aforementioned eventuality where the systems end up
     # being "None" we update the last scan location
@@ -647,16 +653,21 @@ def biosell_event(cmdr, entry):
             i += 1
 
         f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
-        f.write(r"[]")
+        scanneddata = json.load(f)
+        scanneddata[cmdr] = []
+        f.seek(0)
+        json.dump(scanneddata, f, indent=4)
         f.close()
+
         if not_yet_sold_data[cmdr] != []:
             file = directory + "\\notsoldbiodata.json"
             with open(file, "r+", encoding="utf8") as f:
                 notsolddata = json.load(f)
                 for data in not_yet_sold_data[cmdr]:
-                    notsolddata.append(data)
+                    notsolddata[cmdr].append(data)
                 f.seek(0)
                 json.dump(notsolddata, f, indent=4)
+
     else:
         # CMDR sold the whole batch.
         for data in not_yet_sold_data[cmdr]:
@@ -707,7 +718,7 @@ def biosell_event(cmdr, entry):
     # If we sell the exobiodata in the same system as where we currently are
     # Then we want to remove the "*" around the body names of the newly sold biodata
     # So just rebuild the ui for good measure.
-    rebuild_ui(plugin)
+    rebuild_ui(plugin, cmdr)
 
 
 plugin = ArtemisScannerTracker()
@@ -721,7 +732,7 @@ def clear_ui():
         label.destroy()
 
 
-def rebuild_ui(plugin):
+def rebuild_ui(plugin, cmdr):
     """Rebuild the UI in case of preferences change."""
     global frame
 
@@ -774,15 +785,15 @@ def rebuild_ui(plugin):
 
     # Tracked sold bio scans as the last thing to add to the UI
     if plugin.AST_hide_sold_bio.get() != 1:
-        build_sold_bio_ui(plugin)
+        build_sold_bio_ui(plugin, cmdr)
 
     theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
 
 
-def build_sold_bio_ui(plugin):
+def build_sold_bio_ui(plugin, cmdr):
     # Create a Button to make it shorter?
-    soldbiodata = []
-    notsoldbiodata = []
+    soldbiodata = {}
+    notsoldbiodata = {}
 
     file = directory + "\\soldbiodata.json"
     with open(file, "r+", encoding="utf8") as f:
@@ -797,7 +808,7 @@ def build_sold_bio_ui(plugin):
 
     bodylistofspecies = {}
 
-    for sold in soldbiodata:
+    for sold in soldbiodata[cmdr]:
         if sold["system"] == plugin.AST_current_system.get():
 
             bodyname = ""
@@ -814,7 +825,7 @@ def build_sold_bio_ui(plugin):
             else:
                 bodylistofspecies[sold["species"]].append([bodyname, True])
 
-    for notsold in notsoldbiodata:
+    for notsold in notsoldbiodata[cmdr]:
         if notsold["system"] == plugin.AST_current_system.get():
 
             bodyname = ""
@@ -883,7 +894,7 @@ def prefs_changed(cmdr: str, is_beta: bool) -> None:
 
     See PLUGINS.md#configuration
     """
-    rebuild_ui(plugin)
+    rebuild_ui(plugin, cmdr)
 
     plugin.on_preferences_closed(cmdr, is_beta)
     return
