@@ -125,7 +125,7 @@ u14vistagenomicsprices = {
     "Bacterium Acies": 1500000
 }
 
-# pre U14 prices for vista genomics - will need update after U14
+# pre U14 prices for vista genomics - spare table for when values change again.
 vistagenomicsprices = {
     "Fonticulua Fluctus": 900000,
     "Tussock Stigmasis": 806300,
@@ -369,7 +369,7 @@ organicnamesjournaltolocal = {
 }
 
 
-# Colonial ranges in m, TODO: find clonal colonial ranges for missing bio types
+# Colonial ranges in m.
 # later check if any of these is in the localised name of the space plant as in the key being a substring.
 clonalcolonialranges = {
     "Brain Tree": 100,
@@ -391,7 +391,7 @@ clonalcolonialranges = {
     "Tubus": 800,
     "Frutexa": 150,
     "Tussock": 200,
-    "Crystalline Shards": None,  # fix pl0x, Check Range
+    "Crystalline Shards": 100,  # According to fandom. Gotta check it.
     "Amphora Plant": 100
 }
 
