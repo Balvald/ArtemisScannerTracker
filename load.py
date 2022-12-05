@@ -1,7 +1,5 @@
 """
-Artemis Scanner Tracker by Balvald.
-
-created from the EDMC example plugin.
+Artemis Scanner Tracker by Balvald. v0.1.3 dev
 """
 
 import json
@@ -98,6 +96,7 @@ class ArtemisScannerTracker:
             value=str(config.get_str("AST_current_body")))
         self.AST_state: Optional[tk.StringVar] = tk.StringVar(
             value=str(config.get_str("AST_state")))
+        # TODO: format string with thousands seperators
         self.AST_value: Optional[tk.StringVar] = tk.StringVar(
             value=(str(config.get_int("AST_value")) + str(" Cr.")))
 
@@ -142,7 +141,7 @@ class ArtemisScannerTracker:
         current_row = 0
         frame = nb.Frame(parent)
 
-        nb.Label(frame, text="Artemis Scanner Tracker v0.1.2 by Balvald").grid(
+        nb.Label(frame, text="Artemis Scanner Tracker v0.1.3 dev by Balvald").grid(
             row=current_row, sticky=tk.W)
         current_row += 1
         nb.Label(
@@ -311,6 +310,8 @@ class ArtemisScannerTracker:
         config.set("AST_last_scan_body", str(self.AST_last_scan_body.get()))
         config.set("AST_last_scan_plant", str(self.AST_last_scan_plant.get()))
         config.set("AST_state", str(self.AST_state.get()))
+
+        # TODO for formatting the string with thousands seperators we have to remove them here again.
         config.set("AST_value", int(self.AST_value.get().split(" ")[0]))
 
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
@@ -366,6 +367,18 @@ class ArtemisScannerTracker:
         build_biodata_json(logger, config.default_journal_dir)
 
 
+def dashboard_entry(cmdr, is_beta, entry):
+    """
+    React to changes in the CMDRs status (Movement for CCR feature)
+
+    :param cmdr: The current ED Commander
+    :param is_beta: Is the game currently in beta
+    :param entry: full excerpt from status.json
+    """
+    # print full excerpt to check everything is there.
+    logger.debug(f'Status.json says: {entry}')
+
+
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     """
     React accordingly to events in the journal.
@@ -374,15 +387,26 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     Scan Type of these events can tell us the progress of the scan.
     Add the value of a finished Scan to the tally
     :param cmdr: The current ED Commander
-    :param is_beta: Whether or not EDMC is currently marked as in beta mode
-    :param system: current system? unused
-    :param station: unused
+    :param is_beta: Is the game currently in beta
+    :param system: Current system, if known
+    :param station: Current station, if any
     :param entry: the current Journal entry
-    :param state: unused
+    :param state: More info about the commander, their ship, and their cargo
     """
     global plugin
 
+    logger.debug(f'The value cmdr in journal_entry is: {cmdr}')
+    logger.debug(f'The value is_beta in journal_entry is: {is_beta}')
+    logger.debug(f'The value system in journal_entry is: {system}')
+    logger.debug(f'The value station in journal_entry is: {station}')
+    logger.debug(f'The value state in journal_entry is: {state}')
+
     flag = False
+
+    # Prepare to fix probable bugs before a user might report them:
+    # TODO: Do not update anything while not in Live universe of E:D!
+    # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
+    # TODO: Check how real death differs from frontline solutions ground combat zone death.
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
