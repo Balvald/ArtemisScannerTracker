@@ -29,7 +29,7 @@ def build_biodata_json(logger, journaldir):
 
     directory, sourcename = os.path.split(os.path.realpath(__file__))
 
-    currentcommander = ""
+    cmdr = ""
     currentsystem = ""
     currentbody = ""
 
@@ -65,15 +65,15 @@ def build_biodata_json(logger, journaldir):
 
                 if entry["event"] in ["LoadGame", "Commander"]:
                     if entry["event"] == "Commander":
-                        currentcommander = entry["Name"]
+                        cmdr = entry["Name"]
                     else:
-                        currentcommander = entry["Commander"]
+                        cmdr = entry["Commander"]
 
-                    if currentcommander != "" and currentcommander not in sold_exobiology.keys():
-                        sold_exobiology[currentcommander] = []
+                    if cmdr != "" and cmdr not in sold_exobiology.keys():
+                        sold_exobiology[cmdr] = []
 
-                    if currentcommander != "" and currentcommander not in sold_exobiology.keys():
-                        possibly_sold_data[currentcommander] = []
+                    if cmdr != "" and cmdr not in possibly_sold_data.keys():
+                        possibly_sold_data[cmdr] = []
 
                 if entry["event"] in ["Location", "Embark",
                                       "Disembark", "Touchdown",
@@ -93,15 +93,15 @@ def build_biodata_json(logger, journaldir):
                             currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
                             currententrytowrite["system"] = currentsystem
                             currententrytowrite["body"] = currentbody
-                            if currententrytowrite not in possibly_sold_data[currentcommander]:
-                                possibly_sold_data[currentcommander].append(currententrytowrite)
+                            if currententrytowrite not in possibly_sold_data[cmdr]:
+                                possibly_sold_data[cmdr].append(currententrytowrite)
                             currententrytowrite = {}
                             continue
 
                 if entry["event"] == "Resurrect":
                     # Reset - player was unable to sell before death
                     logger.info("We died")
-                    possibly_sold_data[currentcommander] = []
+                    possibly_sold_data[cmdr] = []
 
                 if entry["event"] == "SellOrganicData":
                     currentbatch = {}
@@ -113,7 +113,7 @@ def build_biodata_json(logger, journaldir):
                         else:
                             currentbatch[sold["Species_Localised"]] = 1
                     bysystem = {}
-                    for biodata in possibly_sold_data[currentcommander]:
+                    for biodata in possibly_sold_data[cmdr]:
                         if biodata["system"] in bysystem.keys():
                             if (biodata["species"] in bysystem[biodata["system"]].keys()):
                                 bysystem[biodata["system"]][biodata["species"]] += 1
@@ -171,7 +171,7 @@ def build_biodata_json(logger, journaldir):
                     if thesystem != "":
                         logger.info("CMDR sold by system: " + thesystem)
                         i = 0
-                        while i < len(possibly_sold_data[currentcommander]):
+                        while i < len(possibly_sold_data[cmdr]):
                             # For the case when we are done when we havent sold everything
                             done = True
                             for species in currentbatch:
@@ -188,18 +188,18 @@ def build_biodata_json(logger, journaldir):
                             # in one system that at this point
                             # is saved in the variable "thesystem"
                             logger.info("possibly sold data")
-                            logger.info(possibly_sold_data[currentcommander])
+                            logger.info(possibly_sold_data[cmdr])
                             logger.info("current batch")
                             logger.info(currentbatch)
 
-                            check = (possibly_sold_data[currentcommander][i]["system"] == thesystem
-                                     and possibly_sold_data[currentcommander][i] not in sold_exobiology[currentcommander]
-                                     and possibly_sold_data[currentcommander][i]["species"] in currentbatch.keys())
+                            check = (possibly_sold_data[cmdr][i]["system"] == thesystem
+                                     and possibly_sold_data[cmdr][i] not in sold_exobiology[cmdr]
+                                     and possibly_sold_data[cmdr][i]["species"] in currentbatch.keys())
                             if check:
-                                if currentbatch[possibly_sold_data[currentcommander][i]["species"]] > 0:
-                                    sold_exobiology[currentcommander].append(possibly_sold_data[currentcommander][i])
-                                    currentbatch[possibly_sold_data[currentcommander][i]["species"]] -= 1
-                                    thing = possibly_sold_data[currentcommander].pop(i)
+                                if currentbatch[possibly_sold_data[cmdr][i]["species"]] > 0:
+                                    sold_exobiology[cmdr].append(possibly_sold_data[cmdr][i])
+                                    currentbatch[possibly_sold_data[cmdr][i]["species"]] -= 1
+                                    thing = possibly_sold_data[cmdr].pop(i)
                                     logger.debug("Sold:")
                                     logger.debug(thing)
                                     logger.debug(" i = " + str(i))
@@ -211,14 +211,14 @@ def build_biodata_json(logger, journaldir):
                     else:
                         logger.info("CMDR sold the whole batch.")
                         logger.info("possibly sold data")
-                        logger.info(possibly_sold_data[currentcommander])
+                        logger.info(possibly_sold_data[cmdr])
                         logger.info("current batch")
                         logger.info(currentbatch)
-                        for data in possibly_sold_data[currentcommander]:
-                            if (data not in sold_exobiology[currentcommander] and currentbatch[data["species"]] > 0):
+                        for data in possibly_sold_data[cmdr]:
+                            if (data not in sold_exobiology[cmdr] and currentbatch[data["species"]] > 0):
                                 currentbatch[data["species"]] -= 1
-                                sold_exobiology[currentcommander].append(data)
-                        possibly_sold_data[currentcommander] = []
+                                sold_exobiology[cmdr].append(data)
+                        possibly_sold_data[cmdr] = []
 
             file.close()
 
@@ -230,9 +230,3 @@ def build_biodata_json(logger, journaldir):
         # and aren't as human readable
         f.write(json.dumps(sold_exobiology, indent=4))
         f.close()
-
-
-# if __name__ == "__main__":
-# logger = logging.getLogger(f"test.{os.path.basename(os.path.dirname(__file__))}")
-# build_biodata_json(logger, "C:\\Users\\flori\\Saved Games\\Frontier Developments\\Elite Dangerous")
-# build_biodata_json(logger, "journals")
