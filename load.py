@@ -404,7 +404,10 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     :param state: More info about the commander, their ship, and their cargo
     """
     global plugin, currentcommander
-    currentcommander = cmdr
+
+    if currentcommander != cmdr:
+        currentcommander = cmdr
+        rebuild_ui(plugin, cmdr)
 
     if plugin.AST_current_system.get() == "None":
         plugin.AST_current_system.set(str(system))
