@@ -1,6 +1,4 @@
-"""
-Artemis Scanner Tracker by Balvald. v0.1.3 dev
-"""
+"""Artemis Scanner Tracker v0.1.3 dev by Balvald."""
 
 import json
 import logging
@@ -10,15 +8,16 @@ from typing import Optional
 
 import myNotebook as nb  # type: ignore # noqa: N813
 from config import appname, config  # type: ignore
-from theme import theme  # type: ignore # noqa: N813
+from theme import theme  # type: ignore
 
 from journalcrawler import build_biodata_json
-from organicinfo import getu14vistagenomicprices, generaltolocalised
+from organicinfo import generaltolocalised, getu14vistagenomicprices
 
-# globals as part of the plugin class?
 frame: Optional[tk.Frame] = None
 
+
 PLUGIN_NAME = "AST"
+
 
 # Gonna need the files directory to store data for full
 # tracking of all the biological things that the CMDR scans.
@@ -82,6 +81,25 @@ class ArtemisScannerTracker:
             value=config.get_int("AST_hide_value"))
         self.AST_hide_sold_bio: Optional[tk.IntVar] = tk.IntVar(
             value=config.get_int("AST_hide_sold_bio"))
+        self.AST_hide_CCR: Optional[tk.IntVar] = tk.IntVar(
+            value=config.get_int("AST_hide_CCR"))
+
+        # bool to steer when the CCR feature is visible
+        self.AST_near_planet: Optional[tk.StringVar] = False
+        # positions as lat long, lat at index 0, long at index 1
+        self.AST_current_pos_lat = None
+        self.AST_current_pos_long = None
+        self.AST_current_pos_head = None
+        self.AST_scan_pos_1_lat = None
+        self.AST_scan_pos_1_long = None
+        self.AST_scan_pos_2_lat = None
+        self.AST_scan_pos_2_long = None
+        # radius of the most current planet
+        self.AST_current_radius: Optional[tk.StringVar] = tk.StringVar(value="")
+
+        self.AST_current_pos: Optional[tk.StringVar] = tk.StringVar(value="")
+        self.AST_scan_pos_1: Optional[tk.StringVar] = tk.StringVar(value="")
+        self.AST_scan_pos_2: Optional[tk.StringVar] = tk.StringVar(value="")
 
         # Artemis Scanner State infos
         self.AST_last_scan_plant: Optional[tk.StringVar] = tk.StringVar(
@@ -170,7 +188,7 @@ class ArtemisScannerTracker:
             row=current_row, column=0, sticky="W")
         nb.Checkbutton(
             frame,
-            text="Hide Unsold Scans Value",
+            text="Hide Value of unsold Scans",
             variable=self.AST_hide_value).grid(
             row=current_row, column=1, sticky="W")
         current_row += 1
@@ -209,9 +227,14 @@ class ArtemisScannerTracker:
         current_row += 1
         nb.Checkbutton(
             frame,
-            text="Hide Sold species",
+            text="Hide Scanned/Sold Species in System",
             variable=self.AST_hide_sold_bio).grid(
             row=current_row, column=0, sticky="W")
+        nb.Checkbutton(
+            frame,
+            text="Hide Clonal Colonial Distances",
+            variable=self.AST_hide_CCR).grid(
+            row=current_row, column=1, sticky="W")
         current_row += 1
         if debug:
             # setup debug fields for the scanner.
@@ -331,6 +354,7 @@ class ArtemisScannerTracker:
         config.set("AST_hide_system", int(self.AST_hide_system.get()))
         config.set("AST_hide_body", int(self.AST_hide_body.get()))
         config.set("AST_hide_sold_bio", int(self.AST_hide_sold_bio.get()))
+        config.set("AST_hide_CCR", int(self.AST_hide_CCR.get()))
 
         logger.debug("ArtemisScannerTracker saved preferences")
 
@@ -380,14 +404,13 @@ class ArtemisScannerTracker:
 
 def clipboard():
     """Copy value to clipboard."""
-    dummytk = tk.Tk()  # creates no window we don't want
-    logger.info(dummytk)
+    dummytk = tk.Tk()  # creates a window we don't want
     dummytk.clipboard_clear()
     dummytk.clipboard_append(plugin.AST_value.get()[:-4].replace(",", ""))
-    dummytk.destroy()  # destroying it again we don't need full another window. everytime we copy to clipboard
+    dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
 
 
-def dashboard_entry(cmdr, is_beta, entry):
+def dashboard_entry(cmdr: str, is_beta, entry):
     """
     React to changes in the CMDRs status (Movement for CCR feature).
 
@@ -397,9 +420,47 @@ def dashboard_entry(cmdr, is_beta, entry):
     """
     # print full excerpt to check everything is there.
     logger.debug(f'Status.json says: {entry}')
+    # 'Latitude': -19.506268, 'Longitude': -4.657524, 'Heading': 298,
+    # 'Altitude': 1320594, 'BodyName': 'Murato 3 a', 'PlanetRadius': 3741155.5,
+
+    """
+    # bool to steer when the CCR feature is visible
+    self.AST_near_planet = False
+    # positions as lat long, lat at index 0, long at index 1
+    self.AST_current_pos_lat = None
+    self.AST_current_pos_long = None
+    self.AST_current_pos_head = None
+    self.AST_scan_pos_1_lat = None
+    self.AST_scan_pos_1_long = None
+    self.AST_scan_pos_2_lat = None
+    self.AST_scan_pos_2_long = None
+    # radius of the most current planet
+    self.AST_current_radius = None
+    """
+
+    global plugin
+
+    if "PlanetRadius" in entry.keys():
+        plugin.AST_near_planet = True
+        plugin.AST_current_radius = entry["PlanetRadius"]
+        plugin.AST_current_pos_lat = entry["Latitude"]
+        plugin.AST_current_pos_long = entry["Longitude"]
+        plugin.AST_current_pos_head = entry["Heading"]
+        text = str(plugin.AST_current_pos_lat) + ", " + str(plugin.AST_current_pos_long) + ", " + \
+            str(plugin.AST_current_pos_head) + ", " + str(plugin.AST_current_radius)
+        plugin.AST_current_pos.set(text)
+    else:
+        plugin.AST_near_planet = False
+        plugin.AST_current_radius = None
+        plugin.AST_current_pos_lat = None
+        plugin.AST_current_pos_long = None
+        plugin.AST_current_pos_head = None
+        plugin.AST_current_pos.set("No reference point")
+
+    # rebuild_ui(plugin, cmdr)
 
 
-def journal_entry(cmdr, is_beta, system, station, entry, state):
+def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):
     """
     React accordingly to events in the journal.
 
@@ -463,14 +524,13 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         plugin.on_preferences_closed(cmdr, is_beta)
 
 
-def resurrection_event(cmdr):
+def resurrection_event(cmdr: str):
     """Handle resurrection event aka dying."""
     global not_yet_sold_data
     not_yet_sold_data[cmdr] = []
-    pass
 
 
-def bioscan_event(cmdr, entry):
+def bioscan_event(cmdr: str, entry):  # noqa #CCR001
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin
     plugin.AST_last_scan_plant.set(generaltolocalised(entry["Species"].lower()))
@@ -520,7 +580,7 @@ def bioscan_event(cmdr, entry):
         plugin.AST_current_scan_progress.set("Excuse me what the fuck")
 
 
-def system_body_change_event(cmdr, entry):
+def system_body_change_event(cmdr: str, entry):
     """Handle all events that give a tell in which system we are or on what planet we are on."""
     global plugin
 
@@ -549,7 +609,7 @@ def system_body_change_event(cmdr, entry):
         plugin.AST_last_scan_body.set(entry["Body"])
 
 
-def biosell_event(cmdr, entry):
+def biosell_event(cmdr: str, entry):  # noqa #CCR001
     """Handle the SellOrganicData event."""
     global currententrytowrite, not_yet_sold_data, sold_exobiology
     soldvalue = 0
@@ -745,14 +805,20 @@ def clear_ui():
         label.destroy()
 
 
-def rebuild_ui(plugin, cmdr):
+def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
     """Rebuild the UI in case of preferences change."""
     global frame
 
     clear_ui()
 
     # recreate UI
-    current_row = 12
+    current_row = 14
+
+    # Clonal Colonial Range here.
+    if plugin.AST_hide_CCR.get() != 1:
+        # show distances for the last scans.
+        tk.Label(frame, text="Currentpos: ").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_current_pos).grid(row=current_row, column=1, sticky=tk.W)
 
     if plugin.AST_hide_body.get() != 1:
         current_row -= 1
@@ -795,8 +861,6 @@ def rebuild_ui(plugin, cmdr):
         tk.Label(frame, text="Last Exobiology Scan:").grid(row=current_row, sticky=tk.W)
         tk.Label(frame, textvariable=plugin.AST_state).grid(row=current_row, column=1, sticky=tk.W)
 
-    # Clonal Colonial Range here.
-
     # Tracked sold bio scans as the last thing to add to the UI
     if plugin.AST_hide_sold_bio.get() != 1:
         build_sold_bio_ui(plugin, cmdr)
@@ -804,7 +868,7 @@ def rebuild_ui(plugin, cmdr):
     theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
 
 
-def build_sold_bio_ui(plugin, cmdr):
+def build_sold_bio_ui(plugin, cmdr: str):  # noqa #CCR001
     # Create a Button to make it shorter?
     soldbiodata = {}
     notsoldbiodata = {}
@@ -817,7 +881,7 @@ def build_sold_bio_ui(plugin, cmdr):
     with open(file, "r+", encoding="utf8") as f:
         notsoldbiodata = json.load(f)
 
-    current_row = 14
+    current_row = 15
     tk.Label(frame, text="Scans in this System:").grid(row=current_row, sticky=tk.W)
 
     # Check if we even got a cmdr yet!
@@ -907,8 +971,7 @@ def plugin_stop() -> None:
     return
 
 
-def plugin_prefs(parent: nb.Notebook,
-                 cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
+def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
     """
     Handle preferences tab for the plugin.
 
