@@ -39,7 +39,6 @@ if not os.path.exists(directory + "\\notsoldbiodata.json"):
 not_yet_sold_data = {}
 sold_exobiology = {}
 currententrytowrite = {}
-
 currentcommander = ""
 
 plugin = None
@@ -99,9 +98,11 @@ class ArtemisScannerTracker:
             value=str(config.get_str("AST_current_body")))
         self.AST_state: Optional[tk.StringVar] = tk.StringVar(
             value=str(config.get_str("AST_state")))
-        # TODO: format string with thousands seperators
+
+        rawvalue = int(config.get_int("AST_value"))
+
         self.AST_value: Optional[tk.StringVar] = tk.StringVar(
-            value=(str(config.get_int("AST_value")) + str(" Cr.")))
+            value=((f"{rawvalue:,}") + str(" Cr.")))
 
         logger.info("ArtemisScannerTracker instantiated")
 
@@ -317,8 +318,8 @@ class ArtemisScannerTracker:
         config.set("AST_last_scan_plant", str(self.AST_last_scan_plant.get()))
         config.set("AST_state", str(self.AST_state.get()))
 
-        # TODO for formatting the string with thousands seperators we have to remove them here again.
-        config.set("AST_value", int(self.AST_value.get().split(" ")[0]))
+        # for formatting the string with thousands seperators we have to remove them here again.
+        config.set("AST_value", int(self.AST_value.get().replace(",", "").split(" ")[0]))
 
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
         config.set("AST_hide_fullscan", int(self.AST_hide_fullscan.get()))
@@ -375,6 +376,15 @@ class ArtemisScannerTracker:
         global logger
 
         build_biodata_json(logger, config.default_journal_dir)
+
+
+def clipboard():
+    """Copy value to clipboard."""
+    dummytk = tk.Tk()  # creates no window we don't want
+    logger.info(dummytk)
+    dummytk.clipboard_clear()
+    dummytk.clipboard_append(plugin.AST_value.get()[:-4].replace(",", ""))
+    dummytk.destroy()  # destroying it again we don't need full another window. everytime we copy to clipboard
 
 
 def dashboard_entry(cmdr, is_beta, entry):
@@ -479,10 +489,10 @@ def bioscan_event(cmdr, entry):
 
             if plugin.AST_value.get() == "None":
                 plugin.AST_value.set("0 Cr.")
-            # Somehow we get here twice for each 3rd scan. idfk
-            newvalue = int(plugin.AST_value.get().split(" ")[0]) + \
+            # remove thousand seperators for before casting to int from the AST_value.get()
+            newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) + \
                 int(vistagenomicsprices[generaltolocalised(entry["Species"].lower())])
-            plugin.AST_value.set(str(newvalue) + " Cr.")
+            plugin.AST_value.set(f"{newvalue:,}" + " Cr.")
             # Found some cases where the analyse happened
             # seemingly directly after a log.
             plugin.AST_current_scan_progress.set("3/3")
@@ -758,6 +768,7 @@ def rebuild_ui(plugin, cmdr):
         current_row -= 1
         tk.Label(frame, text="Unsold Scan Value:").grid(row=current_row, sticky=tk.W)
         tk.Label(frame, textvariable=plugin.AST_value).grid(row=current_row, column=1, sticky=tk.W)
+        tk.Button(frame, text="📋", command=clipboard).grid(row=current_row, column=2, sticky=tk.E)
 
     if plugin.AST_hide_last_body.get() != 1:
         current_row -= 1
