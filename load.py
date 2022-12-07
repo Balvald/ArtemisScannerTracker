@@ -11,7 +11,9 @@ from config import appname, config  # type: ignore
 from theme import theme  # type: ignore
 
 from journalcrawler import build_biodata_json
-from organicinfo import generaltolocalised, getu14vistagenomicprices
+from organicinfo import computedistance, getclonalcolonialranges, \
+                        getu14vistagenomicprices, generaltolocalised, \
+                        genusgeneraltolocalised
 
 frame: Optional[tk.Frame] = None
 
@@ -85,21 +87,21 @@ class ArtemisScannerTracker:
             value=config.get_int("AST_hide_CCR"))
 
         # bool to steer when the CCR feature is visible
-        self.AST_near_planet: Optional[tk.StringVar] = False
+        self.AST_near_planet: Optional[tk.BooleanVar] = False
+
         # positions as lat long, lat at index 0, long at index 1
-        self.AST_current_pos_lat = None
-        self.AST_current_pos_long = None
-        self.AST_current_pos_head = None
-        self.AST_scan_pos_1_lat = None
-        self.AST_scan_pos_1_long = None
-        self.AST_scan_pos_2_lat = None
-        self.AST_scan_pos_2_long = None
+        self.AST_current_pos_vector = [None, None, None]
+        self.AST_scan_1_pos_vector = [None, None]
+        self.AST_scan_2_pos_vector = [None, None]
+
+        self.AST_CCR: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_CCR"))
+
         # radius of the most current planet
         self.AST_current_radius: Optional[tk.StringVar] = tk.StringVar(value="")
 
         self.AST_current_pos: Optional[tk.StringVar] = tk.StringVar(value="")
-        self.AST_scan_pos_1: Optional[tk.StringVar] = tk.StringVar(value="")
-        self.AST_scan_pos_2: Optional[tk.StringVar] = tk.StringVar(value="")
+        self.AST_scan_1_pos_dist: Optional[tk.StringVar] = tk.StringVar(value="")
+        self.AST_scan_2_pos_dist: Optional[tk.StringVar] = tk.StringVar(value="")
 
         # Artemis Scanner State infos
         self.AST_last_scan_plant: Optional[tk.StringVar] = tk.StringVar(
@@ -344,6 +346,8 @@ class ArtemisScannerTracker:
         # for formatting the string with thousands seperators we have to remove them here again.
         config.set("AST_value", int(self.AST_value.get().replace(",", "").split(" ")[0]))
 
+        config.set("AST_CCR", int(self.AST_CCR.get()))
+
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
         config.set("AST_hide_fullscan", int(self.AST_hide_fullscan.get()))
         config.set("AST_hide_species", int(self.AST_hide_species.get()))
@@ -422,42 +426,48 @@ def dashboard_entry(cmdr: str, is_beta, entry):
     logger.debug(f'Status.json says: {entry}')
     # 'Latitude': -19.506268, 'Longitude': -4.657524, 'Heading': 298,
     # 'Altitude': 1320594, 'BodyName': 'Murato 3 a', 'PlanetRadius': 3741155.5,
-
-    """
-    # bool to steer when the CCR feature is visible
-    self.AST_near_planet = False
-    # positions as lat long, lat at index 0, long at index 1
-    self.AST_current_pos_lat = None
-    self.AST_current_pos_long = None
-    self.AST_current_pos_head = None
-    self.AST_scan_pos_1_lat = None
-    self.AST_scan_pos_1_long = None
-    self.AST_scan_pos_2_lat = None
-    self.AST_scan_pos_2_long = None
-    # radius of the most current planet
-    self.AST_current_radius = None
-    """
-
     global plugin
 
+    flag = False
+
     if "PlanetRadius" in entry.keys():
+        if not plugin.AST_near_planet:
+            flag = True
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
-        plugin.AST_current_pos_lat = entry["Latitude"]
-        plugin.AST_current_pos_long = entry["Longitude"]
-        plugin.AST_current_pos_head = entry["Heading"]
-        text = str(plugin.AST_current_pos_lat) + ", " + str(plugin.AST_current_pos_long) + ", " + \
-            str(plugin.AST_current_pos_head) + ", " + str(plugin.AST_current_radius)
+        plugin.AST_current_pos_vector[0] = entry["Latitude"]
+        plugin.AST_current_pos_vector[1] = entry["Longitude"]
+        plugin.AST_current_pos_vector[2] = entry["Heading"]
+        text = str(plugin.AST_current_pos_vector[0]) + ", " + str(plugin.AST_current_pos_vector[1]) + ", " + \
+            str(plugin.AST_current_pos_vector[2]) + ", " + str(plugin.AST_current_radius)
         plugin.AST_current_pos.set(text)
+
+        if plugin.AST_current_scan_progress.get() in ["1/3", "2/3"] and plugin.AST_scan_1_pos_vector[0] is not None:
+            plugin.AST_scan_1_pos_dist.set(str(round(computedistance(plugin.AST_current_pos_vector[0],
+                                                                     plugin.AST_current_pos_vector[1],
+                                                                     plugin.AST_scan_1_pos_vector[0],
+                                                                     plugin.AST_scan_1_pos_vector[1],
+                                                                     plugin.AST_current_radius), 2))
+                                           + " m / " + str(plugin.AST_CCR.get()) + " m")
+        if plugin.AST_current_scan_progress.get() == "2/3" and plugin.AST_scan_1_pos_vector[0] is not None:
+            plugin.AST_scan_2_pos_dist.set(str(round(computedistance(plugin.AST_current_pos_vector[0],
+                                                                     plugin.AST_current_pos_vector[1],
+                                                                     plugin.AST_scan_2_pos_vector[0],
+                                                                     plugin.AST_scan_2_pos_vector[1],
+                                                                     plugin.AST_current_radius), 2))
+                                           + " m / " + str(plugin.AST_CCR.get()) + " m")
     else:
+        if plugin.AST_near_planet:
+            flag = True
         plugin.AST_near_planet = False
         plugin.AST_current_radius = None
-        plugin.AST_current_pos_lat = None
-        plugin.AST_current_pos_long = None
-        plugin.AST_current_pos_head = None
+        plugin.AST_current_pos_vector[0] = None
+        plugin.AST_current_pos_vector[1] = None
+        plugin.AST_current_pos_vector[2] = None
         plugin.AST_current_pos.set("No reference point")
 
-    # rebuild_ui(plugin, cmdr)
+    if flag:
+        rebuild_ui(plugin, cmdr)
 
 
 def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):
@@ -477,7 +487,10 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     global plugin, currentcommander
 
     if currentcommander != cmdr:
+        # New Commander Save state of current Commander
         currentcommander = cmdr
+
+        # Load state of current Commander
         rebuild_ui(plugin, cmdr)
 
     if plugin.AST_current_system.get() == "None":
@@ -544,6 +557,9 @@ def bioscan_event(cmdr: str, entry):  # noqa #CCR001
 
     if entry["ScanType"] == "Log":
         plugin.AST_current_scan_progress.set("1/3")
+        plugin.AST_CCR.set(getclonalcolonialranges(genusgeneraltolocalised(entry["Genus"])))
+        plugin.AST_scan_1_pos_vector[0] = plugin.AST_current_pos_vector[0]
+        plugin.AST_scan_1_pos_vector[1] = plugin.AST_current_pos_vector[1]
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
 
@@ -556,6 +572,10 @@ def bioscan_event(cmdr: str, entry):  # noqa #CCR001
             # Found some cases where the analyse happened
             # seemingly directly after a log.
             plugin.AST_current_scan_progress.set("3/3")
+            # clear the scan locations to [None, None]
+            plugin.AST_scan_1_pos_vector = [None, None]
+            plugin.AST_scan_2_pos_vector = [None, None]
+            plugin.AST_CCR.set(-1)
             currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
             currententrytowrite["system"] = plugin.AST_current_system.get()
             currententrytowrite["body"] = plugin.AST_current_body.get()
@@ -566,18 +586,23 @@ def bioscan_event(cmdr: str, entry):  # noqa #CCR001
                 file = directory + "\\notsoldbiodata.json"
                 with open(file, "r+", encoding="utf8") as f:
                     notsolddata = json.load(f)
-                    notsolddata.append(currententrytowrite)
+                    notsolddata[cmdr].append(currententrytowrite)
                     f.seek(0)
                     json.dump(notsolddata, f, indent=4)
                 currententrytowrite = {}
-            rebuild_ui(plugin, cmdr)
         else:
             plugin.AST_current_scan_progress.set("2/3")
+            plugin.AST_CCR.set(getclonalcolonialranges(genusgeneraltolocalised(entry["Genus"])))
+            plugin.AST_scan_2_pos_vector[0] = plugin.AST_current_pos_vector[0]
+            plugin.AST_scan_2_pos_vector[1] = plugin.AST_current_pos_vector[1]
     else:
         # Something is horribly wrong if we end up here
         # If anyone ever sees "Excuse me what the fuck"
         # we know they added a new ScanType, that we might need to handle
         plugin.AST_current_scan_progress.set("Excuse me what the fuck")
+
+    # We now need to rebuild regardless how far we progressed
+    rebuild_ui(plugin, cmdr)
 
 
 def system_body_change_event(cmdr: str, entry):
@@ -815,10 +840,17 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
     current_row = 14
 
     # Clonal Colonial Range here.
-    if plugin.AST_hide_CCR.get() != 1:
+    if plugin.AST_hide_CCR.get() != 1 and plugin.AST_near_planet is True:
         # show distances for the last scans.
+        current_row -= 1
         tk.Label(frame, text="Currentpos: ").grid(row=current_row, sticky=tk.W)
         tk.Label(frame, textvariable=plugin.AST_current_pos).grid(row=current_row, column=1, sticky=tk.W)
+        current_row -= 1
+        tk.Label(frame, text="Distance to Scan #2: ").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_scan_2_pos_dist).grid(row=current_row, column=1, sticky=tk.W)
+        current_row -= 1
+        tk.Label(frame, text="Distance to Scan #1: ").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_scan_1_pos_dist).grid(row=current_row, column=1, sticky=tk.W)
 
     if plugin.AST_hide_body.get() != 1:
         current_row -= 1

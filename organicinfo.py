@@ -4,6 +4,8 @@ Contains the info for exobiology for the Artemis Scanner Tracker.
 Such as prices for different types of organic scans and colonial range.
 """
 
+import math
+
 # new prices, only missing sinouos tubers and amphora plant
 u14vistagenomicsprices = {
     "Fonticulua Fluctus": 16777215,
@@ -369,6 +371,31 @@ organicnamesjournaltolocal = {
 }
 
 
+genusnamesjournaltolocal = {
+    "$Codex_Ent_Aleoids_Genus_Name;": "Aleoida",
+    "$Codex_Ent_Vents_Name;": "Amphora Plant",
+    "$Codex_Ent_Sphere_Name;": "Anemone",
+    "$Codex_Ent_Bacterial_Genus_Name;": "Bacterium",
+    "$Codex_Ent_Cone_Name;": "Bark Mound",
+    "$Codex_Ent_Brancae_Name;": "Brain Tree",
+    "$Codex_Ent_Cactoid_Genus_Name;": "Cactoida",
+    "$Codex_Ent_Conchas_Genus_Name;": "Concha",
+    "$Codex_Ent_Clypeus_Genus_Name;": "Clypeus",
+    "$Codex_Ent_Ground_Struct_Ice_Name;": "Crystalline Shards",
+    "$Codex_Ent_Electricae_Genus_Name;": "Electricae",
+    "$Codex_Ent_Fonticulus_Genus_Name;": "Fonticulua",
+    "$Codex_Ent_Shrubs_Genus_Name;": "Frutexa",
+    "$Codex_Ent_Fumerolas_Genus_Name;": "Fumerola",
+    "$Codex_Ent_Fungoids_Genus_Name;": "Fungoida",
+    "$Codex_Ent_Osseus_Genus_Name;": "Osseus",
+    "$Codex_Ent_Recepta_Genus_Name;": "Recepta",
+    "$Codex_Ent_Tube_Name;": "Sinuous Tubers",
+    "$Codex_Ent_Stratum_Genus_Name;": "Stratum",
+    "$Codex_Ent_Tubus_Genus_Name;": "Tubus",
+    "$Codex_Ent_Tussocks_Genus_Name;": "Tussock"
+}
+
+
 # Colonial ranges in m.
 # later check if any of these is in the localised name of the space plant as in the key being a substring.
 clonalcolonialranges = {
@@ -396,25 +423,43 @@ clonalcolonialranges = {
 }
 
 
-def getvistagenomicprices():
-    """Get price table."""
-    return vistagenomicsprices
-
-
 def getu14vistagenomicprices():
     """Get price table."""
     return u14vistagenomicsprices
 
 
-def getclonalcolonialranges():
+def getclonalcolonialranges(name: str) -> int:
     """Get clonal colonial ranges in m."""
-    return clonalcolonialranges
+    return clonalcolonialranges[name]
 
 
-def generaltolocalised(name):
+def genusgeneraltolocalised(name: str) -> str:
+    """
+    Translate journal name to localised name for organic scan.
+
+    expects the full journal name with preceding "$"
+    """
+    return genusnamesjournaltolocal[name]
+
+
+def generaltolocalised(name: str) -> str:
     """
     Translate journal name to localised name for organic scan.
 
     expects the full journal name with preceding "$" in all lowercase letters
     """
     return organicnamesjournaltolocal[name]
+
+
+def computedistanceangle(lat1: float, long1: float, lat2: float, long2: float) -> float:
+    """Compute the angle between two positions on a sphere."""
+    result = math.acos(math.sin(math.radians(lat1)) * math.sin(math.radians(lat2)) +
+                       math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+                       math.cos(math.radians(long2 - long1)))
+    return result
+
+
+def computedistance(lat1: float, long1: float, lat2: float, long2: float, r: float) -> float:
+    """Compute distance between two points (lat1, long1), (lat2, long2) on a planet with radius r."""
+    angle = computedistanceangle(lat1, long1, lat2, long2)
+    return angle * r
