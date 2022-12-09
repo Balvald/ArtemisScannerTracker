@@ -25,22 +25,19 @@ PLUGIN_NAME = "AST"
 # tracking of all the biological things that the CMDR scans.
 directory, filename = os.path.split(os.path.realpath(__file__))
 
-if not os.path.exists(directory + "\\soldbiodata.json"):
-    firstrun = True
-    f = open(directory + "\\soldbiodata.json", "w", encoding="utf8")
-    f.write(r"{}")
-    f.close()
+filenames = ["\\soldbiodata.json", "\\notsoldbiodata.json",  "\\cmdrstates.json"]
 
-if not os.path.exists(directory + "\\notsoldbiodata.json"):
-    firstrun = True
-    f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
-    f.write(r"{}")
-    f.close()
+for file in filenames:
+    if not os.path.exists(directory + file):
+        f = open(directory + file, "w", encoding="utf8")
+        f.write(r"{}")
+        f.close()
 
 not_yet_sold_data = {}
 sold_exobiology = {}
 currententrytowrite = {}
 currentcommander = ""
+cmdrstates = {}
 
 plugin = None
 
@@ -48,6 +45,9 @@ plugin = None
 
 with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
     not_yet_sold_data = json.load(f)
+
+with open(directory + "\\cmdrstates.json", "r+", encoding="utf8") as f:
+    cmdrstates = json.load(f)
 
 # Shows debug fields in preferences when True
 debug = False
@@ -163,6 +163,8 @@ class ArtemisScannerTracker:
         :return: The frame to add to the settings window
         """
         global currentcommander
+
+        load_cmdr(cmdr)
         currentcommander = cmdr
 
         current_row = 0
@@ -335,6 +337,9 @@ class ArtemisScannerTracker:
         :param cmdr: The current ED Commander
         :param is_beta: Whether or not EDMC is currently marked as in beta mode
         """
+        global currentcommander
+        save_cmdr(currentcommander)
+
         config.set("AST_current_scan_progress", int(
             self.AST_current_scan_progress.get()[0]))
         config.set("AST_last_scan_system", str(
@@ -426,9 +431,25 @@ def dashboard_entry(cmdr: str, is_beta, entry):
     logger.debug(f'Status.json says: {entry}')
     # 'Latitude': -19.506268, 'Longitude': -4.657524, 'Heading': 298,
     # 'Altitude': 1320594, 'BodyName': 'Murato 3 a', 'PlanetRadius': 3741155.5,
-    global plugin
+    global plugin, currentcommander
 
     flag = False
+
+    if currentcommander != cmdr:
+        # Check if new and old Commander are in the cmdrstates file.
+        save_cmdr(currentcommander)
+        # New Commander not in cmdr states file.
+        if cmdr not in cmdrstates.keys():
+            # completely new cmdr theres nothing to load
+            cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
+        else:
+            # Load cmdr from cmdr states.
+            load_cmdr(cmdr)
+
+        # Set new Commander to currentcommander
+        currentcommander = cmdr
+
+        flag = True
 
     if "PlanetRadius" in entry.keys():
         if not plugin.AST_near_planet:
@@ -470,6 +491,46 @@ def dashboard_entry(cmdr: str, is_beta, entry):
         rebuild_ui(plugin, cmdr)
 
 
+def save_cmdr(cmdr):
+    global plugin, directory
+
+    if cmdr not in cmdrstates.keys():
+        cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
+
+    cmdrstates[cmdr][0] = plugin.AST_last_scan_plant.get()
+    cmdrstates[cmdr][1] = plugin.AST_last_scan_system.get()
+    cmdrstates[cmdr][2] = plugin.AST_last_scan_body.get()
+    cmdrstates[cmdr][3] = plugin.AST_current_scan_progress.get()
+    cmdrstates[cmdr][4] = plugin.AST_state.get()
+    cmdrstates[cmdr][5] = plugin.AST_value.get()
+    cmdrstates[cmdr][6] = plugin.AST_CCR.get()
+    cmdrstates[cmdr][7] = plugin.AST_scan_1_pos_vector.copy()
+    cmdrstates[cmdr][8] = plugin.AST_scan_2_pos_vector.copy()
+
+    file = directory + "\\cmdrstates.json"
+
+    with open(file, "r+", encoding="utf8") as f:
+        json.dump(cmdrstates, f, indent=4)
+
+
+def load_cmdr(cmdr):
+    global cmdrstates, plugin
+    file = directory + "\\cmdrstates.json"
+
+    with open(file, "r+", encoding="utf8") as f:
+        cmdrstates = json.load(f)
+
+    plugin.AST_last_scan_plant.set(cmdrstates[cmdr][0])
+    plugin.AST_last_scan_system.set(cmdrstates[cmdr][1])
+    plugin.AST_last_scan_body.set(cmdrstates[cmdr][2])
+    plugin.AST_current_scan_progress.set(cmdrstates[cmdr][3])
+    plugin.AST_state.set(cmdrstates[cmdr][4])
+    plugin.AST_value.set(cmdrstates[cmdr][5])
+    plugin.AST_CCR.set(cmdrstates[cmdr][6])
+    plugin.AST_scan_1_pos_vector = cmdrstates[cmdr][7].copy()
+    plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8].copy()
+
+
 def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):
     """
     React accordingly to events in the journal.
@@ -487,10 +548,18 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     global plugin, currentcommander
 
     if currentcommander != cmdr:
-        # New Commander Save state of current Commander
+        # Check if new and old Commander are in the cmdrstates file.
+        save_cmdr(currentcommander)
+        # New Commander not in cmdr states file.
+        if cmdr not in cmdrstates.keys():
+            # completely new cmdr theres nothing to load
+            cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
+        else:
+            # Load cmdr from cmdr states.
+            load_cmdr(cmdr)
+        # Set new Commander to currentcommander
         currentcommander = cmdr
 
-        # Load state of current Commander
         rebuild_ui(plugin, cmdr)
 
     if plugin.AST_current_system.get() == "None":
