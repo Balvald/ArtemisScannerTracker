@@ -164,166 +164,92 @@ class ArtemisScannerTracker:
         """
         global currentcommander
         currentcommander = cmdr
-        if currentcommander != "":
+        if currentcommander != "" and currentcommander is not None:
             load_cmdr(cmdr)
+
+        line = "___________________________________________________________"
 
         current_row = 0
         frame = nb.Frame(parent)
 
-        nb.Label(frame, text="Artemis Scanner Tracker v0.1.3 dev by Balvald").grid(
-            row=current_row, sticky=tk.W)
-        current_row += 1
-        nb.Label(
-            frame,
-            text="___________________________________________________________"
-        ).grid(row=current_row, sticky=tk.W)
+        # nb.Label(frame, text="Artemis Scanner Tracker v0.1.3 dev by Balvald").grid(
+        #     row=current_row, sticky=tk.W)
 
-        nb.Label(
-            frame,
-            text="___________________________________________________________"
-        ).grid(row=current_row, column=1, sticky=tk.W)
+        prefs_label(frame, "Artemis Scanner Tracker v0.1.3 dev by Balvald", current_row, 0, tk.W)
 
         current_row += 1
 
-        nb.Checkbutton(
-            frame,
-            text="Hide Full Status",
-            variable=self.AST_hide_fullscan).grid(
-            row=current_row, column=0, sticky="W")
-        nb.Checkbutton(
-            frame,
-            text="Hide Value of unsold Scans",
-            variable=self.AST_hide_value).grid(
-            row=current_row, column=1, sticky="W")
+        prefs_label(frame, line, current_row, 0, tk.W)
+        prefs_label(frame, line, current_row, 1, tk.W)
+
         current_row += 1
-        nb.Checkbutton(
-            frame,
-            text="Hide Species",
-            variable=self.AST_hide_species).grid(
-            row=current_row, column=0, sticky="W")
-        nb.Checkbutton(
-            frame,
-            text="Hide Scan Progress",
-            variable=self.AST_hide_progress).grid(
-            row=current_row, column=1, sticky="W")
-        current_row += 1
-        nb.Checkbutton(
-            frame,
-            text="Hide System of last Scan",
-            variable=self.AST_hide_last_system).grid(
-            row=current_row, column=0, sticky="W")
-        nb.Checkbutton(
-            frame,
-            text="Hide Body of last Scan",
-            variable=self.AST_hide_last_body).grid(
-            row=current_row, column=1, sticky="W")
-        current_row += 1
-        nb.Checkbutton(
-            frame,
-            text="Hide Current System",
-            variable=self.AST_hide_system).grid(
-            row=current_row, column=0, sticky="W")
-        nb.Checkbutton(
-            frame,
-            text="Hide Current Body",
-            variable=self.AST_hide_body).grid(
-            row=current_row, column=1, sticky="W")
-        current_row += 1
-        nb.Checkbutton(
-            frame,
-            text="Hide Scanned/Sold Species in System",
-            variable=self.AST_hide_sold_bio).grid(
-            row=current_row, column=0, sticky="W")
-        nb.Checkbutton(
-            frame,
-            text="Hide Clonal Colonial Distances",
-            variable=self.AST_hide_CCR).grid(
-            row=current_row, column=1, sticky="W")
-        current_row += 1
+
+        checkboxlistleft = ["Hide Full Status", "Hide Species",
+                            "Hide System of last Scan", "Hide Current System",
+                            "Hide Scanned/Sold Species in System"]
+        checkboxlistright = ["Hide Value of unsold Scans", "Hide Scan Progress",
+                             "Hide Body of last Scan", "Hide Current Body",
+                             "Hide Clonal Colonial Distances"]
+
+        variablelistleft = [self.AST_hide_fullscan, self.AST_hide_species,
+                            self.AST_hide_last_system, self.AST_hide_system,
+                            self.AST_hide_sold_bio]
+        variablelistright = [self.AST_hide_value, self.AST_hide_progress,
+                             self.AST_hide_last_body, self.AST_hide_body,
+                             self.AST_hide_CCR]
+
+        for i in range(max(len(checkboxlistleft), len(checkboxlistright))):
+            if i < len(checkboxlistleft):
+                prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
+            if i < len(checkboxlistright):
+                prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
+            current_row += 1
+
         if debug:
-            # setup debug fields for the scanner.
-            nb.Label(frame, text="Species").grid(row=current_row, sticky=tk.W)
-            nb.Entry(frame, textvariable=self.AST_last_scan_plant).grid(
-                row=current_row, column=1, sticky=tk.W)
-            current_row += 1
 
-            nb.Label(frame, text="System of last Scan").grid(
-                row=current_row, sticky=tk.W)
-            nb.Entry(frame, textvariable=self.AST_last_scan_system).grid(
-                row=current_row, column=1, sticky=tk.W)
-            current_row += 1
+            debuglistleft = ["Species", "System of last Scan",
+                             "Body of last Scan", "Scan progress",
+                             "Scanned Value"]
+            debuglistright = [self.AST_last_scan_plant, self.AST_last_scan_system,
+                              self.AST_last_scan_body, self.AST_current_scan_progress,
+                              self.AST_value]
 
-            nb.Label(frame, text="Body of last Scan").grid(
-                row=current_row, sticky=tk.W)
-            nb.Entry(frame, textvariable=self.AST_last_scan_body).grid(
-                row=current_row, column=1, sticky=tk.W)
-            current_row += 1
+            for i in range(max(len(debuglistleft), len(debuglistright))):
+                if i < len(debuglistleft):
+                    prefs_label(frame, debuglistleft[i], current_row, 0, tk.W)
+                if i < len(debuglistright):
+                    prefs_entry(frame, debuglistright[i], current_row, 0, tk.W)
+                current_row += 1
 
-            nb.Label(frame, text="Scan progress").grid(
-                row=current_row, sticky=tk.W)
-            nb.Entry(frame, textvariable=self.AST_current_scan_progress).grid(
-                row=current_row, column=1, sticky=tk.W)
-            current_row += 1
-
-            nb.Label(frame, text="Scanned Value").grid(
-                row=current_row, sticky=tk.W)
-            nb.Entry(frame, textvariable=self.AST_value).grid(
-                row=current_row, column=1, sticky=tk.W)
-            current_row += 1
-
-        nb.Label(
-            frame,
-            text="___________________________________________________________"
-        ).grid(row=current_row, sticky=tk.W)
-
-        nb.Label(
-            frame,
-            text="___________________________________________________________"
-        ).grid(row=current_row, column=1, sticky=tk.W)
+        prefs_label(frame, line, current_row, 0, tk.W)
+        prefs_label(frame, line, current_row, 1, tk.W)
 
         current_row += 1
 
-        nb.Button(
-            frame,
-            text="Scan game journals for sold exobiology",
-            command=self.buildsoldbiodatajson).grid(
-            row=current_row, column=0, sticky=tk.W)
-
-        nb.Button(
-            frame,
-            text="Scan local journal folder for sold exobiology",
-            command=self.buildsoldbiodatajsonlocal).grid(
-            row=current_row, column=1, sticky=tk.W)
+        text = "Scan game journals for sold exobiology"
+        prefs_button(frame, text, self.buildsoldbiodatajson, current_row, 0, tk.W)
+        text = "Scan local journal folder for sold exobiology"
+        prefs_button(frame, text, self.buildsoldbiodatajsonlocal, current_row, 1, tk.W)
 
         current_row += 1
 
-        nb.Label(
-            frame,
-            text="___________________________________________________________"
-        ).grid(row=current_row, sticky=tk.W)
-
-        nb.Label(
-            frame,
-            text="___________________________________________________________"
-        ).grid(row=current_row, column=1, sticky=tk.W)
+        prefs_label(frame, line, current_row, 0, tk.W)
+        prefs_label(frame, line, current_row, 1, tk.W)
 
         current_row += 1
 
-        nb.Label(
-            frame,
-            text="To reset the status, body, system and species"
-        ).grid(row=current_row, sticky=tk.W)
+        text = "To reset the status, body, system and species"
+        prefs_label(frame, text, current_row, 0, tk.W)
+
         current_row += 1
-        nb.Label(
-            frame,
-            text="of the last scan press the button below").grid(
-            row=current_row, sticky=tk.W)
-        current_row += 2
-        nb.Button(
-            frame,
-            text="RESET",
-            command=self.reset).grid(
-            row=current_row, sticky=tk.W)
+
+        text = "of the last scan press the button below"
+        prefs_label(frame, text, current_row, 0, tk.W)
+
+        current_row += 1
+
+        prefs_button(frame, "RESET", self.reset, current_row, 0, tk.W)
+
         current_row += 1
 
         return frame
@@ -340,7 +266,7 @@ class ArtemisScannerTracker:
         global currentcommander
         if currentcommander != "":
             save_cmdr(currentcommander)
-        if currentcommander != cmdr and cmdr != "":
+        if currentcommander != cmdr and cmdr != "" and cmdr is not None:
             currentcommander = cmdr
             load_cmdr(currentcommander)
 
@@ -448,7 +374,8 @@ def dashboard_entry(cmdr: str, is_beta, entry):
             cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
         else:
             # Load cmdr from cmdr states.
-            load_cmdr(cmdr)
+            if cmdr is not None:
+                load_cmdr(cmdr)
 
         # Set new Commander to currentcommander
         currentcommander = cmdr
@@ -568,7 +495,8 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
             cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
         else:
             # Load cmdr from cmdr states.
-            load_cmdr(cmdr)
+            if cmdr is not None:
+                load_cmdr(cmdr)
         # Set new Commander to currentcommander
         currentcommander = cmdr
 
@@ -941,7 +869,8 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
         current_row -= 1
         tk.Label(frame, text="Unsold Scan Value:").grid(row=current_row, sticky=tk.W)
         tk.Label(frame, textvariable=plugin.AST_value).grid(row=current_row, column=1, sticky=tk.W)
-        tk.Button(frame, text="📋", command=clipboard).grid(row=current_row, column=2, sticky=tk.E)
+        ui_button(frame, "📋", clipboard, current_row, 2, tk.E)
+        # tk.Button(frame, text="📋", command=clipboard).grid(row=current_row, column=2, sticky=tk.E)
 
     if plugin.AST_hide_last_body.get() != 1:
         current_row -= 1
@@ -1058,20 +987,32 @@ def build_sold_bio_ui(plugin, cmdr: str):  # noqa #CCR001
         tk.Label(frame, text=bodies).grid(row=current_row, column=1, sticky=tk.W)
 
 
-def preference_label():
-    pass
+def prefs_label(frame, text, row, col, sticky):
+    nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
-def preference_button():
-    pass
+def prefs_entry(frame, textvariable, row, col, sticky):
+    nb.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
-def ui_label():
-    pass
+def prefs_button(frame, text, command, row, col, sticky):
+    nb.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 
-def ui_button():
-    pass
+def prefs_tickbutton(frame, text, variable, row, col, sticky):
+    nb.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
+
+
+def ui_label(frame, text, row, col, sticky):
+    tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
+
+
+def ui_entry(frame, textvariable, row, col, sticky):
+    tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
+
+
+def ui_button(frame, text, command, row, col, sticky):
+    tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 
 def plugin_start3(plugin_dir: str) -> str:
