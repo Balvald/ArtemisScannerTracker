@@ -11,8 +11,9 @@ from config import appname, config  # type: ignore
 from theme import theme  # type: ignore
 
 from journalcrawler import build_biodata_json
-from organicinfo import bearing, computedistance, generaltolocalised, getclonalcolonialranges, \
-                        genusgeneraltolocalised, getu14vistagenomicprices
+from organicinfo import bearing, computedistance, generaltolocalised, \
+    getclonalcolonialranges, genusgeneraltolocalised, getu14vistagenomicprices
+
 
 frame: Optional[tk.Frame] = None
 
@@ -31,6 +32,8 @@ for file in filenames:
         f = open(directory + file, "w", encoding="utf8")
         f.write(r"{}")
         f.close()
+
+firstdashboard = True
 
 not_yet_sold_data = {}
 sold_exobiology = {}
@@ -64,26 +67,16 @@ class ArtemisScannerTracker:
         # Be sure to use names that wont collide in our config variables
         # Bools for show hide checkboxes
 
-        self.AST_hide_fullscan: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_fullscan"))
-        self.AST_hide_species: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_species"))
-        self.AST_hide_progress: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_progress"))
-        self.AST_hide_last_system: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_last_system"))
-        self.AST_hide_last_body: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_last_body"))
-        self.AST_hide_system: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_system"))
-        self.AST_hide_body: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_body"))
-        self.AST_hide_value: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_value"))
-        self.AST_hide_sold_bio: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_sold_bio"))
-        self.AST_hide_CCR: Optional[tk.IntVar] = tk.IntVar(
-            value=config.get_int("AST_hide_CCR"))
+        self.AST_hide_fullscan: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_fullscan"))
+        self.AST_hide_species: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_species"))
+        self.AST_hide_progress: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_progress"))
+        self.AST_hide_last_system: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_last_system"))
+        self.AST_hide_last_body: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_last_body"))
+        self.AST_hide_system: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_system"))
+        self.AST_hide_body: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_body"))
+        self.AST_hide_value: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_value"))
+        self.AST_hide_sold_bio: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_sold_bio"))
+        self.AST_hide_CCR: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_CCR"))
 
         # bool to steer when the CCR feature is visible
         self.AST_near_planet: Optional[tk.BooleanVar] = False
@@ -93,7 +86,7 @@ class ArtemisScannerTracker:
         self.AST_scan_1_pos_vector = [None, None]
         self.AST_scan_2_pos_vector = [None, None]
 
-        self.AST_CCR: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_CCR"))
+        self.AST_CCR: Optional[tk.IntVar] = tk.IntVar(value=0)
 
         # radius of the most current planet
         self.AST_current_radius: Optional[tk.StringVar] = tk.StringVar(value="")
@@ -102,21 +95,17 @@ class ArtemisScannerTracker:
         self.AST_scan_1_pos_dist: Optional[tk.StringVar] = tk.StringVar(value="")
         self.AST_scan_2_pos_dist: Optional[tk.StringVar] = tk.StringVar(value="")
 
+        # last Commander
+        self.AST_last_CMDR: Optional[tk.StringVar] = tk.StringVar(value=str(config.get_str("AST_last_CMDR")))
+
         # Artemis Scanner State infos
-        self.AST_last_scan_plant: Optional[tk.StringVar] = tk.StringVar(
-            value=str(config.get_str("AST_last_scan_plant")))
-        self.AST_last_scan_system: Optional[tk.StringVar] = tk.StringVar(
-            value=str(config.get_str("AST_last_scan_system")))
-        self.AST_last_scan_body: Optional[tk.StringVar] = tk.StringVar(
-            value=str(config.get_str("AST_last_scan_body")))
-        self.AST_current_scan_progress: Optional[tk.StringVar] = tk.StringVar(
-            value=(str(config.get_int("AST_current_scan_progress")) + str("/3")))
-        self.AST_current_system: Optional[tk.StringVar] = tk.StringVar(
-            value=str(config.get_str("AST_current_system")))
-        self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(
-            value=str(config.get_str("AST_current_body")))
-        self.AST_state: Optional[tk.StringVar] = tk.StringVar(
-            value=str(config.get_str("AST_state")))
+        self.AST_last_scan_plant: Optional[tk.StringVar] = tk.StringVar(value=str())
+        self.AST_last_scan_system: Optional[tk.StringVar] = tk.StringVar(value=str())
+        self.AST_last_scan_body: Optional[tk.StringVar] = tk.StringVar(value=str())
+        self.AST_current_scan_progress: Optional[tk.StringVar] = tk.StringVar(value=())
+        self.AST_current_system: Optional[tk.StringVar] = tk.StringVar(value=str())
+        self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(value=str())
+        self.AST_state: Optional[tk.StringVar] = tk.StringVar(value=str())
 
         rawvalue = int(config.get_int("AST_value"))
 
@@ -269,30 +258,25 @@ class ArtemisScannerTracker:
             currentcommander = cmdr
             load_cmdr(currentcommander)
 
-        config.set("AST_current_scan_progress", int(
-            self.AST_current_scan_progress.get()[0]))
-        config.set("AST_last_scan_system", str(
-            self.AST_last_scan_system.get()))
-        config.set("AST_last_scan_body", str(self.AST_last_scan_body.get()))
-        config.set("AST_last_scan_plant", str(self.AST_last_scan_plant.get()))
-        config.set("AST_state", str(self.AST_state.get()))
-
         # for formatting the string with thousands seperators we have to remove them here again.
         config.set("AST_value", int(self.AST_value.get().replace(",", "").split(" ")[0]))
 
-        config.set("AST_CCR", int(self.AST_CCR.get()))
+        """        config.set("AST_CCR", int(self.AST_CCR.get()))"""
 
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
         config.set("AST_hide_fullscan", int(self.AST_hide_fullscan.get()))
         config.set("AST_hide_species", int(self.AST_hide_species.get()))
         config.set("AST_hide_progress", int(self.AST_hide_progress.get()))
-        config.set("AST_hide_last_system", int(
-            self.AST_hide_last_system.get()))
+        config.set("AST_hide_last_system", int(self.AST_hide_last_system.get()))
         config.set("AST_hide_last_body", int(self.AST_hide_last_body.get()))
         config.set("AST_hide_system", int(self.AST_hide_system.get()))
         config.set("AST_hide_body", int(self.AST_hide_body.get()))
         config.set("AST_hide_sold_bio", int(self.AST_hide_sold_bio.get()))
         config.set("AST_hide_CCR", int(self.AST_hide_CCR.get()))
+
+        logger.info(f"Currently last Commander is: {cmdr}")
+
+        config.set("AST_last_CMDR", str(cmdr))
 
         logger.debug("ArtemisScannerTracker saved preferences")
 
@@ -307,6 +291,12 @@ class ArtemisScannerTracker:
         """
         global frame, currentcommander
 
+        try:
+            load_cmdr(self.AST_last_CMDR.get())
+        except KeyError:
+            # last Commander saved is just not known
+            pass
+
         frame = tk.Frame(parent)
 
         rebuild_ui(self, currentcommander)
@@ -316,8 +306,8 @@ class ArtemisScannerTracker:
     def reset(self):
         """Reset function of the Reset Button."""
         self.AST_current_scan_progress.set("0/3")
-        self.AST_last_scan_system.set("None")
-        self.AST_last_scan_body.set("None")
+        self.AST_last_scan_system.set("")
+        self.AST_last_scan_body.set("")
         self.AST_last_scan_plant.set("None")
         self.AST_state.set("None")
         self.AST_value.set("0 Cr.")
@@ -357,10 +347,10 @@ def dashboard_entry(cmdr: str, is_beta, entry):
     :param entry: full excerpt from status.json
     """
     # print full excerpt to check everything is there.
-    logger.debug(f'Status.json says: {entry}')
+    # logger.debug(f'Status.json says: {entry}')
     # 'Latitude': -19.506268, 'Longitude': -4.657524, 'Heading': 298,
     # 'Altitude': 1320594, 'BodyName': 'Murato 3 a', 'PlanetRadius': 3741155.5,
-    global plugin, currentcommander
+    global plugin, currentcommander, firstdashboard
 
     flag = False
 
@@ -372,14 +362,17 @@ def dashboard_entry(cmdr: str, is_beta, entry):
             # completely new cmdr theres nothing to load
             cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
         else:
-            # Load cmdr from cmdr states.
-            if cmdr is not None:
+            if cmdr is not None and cmdr != "":
                 load_cmdr(cmdr)
 
         # Set new Commander to currentcommander
         currentcommander = cmdr
 
         flag = True
+
+    if firstdashboard:
+        firstdashboard = False
+        plugin.on_preferences_closed(cmdr, is_beta)
 
     if "PlanetRadius" in entry.keys():
         if not plugin.AST_near_planet:
@@ -399,18 +392,18 @@ def dashboard_entry(cmdr: str, is_beta, entry):
                                                                      plugin.AST_scan_1_pos_vector[0],
                                                                      plugin.AST_scan_1_pos_vector[1],
                                                                      plugin.AST_current_radius), 2))
-                                           + " m / " + str(plugin.AST_CCR.get()) + " m" +
+                                           + " m / " + str(plugin.AST_CCR.get()) + " m, B:" +
                                            str(round(bearing(plugin.AST_current_pos_vector[0],
                                                              plugin.AST_current_pos_vector[1],
-                                                             plugin.AST_scan_2_pos_vector[0],
-                                                             plugin.AST_scan_2_pos_vector[1]), 2)))
+                                                             plugin.AST_scan_1_pos_vector[0],
+                                                             plugin.AST_scan_1_pos_vector[1]), 2)))
         if plugin.AST_current_scan_progress.get() == "2/3" and plugin.AST_scan_1_pos_vector[0] is not None:
             plugin.AST_scan_2_pos_dist.set(str(round(computedistance(plugin.AST_current_pos_vector[0],
                                                                      plugin.AST_current_pos_vector[1],
                                                                      plugin.AST_scan_2_pos_vector[0],
                                                                      plugin.AST_scan_2_pos_vector[1],
                                                                      plugin.AST_current_radius), 2))
-                                           + " m / " + str(plugin.AST_CCR.get()) + " m" +
+                                           + " m / " + str(plugin.AST_CCR.get()) + " m, B:" +
                                            str(round(bearing(plugin.AST_current_pos_vector[0],
                                                              plugin.AST_current_pos_vector[1],
                                                              plugin.AST_scan_2_pos_vector[0],
@@ -447,6 +440,7 @@ def save_cmdr(cmdr):
 
     file = directory + "\\cmdrstates.json"
 
+    open(file, "w", encoding="utf8").close()
     with open(file, "r+", encoding="utf8") as f:
         json.dump(cmdrstates, f, indent=4)
 
@@ -465,8 +459,8 @@ def load_cmdr(cmdr):
     plugin.AST_state.set(cmdrstates[cmdr][4])
     plugin.AST_value.set(cmdrstates[cmdr][5])
     plugin.AST_CCR.set(cmdrstates[cmdr][6])
-    plugin.AST_scan_1_pos_vector = cmdrstates[cmdr][7].copy()
-    plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8].copy()
+    plugin.AST_scan_1_pos_vector = cmdrstates[cmdr][7]
+    plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8]
 
 
 def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):
@@ -485,7 +479,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     """
     global plugin, currentcommander
 
-    if currentcommander != cmdr and currentcommander is not None:
+    if currentcommander != cmdr and currentcommander != "" and currentcommander is not None:
         # Check if new and old Commander are in the cmdrstates file.
         save_cmdr(currentcommander)
         # New Commander not in cmdr states file.
@@ -501,13 +495,18 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
         rebuild_ui(plugin, cmdr)
 
-    if plugin.AST_current_system.get() == "None":
+    if plugin.AST_current_system.get() != system:
+        plugin.AST_current_system.set(system)
+        rebuild_ui(plugin, cmdr)
+
+    if plugin.AST_current_system.get() == "" or plugin.AST_current_system.get() == "None":
         plugin.AST_current_system.set(str(system))
 
     flag = False
 
     # Prepare to fix probable bugs before a user might report them:
     # TODO: Do not update anything while not in Live universe of E:D!
+
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # TODO: Check how real death differs from frontline solutions ground combat zone death.
 
@@ -517,7 +516,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if entry["event"] == "ScanOrganic":
         flag = True
-        bioscan_event(cmdr, entry)
+        bioscan_event(cmdr, is_beta, entry)
 
     if entry["event"] in ["Location", "Embark", "Disembark", "Touchdown", "Liftoff", "FSDJump"]:
         flag = True
@@ -545,7 +544,7 @@ def resurrection_event(cmdr: str):
     not_yet_sold_data[cmdr] = []
 
 
-def bioscan_event(cmdr: str, entry):  # noqa #CCR001
+def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin
     plugin.AST_last_scan_plant.set(generaltolocalised(entry["Species"].lower()))
@@ -562,6 +561,7 @@ def bioscan_event(cmdr: str, entry):  # noqa #CCR001
         plugin.AST_CCR.set(getclonalcolonialranges(genusgeneraltolocalised(entry["Genus"])))
         plugin.AST_scan_1_pos_vector[0] = plugin.AST_current_pos_vector[0]
         plugin.AST_scan_1_pos_vector[1] = plugin.AST_current_pos_vector[1]
+        plugin.on_preferences_closed(cmdr, is_beta)
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
 
@@ -577,10 +577,14 @@ def bioscan_event(cmdr: str, entry):  # noqa #CCR001
             # clear the scan locations to [None, None]
             plugin.AST_scan_1_pos_vector = [None, None]
             plugin.AST_scan_2_pos_vector = [None, None]
-            plugin.AST_CCR.set(-1)
+            plugin.AST_CCR.set(0)
+            plugin.AST_scan_1_pos_dist.set("")
+            plugin.AST_scan_2_pos_dist.set("")
             currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
             currententrytowrite["system"] = plugin.AST_current_system.get()
             currententrytowrite["body"] = plugin.AST_current_body.get()
+            if cmdr not in not_yet_sold_data.keys():
+                not_yet_sold_data[cmdr] = []
             if currententrytowrite not in not_yet_sold_data[cmdr]:
                 # If there is no second Sample scantype event
                 # we have to save the data here.
@@ -631,9 +635,17 @@ def system_body_change_event(cmdr: str, entry):
     # When the CMDR gets another journal entry that tells us
     # the players location.
 
-    if ((plugin.AST_last_scan_system.get() == "None") or (plugin.AST_last_scan_body.get() == "None")):
+    if (((plugin.AST_last_scan_system.get() == "")
+         or (plugin.AST_last_scan_body.get() == "")
+         or (plugin.AST_last_scan_system.get() == "None")
+         or (plugin.AST_last_scan_body.get() == "None"))):
         plugin.AST_last_scan_system.set(entry["StarSystem"])
         plugin.AST_last_scan_body.set(entry["Body"])
+
+    if cmdrstates[cmdr][1] == "" or cmdrstates[cmdr][2] == "":
+        cmdrstates[cmdr][1] = plugin.AST_last_scan_system.get()
+        cmdrstates[cmdr][2] = plugin.AST_last_scan_body.get()
+        save_cmdr(cmdr)
 
 
 def biosell_event(cmdr: str, entry):  # noqa #CCR001
@@ -663,6 +675,8 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
     # build by system dict, has the form of {<system> : {<species> : <amount>}}
     logger.info(f'Value that was sold: {soldvalue}')
     bysystem = {}
+    if cmdr not in not_yet_sold_data.keys():
+        not_yet_sold_data[cmdr] = []
     for biodata in not_yet_sold_data[cmdr]:
         if biodata["system"] in bysystem.keys():
             # We already know the system
@@ -897,8 +911,13 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
 
     tk.Label(frame, text="Scans in this System:").grid(row=current_row, sticky=tk.W)
 
+    if cmdr == "":
+        return
+
     # Check if we even got a cmdr yet!
-    logger.info(f"Commander: {cmdr}. attempting to access")
+    # logger.info(f"Commander: {cmdr}. attempting to access")
+    # logger.info(f"data: {soldbiodata[cmdr]}.")
+    # logger.info(f"data: {notsoldbiodata}.")
 
     bodylistofspecies = {}
 
@@ -919,7 +938,6 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
                     bodylistofspecies[sold["species"]] = [[bodyname, True]]
                 else:
                     bodylistofspecies[sold["species"]].append([bodyname, True])
-
     except KeyError:
         # if we don't have the cmdr in the sold data yet we just pass all sold data.
         pass
@@ -941,7 +959,6 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
                     bodylistofspecies[notsold["species"]] = [[bodyname, False]]
                 else:
                     bodylistofspecies[notsold["species"]].append([bodyname, False])
-
     except KeyError:
         # if we don't have the cmdr in the notsold data yet we just pass.
         pass

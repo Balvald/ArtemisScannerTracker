@@ -479,4 +479,8 @@ def bearing(lat1: float, lon1: float, lat2: float, lon2: float):
     theta = math.atan2(x, y)
 
     # Return the bearing in degrees
-    return math.degrees(theta)
+    result = math.degrees(theta)
+    if result < 0:
+        result += 360
+
+    return result
