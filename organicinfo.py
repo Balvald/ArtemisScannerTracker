@@ -397,7 +397,6 @@ genusnamesjournaltolocal = {
 
 
 # Colonial ranges in m.
-# later check if any of these is in the localised name of the space plant as in the key being a substring.
 clonalcolonialranges = {
     "Brain Tree": 100,
     "Bark Mound": 100,
@@ -463,3 +462,21 @@ def computedistance(lat1: float, long1: float, lat2: float, long2: float, r: flo
     """Compute distance between two points (lat1, long1), (lat2, long2) on a planet with radius r."""
     angle = computedistanceangle(lat1, long1, lat2, long2)
     return angle * r
+
+
+def bearing(lat1: float, lon1: float, lat2: float, lon2: float):
+    # Convert latitude and longitude to radians
+    lat1 = math.radians(lat1)
+    lon1 = math.radians(lon1)
+    lat2 = math.radians(lat2)
+    lon2 = math.radians(lon2)
+
+    # Compute the parameters for atan2
+    x = math.sin(lon2 - lon1) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1)
+
+    # Compute the bearing in radians
+    theta = math.atan2(x, y)
+
+    # Return the bearing in degrees
+    return math.degrees(theta)

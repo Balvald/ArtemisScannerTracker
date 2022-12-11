@@ -13,7 +13,7 @@ from theme import theme  # type: ignore
 from journalcrawler import build_biodata_json
 from organicinfo import computedistance, getclonalcolonialranges, \
                         getu14vistagenomicprices, generaltolocalised, \
-                        genusgeneraltolocalised
+                        genusgeneraltolocalised, bearing
 
 frame: Optional[tk.Frame] = None
 
@@ -163,9 +163,9 @@ class ArtemisScannerTracker:
         :return: The frame to add to the settings window
         """
         global currentcommander
-
-        load_cmdr(cmdr)
         currentcommander = cmdr
+        if currentcommander != "":
+            load_cmdr(cmdr)
 
         current_row = 0
         frame = nb.Frame(parent)
@@ -338,7 +338,11 @@ class ArtemisScannerTracker:
         :param is_beta: Whether or not EDMC is currently marked as in beta mode
         """
         global currentcommander
-        save_cmdr(currentcommander)
+        if currentcommander != "":
+            save_cmdr(currentcommander)
+        if currentcommander != cmdr and cmdr != "":
+            currentcommander = cmdr
+            load_cmdr(currentcommander)
 
         config.set("AST_current_scan_progress", int(
             self.AST_current_scan_progress.get()[0]))
@@ -435,7 +439,7 @@ def dashboard_entry(cmdr: str, is_beta, entry):
 
     flag = False
 
-    if currentcommander != cmdr:
+    if currentcommander != cmdr and currentcommander != "":
         # Check if new and old Commander are in the cmdrstates file.
         save_cmdr(currentcommander)
         # New Commander not in cmdr states file.
@@ -469,14 +473,22 @@ def dashboard_entry(cmdr: str, is_beta, entry):
                                                                      plugin.AST_scan_1_pos_vector[0],
                                                                      plugin.AST_scan_1_pos_vector[1],
                                                                      plugin.AST_current_radius), 2))
-                                           + " m / " + str(plugin.AST_CCR.get()) + " m")
+                                           + " m / " + str(plugin.AST_CCR.get()) + " m" +
+                                           str(round(bearing(plugin.AST_current_pos_vector[0],
+                                                             plugin.AST_current_pos_vector[1],
+                                                             plugin.AST_scan_2_pos_vector[0],
+                                                             plugin.AST_scan_2_pos_vector[1]), 2)))
         if plugin.AST_current_scan_progress.get() == "2/3" and plugin.AST_scan_1_pos_vector[0] is not None:
             plugin.AST_scan_2_pos_dist.set(str(round(computedistance(plugin.AST_current_pos_vector[0],
                                                                      plugin.AST_current_pos_vector[1],
                                                                      plugin.AST_scan_2_pos_vector[0],
                                                                      plugin.AST_scan_2_pos_vector[1],
                                                                      plugin.AST_current_radius), 2))
-                                           + " m / " + str(plugin.AST_CCR.get()) + " m")
+                                           + " m / " + str(plugin.AST_CCR.get()) + " m" +
+                                           str(round(bearing(plugin.AST_current_pos_vector[0],
+                                                             plugin.AST_current_pos_vector[1],
+                                                             plugin.AST_scan_2_pos_vector[0],
+                                                             plugin.AST_scan_2_pos_vector[1]), 2)))
     else:
         if plugin.AST_near_planet:
             flag = True
@@ -564,12 +576,6 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if plugin.AST_current_system.get() == "None":
         plugin.AST_current_system.set(str(system))
-
-    # logger.debug(f'The value cmdr in journal_entry is: {cmdr}')
-    # logger.debug(f'The value is_beta in journal_entry is: {is_beta}')
-    # logger.debug(f'The value system in journal_entry is: {system}')
-    # logger.debug(f'The value station in journal_entry is: {station}')
-    # logger.debug(f'The value state in journal_entry is: {state}')
 
     flag = False
 
@@ -1050,6 +1056,22 @@ def build_sold_bio_ui(plugin, cmdr: str):  # noqa #CCR001
             bodies = bodies[:-2]
 
         tk.Label(frame, text=bodies).grid(row=current_row, column=1, sticky=tk.W)
+
+
+def preference_label():
+    pass
+
+
+def preference_button():
+    pass
+
+
+def ui_label():
+    pass
+
+
+def ui_button():
+    pass
 
 
 def plugin_start3(plugin_dir: str) -> str:
