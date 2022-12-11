@@ -11,9 +11,8 @@ from config import appname, config  # type: ignore
 from theme import theme  # type: ignore
 
 from journalcrawler import build_biodata_json
-from organicinfo import computedistance, getclonalcolonialranges, \
-                        getu14vistagenomicprices, generaltolocalised, \
-                        genusgeneraltolocalised, bearing
+from organicinfo import bearing, computedistance, generaltolocalised, getclonalcolonialranges, \
+                        genusgeneraltolocalised, getu14vistagenomicprices
 
 frame: Optional[tk.Frame] = None
 
@@ -264,7 +263,7 @@ class ArtemisScannerTracker:
         :param is_beta: Whether or not EDMC is currently marked as in beta mode
         """
         global currentcommander
-        if currentcommander != "":
+        if currentcommander != "" and currentcommander is not None:
             save_cmdr(currentcommander)
         if currentcommander != cmdr and cmdr != "" and cmdr is not None:
             currentcommander = cmdr
@@ -365,7 +364,7 @@ def dashboard_entry(cmdr: str, is_beta, entry):
 
     flag = False
 
-    if currentcommander != cmdr and currentcommander != "":
+    if currentcommander != cmdr and currentcommander != "" and currentcommander is not None:
         # Check if new and old Commander are in the cmdrstates file.
         save_cmdr(currentcommander)
         # New Commander not in cmdr states file.
@@ -486,7 +485,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     """
     global plugin, currentcommander
 
-    if currentcommander != cmdr:
+    if currentcommander != cmdr and currentcommander is not None:
         # Check if new and old Commander are in the cmdrstates file.
         save_cmdr(currentcommander)
         # New Commander not in cmdr states file.
@@ -840,71 +839,50 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
     clear_ui()
 
     # recreate UI
-    current_row = 14
+    current_row = 0
+
+    uielementcheck = [plugin.AST_hide_fullscan.get(), plugin.AST_hide_species.get(), plugin.AST_hide_progress.get(),
+                      plugin.AST_hide_last_system.get(), plugin.AST_hide_last_body.get(), plugin.AST_hide_value.get(),
+                      plugin.AST_hide_system.get(), plugin.AST_hide_body.get()]
+    uielementlistleft = ["Last Exobiology Scan:", "Last Species:", "Scan Progress:",
+                         "System of last Scan:", "Body of last Scan:", "Unsold Scan Value:",
+                         "Current System:", "Current Body:"]
+    uielementlistright = [plugin.AST_state, plugin.AST_last_scan_plant, plugin.AST_current_scan_progress,
+                          plugin.AST_last_scan_system, plugin.AST_last_scan_body, plugin.AST_value,
+                          plugin.AST_current_system, plugin.AST_current_body]
+    uielementlistextra = [None, None, None, None, None, "clipboardbutton", None, None]
+
+    for i in range(max(len(uielementlistleft), len(uielementlistright))):
+        if uielementcheck[i] != 1:
+            if i < len(uielementlistleft):
+                ui_label(frame, uielementlistleft[i], current_row, 0, tk.W)
+            if i < len(uielementlistright):
+                ui_entry(frame, uielementlistright[i], current_row, 1, tk.W)
+            if uielementlistextra[i] == "clipboardbutton":
+                ui_button(frame, "📋", clipboard, current_row, 2, tk.E)
+            current_row += 1
 
     # Clonal Colonial Range here.
     if plugin.AST_hide_CCR.get() != 1 and plugin.AST_near_planet is True:
         # show distances for the last scans.
-        current_row -= 1
-        tk.Label(frame, text="Currentpos: ").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_current_pos).grid(row=current_row, column=1, sticky=tk.W)
-        current_row -= 1
-        tk.Label(frame, text="Distance to Scan #2: ").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_scan_2_pos_dist).grid(row=current_row, column=1, sticky=tk.W)
-        current_row -= 1
         tk.Label(frame, text="Distance to Scan #1: ").grid(row=current_row, sticky=tk.W)
         tk.Label(frame, textvariable=plugin.AST_scan_1_pos_dist).grid(row=current_row, column=1, sticky=tk.W)
-
-    if plugin.AST_hide_body.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="Current Body:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_current_body).grid(row=current_row, column=1, sticky=tk.W)
-
-    if plugin.AST_hide_system.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="Current System:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_current_system).grid(row=current_row, column=1, sticky=tk.W)
-
-    if plugin.AST_hide_value.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="Unsold Scan Value:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_value).grid(row=current_row, column=1, sticky=tk.W)
-        ui_button(frame, "📋", clipboard, current_row, 2, tk.E)
-        # tk.Button(frame, text="📋", command=clipboard).grid(row=current_row, column=2, sticky=tk.E)
-
-    if plugin.AST_hide_last_body.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="Body of last Scan:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_last_scan_body).grid(row=current_row, column=1, sticky=tk.W)
-
-    if plugin.AST_hide_last_system.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="System of last Scan:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_last_scan_system).grid(row=current_row, column=1, sticky=tk.W)
-
-    if plugin.AST_hide_progress.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="Scan Progress:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_current_scan_progress).grid(row=current_row, column=1, sticky=tk.W)
-
-    if plugin.AST_hide_species.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="Species:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_last_scan_plant).grid(row=current_row, column=1, sticky=tk.W)
-
-    if plugin.AST_hide_fullscan.get() != 1:
-        current_row -= 1
-        tk.Label(frame, text="Last Exobiology Scan:").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_state).grid(row=current_row, column=1, sticky=tk.W)
+        current_row += 1
+        tk.Label(frame, text="Distance to Scan #2: ").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_scan_2_pos_dist).grid(row=current_row, column=1, sticky=tk.W)
+        current_row += 1
+        tk.Label(frame, text="Currentpos: ").grid(row=current_row, sticky=tk.W)
+        tk.Label(frame, textvariable=plugin.AST_current_pos).grid(row=current_row, column=1, sticky=tk.W)
+        current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI
     if plugin.AST_hide_sold_bio.get() != 1:
-        build_sold_bio_ui(plugin, cmdr)
+        build_sold_bio_ui(plugin, cmdr, current_row)
 
     theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
 
 
-def build_sold_bio_ui(plugin, cmdr: str):  # noqa #CCR001
+def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
     # Create a Button to make it shorter?
     soldbiodata = {}
     notsoldbiodata = {}
@@ -917,7 +895,6 @@ def build_sold_bio_ui(plugin, cmdr: str):  # noqa #CCR001
     with open(file, "r+", encoding="utf8") as f:
         notsoldbiodata = json.load(f)
 
-    current_row = 15
     tk.Label(frame, text="Scans in this System:").grid(row=current_row, sticky=tk.W)
 
     # Check if we even got a cmdr yet!
@@ -987,31 +964,31 @@ def build_sold_bio_ui(plugin, cmdr: str):  # noqa #CCR001
         tk.Label(frame, text=bodies).grid(row=current_row, column=1, sticky=tk.W)
 
 
-def prefs_label(frame, text, row, col, sticky):
+def prefs_label(frame, text, row: int, col: int, sticky) -> None:
     nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
-def prefs_entry(frame, textvariable, row, col, sticky):
+def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> None:
     nb.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
-def prefs_button(frame, text, command, row, col, sticky):
+def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
     nb.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 
-def prefs_tickbutton(frame, text, variable, row, col, sticky):
+def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
     nb.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
 
 
-def ui_label(frame, text, row, col, sticky):
+def ui_label(frame, text, row: int, col: int, sticky) -> None:
     tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
-def ui_entry(frame, textvariable, row, col, sticky):
+def ui_entry(frame, textvariable, row: int, col: int, sticky) -> None:
     tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
-def ui_button(frame, text, command, row, col, sticky):
+def ui_button(frame, text, command, row: int, col: int, sticky) -> None:
     tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 
