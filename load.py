@@ -592,6 +592,8 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
                 file = directory + "\\notsoldbiodata.json"
                 with open(file, "r+", encoding="utf8") as f:
                     notsolddata = json.load(f)
+                    if cmdr not in notsolddata.keys():
+                        notsolddata[cmdr] = []
                     notsolddata[cmdr].append(currententrytowrite)
                     f.seek(0)
                     json.dump(notsolddata, f, indent=4)
