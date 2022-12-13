@@ -465,6 +465,7 @@ def computedistance(lat1: float, long1: float, lat2: float, long2: float, r: flo
 
 
 def bearing(lat1: float, lon1: float, lat2: float, lon2: float):
+    """Compute the bearing to lat2, lon2 from the pos lat1, lon1."""
     # Convert latitude and longitude to radians
     lat1 = math.radians(lat1)
     lon1 = math.radians(lon1)
@@ -480,6 +481,9 @@ def bearing(lat1: float, lon1: float, lat2: float, lon2: float):
 
     # Return the bearing in degrees
     result = math.degrees(theta)
+
+    # Adjustment to get the same bearing numbers as in E:D
+    # Otherwise switches sign at 180 degrees
     if result < 0:
         result += 360
 
