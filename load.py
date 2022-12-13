@@ -311,6 +311,13 @@ class ArtemisScannerTracker:
         self.AST_state.set("None")
         self.AST_value.set("0 Cr.")
 
+    def clipboard(self):
+        """Copy value to clipboard."""
+        dummytk = tk.Tk()  # creates a window we don't want
+        dummytk.clipboard_clear()
+        dummytk.clipboard_append(plugin.AST_value.get()[:-4].replace(",", ""))
+        dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
+
     def buildsoldbiodatajsonlocal(self):
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
         # Always uses the game journal directory
@@ -329,13 +336,7 @@ class ArtemisScannerTracker:
         build_biodata_json(logger, config.default_journal_dir)
 
 
-def clipboard():
-    """Copy value to clipboard."""
-    dummytk = tk.Tk()  # creates a window we don't want
-    dummytk.clipboard_clear()
-    dummytk.clipboard_append(plugin.AST_value.get()[:-4].replace(",", ""))
-    dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
-
+# region eventhandling
 
 def dashboard_entry(cmdr: str, is_beta, entry):  # noqa #CCR001
     """
@@ -423,49 +424,6 @@ def dashboard_entry(cmdr: str, is_beta, entry):  # noqa #CCR001
 
     if flag:
         rebuild_ui(plugin, cmdr)
-
-
-def save_cmdr(cmdr):
-    """Save information specific to the cmdr in the cmdrstates.json."""
-    global plugin, directory
-
-    if cmdr not in cmdrstates.keys():
-        cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
-
-    cmdrstates[cmdr][0] = plugin.AST_last_scan_plant.get()
-    cmdrstates[cmdr][1] = plugin.AST_last_scan_system.get()
-    cmdrstates[cmdr][2] = plugin.AST_last_scan_body.get()
-    cmdrstates[cmdr][3] = plugin.AST_current_scan_progress.get()
-    cmdrstates[cmdr][4] = plugin.AST_state.get()
-    cmdrstates[cmdr][5] = plugin.AST_value.get()
-    cmdrstates[cmdr][6] = plugin.AST_CCR.get()
-    cmdrstates[cmdr][7] = plugin.AST_scan_1_pos_vector.copy()
-    cmdrstates[cmdr][8] = plugin.AST_scan_2_pos_vector.copy()
-
-    file = directory + "\\cmdrstates.json"
-
-    open(file, "w", encoding="utf8").close()
-    with open(file, "r+", encoding="utf8") as f:
-        json.dump(cmdrstates, f, indent=4)
-
-
-def load_cmdr(cmdr):
-    """Load information about a cmdr from cmdrstates.json."""
-    global cmdrstates, plugin
-    file = directory + "\\cmdrstates.json"
-
-    with open(file, "r+", encoding="utf8") as f:
-        cmdrstates = json.load(f)
-
-    plugin.AST_last_scan_plant.set(cmdrstates[cmdr][0])
-    plugin.AST_last_scan_system.set(cmdrstates[cmdr][1])
-    plugin.AST_last_scan_body.set(cmdrstates[cmdr][2])
-    plugin.AST_current_scan_progress.set(cmdrstates[cmdr][3])
-    plugin.AST_state.set(cmdrstates[cmdr][4])
-    plugin.AST_value.set(cmdrstates[cmdr][5])
-    plugin.AST_CCR.set(cmdrstates[cmdr][6])
-    plugin.AST_scan_1_pos_vector = cmdrstates[cmdr][7]
-    plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8]
 
 
 def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):  # noqa #CCR001
@@ -847,8 +805,61 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
     # So just rebuild the ui for good measure.
     rebuild_ui(plugin, cmdr)
 
+# endregion
+
 
 plugin = ArtemisScannerTracker()
+
+
+# region saving/loading
+
+
+def save_cmdr(cmdr):
+    """Save information specific to the cmdr in the cmdrstates.json."""
+    global plugin, directory
+
+    if cmdr not in cmdrstates.keys():
+        cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
+
+    cmdrstates[cmdr][0] = plugin.AST_last_scan_plant.get()
+    cmdrstates[cmdr][1] = plugin.AST_last_scan_system.get()
+    cmdrstates[cmdr][2] = plugin.AST_last_scan_body.get()
+    cmdrstates[cmdr][3] = plugin.AST_current_scan_progress.get()
+    cmdrstates[cmdr][4] = plugin.AST_state.get()
+    cmdrstates[cmdr][5] = plugin.AST_value.get()
+    cmdrstates[cmdr][6] = plugin.AST_CCR.get()
+    cmdrstates[cmdr][7] = plugin.AST_scan_1_pos_vector.copy()
+    cmdrstates[cmdr][8] = plugin.AST_scan_2_pos_vector.copy()
+
+    file = directory + "\\cmdrstates.json"
+
+    open(file, "w", encoding="utf8").close()
+    with open(file, "r+", encoding="utf8") as f:
+        json.dump(cmdrstates, f, indent=4)
+
+
+def load_cmdr(cmdr):
+    """Load information about a cmdr from cmdrstates.json."""
+    global cmdrstates, plugin
+    file = directory + "\\cmdrstates.json"
+
+    with open(file, "r+", encoding="utf8") as f:
+        cmdrstates = json.load(f)
+
+    plugin.AST_last_scan_plant.set(cmdrstates[cmdr][0])
+    plugin.AST_last_scan_system.set(cmdrstates[cmdr][1])
+    plugin.AST_last_scan_body.set(cmdrstates[cmdr][2])
+    plugin.AST_current_scan_progress.set(cmdrstates[cmdr][3])
+    plugin.AST_state.set(cmdrstates[cmdr][4])
+    plugin.AST_value.set(cmdrstates[cmdr][5])
+    plugin.AST_CCR.set(cmdrstates[cmdr][6])
+    plugin.AST_scan_1_pos_vector = cmdrstates[cmdr][7]
+    plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8]
+
+# endregion
+
+
+# region UI
 
 
 def clear_ui():
@@ -886,7 +897,7 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
             if i < len(uielementlistright):
                 ui_entry(frame, uielementlistright[i], current_row, 1, tk.W)
             if uielementlistextra[i] == "clipboardbutton":
-                ui_button(frame, "📋", clipboard, current_row, 2, tk.E)
+                ui_button(frame, "📋", plugin.clipboard, current_row, 2, tk.E)
             current_row += 1
 
     # Clonal Colonial Range here.
@@ -1027,6 +1038,8 @@ def ui_entry(frame, textvariable, row: int, col: int, sticky) -> None:
 def ui_button(frame, text, command, row: int, col: int, sticky) -> None:
     """Create a button for the ui of the plugin."""
     tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
+
+# endregion
 
 
 def plugin_start3(plugin_dir: str) -> str:
