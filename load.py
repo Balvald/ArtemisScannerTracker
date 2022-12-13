@@ -12,7 +12,7 @@ from theme import theme  # type: ignore
 
 from journalcrawler import build_biodata_json
 from organicinfo import bearing, computedistance, generaltolocalised, \
-    getclonalcolonialranges, genusgeneraltolocalised, getu14vistagenomicprices
+    getclonalcolonialranges, genusgeneraltolocalised, getvistagenomicprices
 
 
 frame: Optional[tk.Frame] = None
@@ -56,7 +56,7 @@ debug = False
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
-vistagenomicsprices = getu14vistagenomicprices()
+vistagenomicsprices = getvistagenomicprices()
 
 
 class ArtemisScannerTracker:
@@ -64,6 +64,9 @@ class ArtemisScannerTracker:
 
     def __init__(self) -> None:
         """Initialize the plugin by getting values from the config file."""
+
+        self.AST_in_Legacy: Optional[bool] = False
+
         # Be sure to use names that wont collide in our config variables
         # Bools for show hide checkboxes
 
@@ -346,11 +349,12 @@ def dashboard_entry(cmdr: str, is_beta, entry):
     :param is_beta: Is the game currently in beta
     :param entry: full excerpt from status.json
     """
-    # print full excerpt to check everything is there.
-    # logger.debug(f'Status.json says: {entry}')
-    # 'Latitude': -19.506268, 'Longitude': -4.657524, 'Heading': 298,
-    # 'Altitude': 1320594, 'BodyName': 'Murato 3 a', 'PlanetRadius': 3741155.5,
+
     global plugin, currentcommander, firstdashboard
+
+    if plugin.AST_in_Legacy is True:
+        # We're in legacy we don't update anything through dashboard entries
+        return
 
     flag = False
 
@@ -375,15 +379,18 @@ def dashboard_entry(cmdr: str, is_beta, entry):
         plugin.on_preferences_closed(cmdr, is_beta)
 
     if "PlanetRadius" in entry.keys():
+        # We found a PlanetRadius again, this means we are near a planet.
         if not plugin.AST_near_planet:
+            # We just came into range of a planet again.
             flag = True
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
         plugin.AST_current_pos_vector[0] = entry["Latitude"]
         plugin.AST_current_pos_vector[1] = entry["Longitude"]
         plugin.AST_current_pos_vector[2] = entry["Heading"]
-        text = str(plugin.AST_current_pos_vector[0]) + ", " + str(plugin.AST_current_pos_vector[1]) + ", " + \
-            str(plugin.AST_current_pos_vector[2]) + ", " + str(plugin.AST_current_radius)
+        text = "lat: " + str(plugin.AST_current_pos_vector[0]) + \
+               ", long: " + str(plugin.AST_current_pos_vector[1]) + ", B:" + \
+               str(plugin.AST_current_pos_vector[2])  # + ", " + str(plugin.AST_current_radius)
         plugin.AST_current_pos.set(text)
 
         if plugin.AST_current_scan_progress.get() in ["1/3", "2/3"] and plugin.AST_scan_1_pos_vector[0] is not None:
@@ -410,6 +417,7 @@ def dashboard_entry(cmdr: str, is_beta, entry):
                                                              plugin.AST_scan_2_pos_vector[1]), 2)))
     else:
         if plugin.AST_near_planet:
+            # Switch happened we went too far from the planet to get any reference from it.
             flag = True
         plugin.AST_near_planet = False
         plugin.AST_current_radius = None
@@ -479,6 +487,13 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     """
     global plugin, currentcommander
 
+    if (int(state["gameversion"][0]) < 4) and (plugin.AST_in_Legacy is False):
+        # We're in Legacy, we'll not change the state of anything through journal entries.
+        plugin.AST_in_Legacy = True
+        return
+    else:
+        plugin.AST_in_Legacy = False
+
     if currentcommander != cmdr and currentcommander != "" and currentcommander is not None:
         # Check if new and old Commander are in the cmdrstates file.
         save_cmdr(currentcommander)
@@ -505,7 +520,6 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     flag = False
 
     # Prepare to fix probable bugs before a user might report them:
-    # TODO: Do not update anything while not in Live universe of E:D!
 
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # TODO: Check how real death differs from frontline solutions ground combat zone death.
