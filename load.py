@@ -10,13 +10,10 @@ import myNotebook as nb  # type: ignore # noqa: N813
 from config import appname, config  # type: ignore
 from theme import theme  # type: ignore
 
+import organicinfo as orgi
 from journalcrawler import build_biodata_json
-from organicinfo import bearing, computedistance, generaltolocalised, \
-    getclonalcolonialranges, genusgeneraltolocalised, getvistagenomicprices
-
 
 frame: Optional[tk.Frame] = None
-
 
 PLUGIN_NAME = "AST"
 
@@ -56,7 +53,7 @@ debug = False
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
-vistagenomicsprices = getvistagenomicprices()
+vistagenomicsprices = orgi.getvistagenomicprices()
 
 
 class ArtemisScannerTracker:
@@ -64,7 +61,6 @@ class ArtemisScannerTracker:
 
     def __init__(self) -> None:
         """Initialize the plugin by getting values from the config file."""
-
         self.AST_in_Legacy: Optional[bool] = False
 
         # Be sure to use names that wont collide in our config variables
@@ -138,7 +134,7 @@ class ArtemisScannerTracker:
         """
         self.on_preferences_closed("", False)  # Save our prefs
 
-    def setup_preferences(self, parent: nb.Notebook,
+    def setup_preferences(self, parent: nb.Notebook,  # noqa #CCR001
                           cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
         """
         setup_preferences is called by plugin_prefs below.
@@ -341,7 +337,7 @@ def clipboard():
     dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
 
 
-def dashboard_entry(cmdr: str, is_beta, entry):
+def dashboard_entry(cmdr: str, is_beta, entry):  # noqa #CCR001
     """
     React to changes in the CMDRs status (Movement for CCR feature).
 
@@ -349,7 +345,6 @@ def dashboard_entry(cmdr: str, is_beta, entry):
     :param is_beta: Is the game currently in beta
     :param entry: full excerpt from status.json
     """
-
     global plugin, currentcommander, firstdashboard
 
     if plugin.AST_in_Legacy is True:
@@ -394,27 +389,27 @@ def dashboard_entry(cmdr: str, is_beta, entry):
         plugin.AST_current_pos.set(text)
 
         if plugin.AST_current_scan_progress.get() in ["1/3", "2/3"] and plugin.AST_scan_1_pos_vector[0] is not None:
-            plugin.AST_scan_1_pos_dist.set(str(round(computedistance(plugin.AST_current_pos_vector[0],
-                                                                     plugin.AST_current_pos_vector[1],
-                                                                     plugin.AST_scan_1_pos_vector[0],
-                                                                     plugin.AST_scan_1_pos_vector[1],
-                                                                     plugin.AST_current_radius), 2))
+            plugin.AST_scan_1_pos_dist.set(str(round(orgi.computedistance(plugin.AST_current_pos_vector[0],
+                                                                          plugin.AST_current_pos_vector[1],
+                                                                          plugin.AST_scan_1_pos_vector[0],
+                                                                          plugin.AST_scan_1_pos_vector[1],
+                                                                          plugin.AST_current_radius), 2))
                                            + " m / " + str(plugin.AST_CCR.get()) + " m, B:" +
-                                           str(round(bearing(plugin.AST_current_pos_vector[0],
-                                                             plugin.AST_current_pos_vector[1],
-                                                             plugin.AST_scan_1_pos_vector[0],
-                                                             plugin.AST_scan_1_pos_vector[1]), 2)))
+                                           str(round(orgi.bearing(plugin.AST_current_pos_vector[0],
+                                                                  plugin.AST_current_pos_vector[1],
+                                                                  plugin.AST_scan_1_pos_vector[0],
+                                                                  plugin.AST_scan_1_pos_vector[1]), 2)))
         if plugin.AST_current_scan_progress.get() == "2/3" and plugin.AST_scan_1_pos_vector[0] is not None:
-            plugin.AST_scan_2_pos_dist.set(str(round(computedistance(plugin.AST_current_pos_vector[0],
-                                                                     plugin.AST_current_pos_vector[1],
-                                                                     plugin.AST_scan_2_pos_vector[0],
-                                                                     plugin.AST_scan_2_pos_vector[1],
-                                                                     plugin.AST_current_radius), 2))
+            plugin.AST_scan_2_pos_dist.set(str(round(orgi.computedistance(plugin.AST_current_pos_vector[0],
+                                                                          plugin.AST_current_pos_vector[1],
+                                                                          plugin.AST_scan_2_pos_vector[0],
+                                                                          plugin.AST_scan_2_pos_vector[1],
+                                                                          plugin.AST_current_radius), 2))
                                            + " m / " + str(plugin.AST_CCR.get()) + " m, B:" +
-                                           str(round(bearing(plugin.AST_current_pos_vector[0],
-                                                             plugin.AST_current_pos_vector[1],
-                                                             plugin.AST_scan_2_pos_vector[0],
-                                                             plugin.AST_scan_2_pos_vector[1]), 2)))
+                                           str(round(orgi.bearing(plugin.AST_current_pos_vector[0],
+                                                                  plugin.AST_current_pos_vector[1],
+                                                                  plugin.AST_scan_2_pos_vector[0],
+                                                                  plugin.AST_scan_2_pos_vector[1]), 2)))
     else:
         if plugin.AST_near_planet:
             # Switch happened we went too far from the planet to get any reference from it.
@@ -431,6 +426,7 @@ def dashboard_entry(cmdr: str, is_beta, entry):
 
 
 def save_cmdr(cmdr):
+    """Save information specific to the cmdr in the cmdrstates.json."""
     global plugin, directory
 
     if cmdr not in cmdrstates.keys():
@@ -454,6 +450,7 @@ def save_cmdr(cmdr):
 
 
 def load_cmdr(cmdr):
+    """Load information about a cmdr from cmdrstates.json."""
     global cmdrstates, plugin
     file = directory + "\\cmdrstates.json"
 
@@ -471,7 +468,7 @@ def load_cmdr(cmdr):
     plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8]
 
 
-def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):
+def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):  # noqa #CCR001
     """
     React accordingly to events in the journal.
 
@@ -561,7 +558,7 @@ def resurrection_event(cmdr: str):
 def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin
-    plugin.AST_last_scan_plant.set(generaltolocalised(entry["Species"].lower()))
+    plugin.AST_last_scan_plant.set(orgi.generaltolocalised(entry["Species"].lower()))
 
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
@@ -572,7 +569,7 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
 
     if entry["ScanType"] == "Log":
         plugin.AST_current_scan_progress.set("1/3")
-        plugin.AST_CCR.set(getclonalcolonialranges(genusgeneraltolocalised(entry["Genus"])))
+        plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
         plugin.AST_scan_1_pos_vector[0] = plugin.AST_current_pos_vector[0]
         plugin.AST_scan_1_pos_vector[1] = plugin.AST_current_pos_vector[1]
         plugin.on_preferences_closed(cmdr, is_beta)
@@ -583,7 +580,7 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
                 plugin.AST_value.set("0 Cr.")
             # remove thousand seperators for before casting to int from the AST_value.get()
             newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) + \
-                int(vistagenomicsprices[generaltolocalised(entry["Species"].lower())])
+                int(vistagenomicsprices[orgi.generaltolocalised(entry["Species"].lower())])
             plugin.AST_value.set(f"{newvalue:,}" + " Cr.")
             # Found some cases where the analyse happened
             # seemingly directly after a log.
@@ -594,7 +591,7 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
             plugin.AST_CCR.set(0)
             plugin.AST_scan_1_pos_dist.set("")
             plugin.AST_scan_2_pos_dist.set("")
-            currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
+            currententrytowrite["species"] = orgi.generaltolocalised(entry["Species"].lower())
             currententrytowrite["system"] = plugin.AST_current_system.get()
             currententrytowrite["body"] = plugin.AST_current_body.get()
             if cmdr not in not_yet_sold_data.keys():
@@ -614,7 +611,7 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
                 currententrytowrite = {}
         else:
             plugin.AST_current_scan_progress.set("2/3")
-            plugin.AST_CCR.set(getclonalcolonialranges(genusgeneraltolocalised(entry["Genus"])))
+            plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
             plugin.AST_scan_2_pos_vector[0] = plugin.AST_current_pos_vector[0]
             plugin.AST_scan_2_pos_vector[1] = plugin.AST_current_pos_vector[1]
     else:
@@ -627,7 +624,7 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
     rebuild_ui(plugin, cmdr)
 
 
-def system_body_change_event(cmdr: str, entry):
+def system_body_change_event(cmdr: str, entry):  # noqa #CCR001
     """Handle all events that give a tell in which system we are or on what planet we are on."""
     global plugin
 
@@ -998,30 +995,37 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
 
 
 def prefs_label(frame, text, row: int, col: int, sticky) -> None:
+    """Create label for the preferences of the plugin."""
     nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
 def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> None:
+    """Create an entry field for the preferences of the plugin."""
     nb.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
 def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
+    """Create a button for the prefereces of the plugin."""
     nb.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 
 def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
+    """Create a tickbox for the preferences of the plugin."""
     nb.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
 
 
 def ui_label(frame, text, row: int, col: int, sticky) -> None:
+    """Create a label for the ui of the plugin."""
     tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
 def ui_entry(frame, textvariable, row: int, col: int, sticky) -> None:
+    """Create a label that displays the content of a textvariable for the ui of the plugin."""
     tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
 def ui_button(frame, text, command, row: int, col: int, sticky) -> None:
+    """Create a button for the ui of the plugin."""
     tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 
