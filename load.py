@@ -384,6 +384,11 @@ def dashboard_entry(cmdr: str, is_beta, entry):  # noqa #CCR001
         plugin.AST_current_pos_vector[0] = entry["Latitude"]
         plugin.AST_current_pos_vector[1] = entry["Longitude"]
         plugin.AST_current_pos_vector[2] = entry["Heading"]
+        if plugin.AST_current_pos_vector[2] < 0:
+            # Frontier gives us different value intervals for headings in the status.json
+            # Within a vehicle (srv, ship) its (0, 360) but on foot it is (-180, 180) ffs!
+            # With this change we force every bearing to be in the (0, 360) interval
+            plugin.AST_current_pos_vector[2] += 360
         text = "lat: " + str(plugin.AST_current_pos_vector[0]) + \
                ", long: " + str(plugin.AST_current_pos_vector[1]) + ", B:" + \
                str(plugin.AST_current_pos_vector[2])  # + ", " + str(plugin.AST_current_radius)
@@ -442,7 +447,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     """
     global plugin, currentcommander
 
-    if (int(state["gameversion"][0]) < 4) and (plugin.AST_in_Legacy is False):
+    if (int(state["GameVersion"][0]) < 4) and (plugin.AST_in_Legacy is False):
         # We're in Legacy, we'll not change the state of anything through journal entries.
         plugin.AST_in_Legacy = True
         return
