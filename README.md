@@ -1,4 +1,4 @@
-## ArtemisScannerTracker v0.1.3 dev
+## ArtemisScannerTracker v0.2.0 dev
  An [EDMC](https://github.com/EDCD/EDMarketConnector) plugin that keeps track of the exobiology scanner of a CMDRs artemis suit in ED:Odyssey
 
 
@@ -23,6 +23,10 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - A handy Button in the preferences that'll let the plugin scan through your journal files to retroactively track exobiology scans you've done in the past.
 
 *NEW*: Multi Commander Support. The plugin can handle you playing with many different CMDRs on the same machine with the same EDMC installation.
+
+*NEW*: Shows the Clonal Colony Range of the last scanned exobiology scan, and your current distance to up to two previous scan locations with corresponding bearing.
+
+*NEW*: A button that copies the value of your unsold scans to your clipboard
 
 
 ## Usage
