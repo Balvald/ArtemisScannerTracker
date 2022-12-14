@@ -23,6 +23,8 @@ AST_VERSION = "v0.2.0"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
+alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
+
 # Gonna need the files directory to store data for full
 # tracking of all the biological things that the CMDR scans.
 directory, filename = os.path.split(os.path.realpath(__file__))
@@ -646,6 +648,9 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
 
     logger.info('called biosell_event')
 
+    if cmdr != "" and cmdr is not None and cmdr not in sold_exobiology.keys():
+        sold_exobiology[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
+
     # currentbatch describes which species we are selling.
     # currentbatch has the form: {<species> : <amount> , ....}
     currentbatch = {}
@@ -742,19 +747,31 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
             if done:
                 break
 
-            if cmdr not in sold_exobiology.keys():
-                sold_exobiology[cmdr] = []
-
+            """if cmdr not in sold_exobiology.keys():
+                sold_exobiology[cmdr] = []"""
+            firstletter = not_yet_sold_data[cmdr][i]["system"][0].lower()
+            if firstletter not in alphabet:
+                firstletter = "-"
             # Checking here more granularily which data was sold
             # We do know though that the specifc data was sold only
             # in one system that at this point is saved in
             # the variable"thesystem"
-            check = (not_yet_sold_data[cmdr][i]["system"] == thesystem
+            if (thesystem not in sold_exobiology[cmdr][firstletter].keys()
+               and (thesystem[0].lower() == firstletter or firstletter == "-")):
+                sold_exobiology[cmdr][firstletter][thesystem] = []
+
+            """check = (not_yet_sold_data[cmdr][i]["system"] == thesystem
                      and not_yet_sold_data[cmdr][i] not in sold_exobiology[cmdr]
+                     and not_yet_sold_data[cmdr][i]["species"] in currentbatch.keys())"""
+
+            check = (not_yet_sold_data[cmdr][i]["system"] == thesystem
+                     and not_yet_sold_data[cmdr][i]
+                     not in sold_exobiology[cmdr][firstletter][thesystem]
                      and not_yet_sold_data[cmdr][i]["species"] in currentbatch.keys())
+
             if check:
                 if currentbatch[not_yet_sold_data[cmdr][i]["species"]] > 0:
-                    sold_exobiology[cmdr].append(not_yet_sold_data[cmdr][i])
+                    sold_exobiology[cmdr][firstletter][thesystem].append(not_yet_sold_data[cmdr][i])
                     currentbatch[not_yet_sold_data[cmdr][i]["species"]] -= 1
                     not_yet_sold_data[cmdr].pop(i)
                     continue
@@ -781,9 +798,21 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
     else:
         # CMDR sold the whole batch.
         for data in not_yet_sold_data[cmdr]:
-            if (data not in sold_exobiology[cmdr] and currentbatch[data["species"]] > 0):
+            firstletter = data["system"][0].lower()
+            if firstletter not in alphabet:
+                firstletter = "-"
+
+            if (data["system"] not in sold_exobiology[cmdr][firstletter].keys()
+               and (data["system"][0].lower() == firstletter or firstletter == "-")):
+                sold_exobiology[cmdr][firstletter][data["system"]] = []
+
+            if data["species"] not in currentbatch.keys():
+                continue
+
+            if (data not in sold_exobiology[cmdr][firstletter][data["system"]]
+               and currentbatch[data["species"]] > 0):
                 currentbatch[data["species"]] -= 1
-                sold_exobiology[cmdr].append(data)
+                sold_exobiology[cmdr][firstletter][data["system"]].append(data)
         not_yet_sold_data[cmdr] = []
         # We can already reset to 0 to ensure that after selling all data at once
         # we end up with a reset of the Scanned value metric
@@ -980,10 +1009,11 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
 
     bodylistofspecies = {}
 
-    try:
-        for sold in soldbiodata[cmdr]:
-            if sold["system"] == plugin.AST_current_system.get():
+    firstletter = plugin.AST_current_system.get()[0].lower()
 
+    try:
+        if plugin.AST_current_system.get() in soldbiodata[cmdr][firstletter].keys():
+            for sold in soldbiodata[cmdr][firstletter][plugin.AST_current_system.get()]:
                 bodyname = ""
 
                 # Check if body has a special name or if we have standardized names

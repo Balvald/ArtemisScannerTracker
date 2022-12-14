@@ -23,7 +23,7 @@ from organicinfo import generaltolocalised
 # For best results you can put your whole selection of journals
 # downloaded from Journal limpet into the journaldir
 
-alphabet = "abcdefghijklmnopqrstuvwxyz-"
+alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
 def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
@@ -75,7 +75,7 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
                     else:
                         cmdr = entry["Commander"]
 
-                    if cmdr != "" and cmdr not in sold_exobiology.keys():
+                    if cmdr != "" and cmdr is not None and cmdr not in sold_exobiology.keys():
                         sold_exobiology[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
                         logger.info(sold_exobiology)
 
@@ -205,7 +205,8 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
                             logger.info("current batch")
                             logger.info(currentbatch)
 
-                            if thesystem not in sold_exobiology[cmdr][firstletter].keys():
+                            if (thesystem not in sold_exobiology[cmdr][firstletter].keys()
+                               and (thesystem[0].lower() == firstletter or firstletter == "-")):
                                 sold_exobiology[cmdr][firstletter][thesystem] = []
 
                             check = (possibly_sold_data[cmdr][i]["system"] == thesystem
@@ -238,7 +239,8 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
                             if firstletter not in alphabet:
                                 firstletter = "-"
 
-                            if data["system"] not in sold_exobiology[cmdr][firstletter].keys():
+                            if (data["system"] not in sold_exobiology[cmdr][firstletter].keys()
+                               and (data["system"][0].lower() == firstletter or firstletter == "-")):
                                 sold_exobiology[cmdr][firstletter][data["system"]] = []
 
                             if data["species"] not in currentbatch.keys():
@@ -267,7 +269,7 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
 
 
 """
-to use it as standalone
+# to use it as standalone
 class loggingthing:
     def __init__(self):
         self.info = print
@@ -277,6 +279,8 @@ class loggingthing:
 
 if __name__ == "__main__":
     logger = loggingthing()
-    journaldir = "C:\\Users\\flori\\Saved Games\\Frontier Developments\\Elite Dangerous"
+    journaldir = "<Path1>"
+    build_biodata_json(logger, journaldir)
+    journaldir = "<Path2>"
     build_biodata_json(logger, journaldir)
 """
