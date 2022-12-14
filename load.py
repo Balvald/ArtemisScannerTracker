@@ -1012,8 +1012,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
                 bodies = bodies + body[0] + ", "
             else:
                 bodies = bodies + "*" + body[0] + "*, "
-        if len(bodies) > 3:
-            bodies = bodies[:-2]
+        while (bodies[-1] == "," or bodies[-1] == " "):
+            bodies = bodies[:-1]
 
         tk.Label(frame, text=bodies).grid(row=current_row, column=1, sticky=tk.W)
 
