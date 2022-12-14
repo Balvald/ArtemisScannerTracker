@@ -727,6 +727,9 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
             if done:
                 break
 
+            if cmdr not in sold_exobiology.keys():
+                sold_exobiology[cmdr] = []
+
             # Checking here more granularily which data was sold
             # We do know though that the specifc data was sold only
             # in one system that at this point is saved in
