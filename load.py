@@ -7,8 +7,10 @@ import tkinter as tk
 from typing import Optional
 
 import myNotebook as nb  # type: ignore # noqa: N813
+import requests
 from config import appname, config  # type: ignore
 from theme import theme  # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 import organicinfo as orgi
 from journalcrawler import build_biodata_json
@@ -17,6 +19,9 @@ frame: Optional[tk.Frame] = None
 
 PLUGIN_NAME = "AST"
 
+AST_VERSION = "v0.2.0"
+
+AST_REPO = "Balvald/ArtemisScannerTracker"
 
 # Gonna need the files directory to store data for full
 # tracking of all the biological things that the CMDR scans.
@@ -110,6 +115,18 @@ class ArtemisScannerTracker:
 
         self.AST_value: Optional[tk.StringVar] = tk.StringVar(
             value=((f"{rawvalue:,}") + str(" Cr.")))
+
+        self.updateavailable = False
+
+        response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest")
+
+        if response.ok:
+            data = response.json()
+
+            if AST_VERSION != data['tag_name']:
+                self.updateavailable = True
+        else:
+            logger.error("Check for update failed!")
 
         logger.info("ArtemisScannerTracker instantiated")
 
@@ -891,6 +908,11 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
 
     # recreate UI
     current_row = 0
+
+    if plugin.updateavailable:
+        latest = "github.com/Balvald/ArtemisScannerTracker/releases/latest"
+        HyperlinkLabel(frame, text="Update available!", url=latest, underline=True).grid(row=current_row, sticky=tk.W)
+        current_row += 1
 
     uielementcheck = [plugin.AST_hide_fullscan.get(), plugin.AST_hide_species.get(), plugin.AST_hide_progress.get(),
                       plugin.AST_hide_last_system.get(), plugin.AST_hide_last_body.get(), plugin.AST_hide_value.get(),
