@@ -23,8 +23,13 @@ from organicinfo import generaltolocalised
 # For best results you can put your whole selection of journals
 # downloaded from Journal limpet into the journaldir
 
-def build_biodata_json(logger, journaldir):
-    """Builds a soldbiodata.json that includes all sold organic scans that the player sold."""
+alphabet = "abcdefghijklmnopqrstuvwxyz-"
+
+
+def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
+    """Build a soldbiodata.json that includes all sold organic scans that the player sold."""
+    logger.info = print
+
     logger.info("start logging")
 
     directory, sourcename = os.path.split(os.path.realpath(__file__))
@@ -64,13 +69,15 @@ def build_biodata_json(logger, journaldir):
                 entry = json.loads(line)
 
                 if entry["event"] in ["LoadGame", "Commander"]:
+                    logger.info("CMDR change event!")
                     if entry["event"] == "Commander":
                         cmdr = entry["Name"]
                     else:
                         cmdr = entry["Commander"]
 
                     if cmdr != "" and cmdr not in sold_exobiology.keys():
-                        sold_exobiology[cmdr] = []
+                        sold_exobiology[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
+                        logger.info(sold_exobiology)
 
                     if cmdr != "" and cmdr not in possibly_sold_data.keys():
                         possibly_sold_data[cmdr] = []
@@ -88,6 +95,7 @@ def build_biodata_json(logger, journaldir):
                                     + "for updating the current system and body.")
                         logger.info(entry)
                 if entry["event"] == "ScanOrganic":
+                    logger.info("Scan organic Event!")
                     if entry["ScanType"] in ["Sample", "Analyse"]:
                         if entry["ScanType"] == "Analyse":
                             currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
@@ -104,6 +112,7 @@ def build_biodata_json(logger, journaldir):
                     possibly_sold_data[cmdr] = []
 
                 if entry["event"] == "SellOrganicData":
+                    logger.info("SellOrganicData event!")
                     currentbatch = {}
                     # Lets create a more human readable list of different types
                     # of sold biodata to see how we can continue from there.
@@ -181,6 +190,10 @@ def build_biodata_json(logger, journaldir):
                                 break
 
                             logger.info(" i = " + str(i))
+
+                            firstletter = possibly_sold_data[cmdr][i]["system"][0].lower()
+                            if firstletter not in alphabet:
+                                firstletter = "-"
                             # Checking here more granularily
                             # which data was sold.
                             # We do know though that
@@ -192,12 +205,17 @@ def build_biodata_json(logger, journaldir):
                             logger.info("current batch")
                             logger.info(currentbatch)
 
+                            if thesystem not in sold_exobiology[cmdr][firstletter].keys():
+                                sold_exobiology[cmdr][firstletter][thesystem] = []
+
                             check = (possibly_sold_data[cmdr][i]["system"] == thesystem
-                                     and possibly_sold_data[cmdr][i] not in sold_exobiology[cmdr]
+                                     and possibly_sold_data[cmdr][i]
+                                     not in sold_exobiology[cmdr][firstletter][thesystem]
                                      and possibly_sold_data[cmdr][i]["species"] in currentbatch.keys())
                             if check:
                                 if currentbatch[possibly_sold_data[cmdr][i]["species"]] > 0:
-                                    sold_exobiology[cmdr].append(possibly_sold_data[cmdr][i])
+                                    logger.info("We append in specific system")
+                                    sold_exobiology[cmdr][firstletter][thesystem].append(possibly_sold_data[cmdr][i])
                                     currentbatch[possibly_sold_data[cmdr][i]["species"]] -= 1
                                     thing = possibly_sold_data[cmdr].pop(i)
                                     logger.debug("Sold:")
@@ -214,10 +232,25 @@ def build_biodata_json(logger, journaldir):
                         logger.info(possibly_sold_data[cmdr])
                         logger.info("current batch")
                         logger.info(currentbatch)
+
                         for data in possibly_sold_data[cmdr]:
-                            if (data not in sold_exobiology[cmdr] and currentbatch[data["species"]] > 0):
+                            firstletter = data["system"][0].lower()
+                            if firstletter not in alphabet:
+                                firstletter = "-"
+
+                            if data["system"] not in sold_exobiology[cmdr][firstletter].keys():
+                                sold_exobiology[cmdr][firstletter][data["system"]] = []
+
+                            if data["species"] not in currentbatch.keys():
+                                continue
+
+                            if(data not in sold_exobiology[cmdr][firstletter][data["system"]]
+                               and currentbatch[data["species"]] > 0):
                                 currentbatch[data["species"]] -= 1
-                                sold_exobiology[cmdr].append(data)
+
+                                logger.info("We append single bit of whole batch")
+                                sold_exobiology[cmdr][firstletter][data["system"]].append(data)
+                                logger.info("We appended single bit of whole batch")
                         possibly_sold_data[cmdr] = []
 
             file.close()
@@ -229,4 +262,21 @@ def build_biodata_json(logger, journaldir):
         # Same as below but creates smaller filesizes
         # and aren't as human readable
         f.write(json.dumps(sold_exobiology, indent=4))
+        f.truncate()
         f.close()
+
+
+"""
+to use it as standalone
+class loggingthing:
+    def __init__(self):
+        self.info = print
+        self.debug = print
+        pass
+
+
+if __name__ == "__main__":
+    logger = loggingthing()
+    journaldir = "C:\\Users\\flori\\Saved Games\\Frontier Developments\\Elite Dangerous"
+    build_biodata_json(logger, journaldir)
+"""
