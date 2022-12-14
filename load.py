@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.1.3 dev by Balvald."""
+"""Artemis Scanner Tracker v0.2.0 dev by Balvald."""
 
 import json
 import logging
@@ -159,10 +159,7 @@ class ArtemisScannerTracker:
         current_row = 0
         frame = nb.Frame(parent)
 
-        # nb.Label(frame, text="Artemis Scanner Tracker v0.1.3 dev by Balvald").grid(
-        #     row=current_row, sticky=tk.W)
-
-        prefs_label(frame, "Artemis Scanner Tracker v0.1.3 dev by Balvald", current_row, 0, tk.W)
+        prefs_label(frame, "Artemis Scanner Tracker v0.2.0 dev by Balvald", current_row, 0, tk.W)
 
         current_row += 1
 
@@ -571,6 +568,7 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
                     notsolddata[cmdr].append(currententrytowrite)
                     f.seek(0)
                     json.dump(notsolddata, f, indent=4)
+                    f.truncate()
                 currententrytowrite = {}
         else:
             plugin.AST_current_scan_progress.set("2/3")
@@ -745,11 +743,12 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
                     continue
             i += 1
 
-        f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+        f = open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8")
         scanneddata = json.load(f)
         scanneddata[cmdr] = []
         f.seek(0)
         json.dump(scanneddata, f, indent=4)
+        f.truncate()
         f.close()
 
         if not_yet_sold_data[cmdr] != []:
@@ -760,6 +759,7 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
                     notsolddata[cmdr].append(data)
                 f.seek(0)
                 json.dump(notsolddata, f, indent=4)
+                f.truncate()
 
     else:
         # CMDR sold the whole batch.
@@ -772,11 +772,12 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
         # we end up with a reset of the Scanned value metric
         logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
-        f = open(directory + "\\notsoldbiodata.json", "w", encoding="utf8")
+        f = open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8")
         scanneddata = json.load(f)
         scanneddata[cmdr] = []
         f.seek(0)
         json.dump(scanneddata, f, indent=4)
+        f.truncate()
         f.close()
 
     # Remove the value of what was sold from
@@ -784,7 +785,8 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
     # Specifically so that the plugin still keeps track properly,
     # when the player sells on a by system basis.
     logger.info(f'Removing {soldvalue} from plugin value')
-    plugin.AST_value.set(str(int(plugin.AST_value.get().split(" ")[0]) - soldvalue) + " Cr.")
+    newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) - soldvalue
+    plugin.AST_value.set(str(f"{newvalue:,}") + " Cr.")
 
     # No negative value of biodata could still be unsold on the Scanner
     # This means that there was data on the Scanner that
@@ -807,6 +809,7 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
             sold_exobiology[cmdr] = []
         f.seek(0)
         json.dump(solddata, f, indent=4)
+        f.truncate()
 
     # If we sell the exobiodata in the same system as where we currently are
     # Then we want to remove the "*" around the body names of the newly sold biodata
@@ -841,9 +844,11 @@ def save_cmdr(cmdr):
 
     file = directory + "\\cmdrstates.json"
 
-    open(file, "w", encoding="utf8").close()
+    open(file, "r+", encoding="utf8").close()
     with open(file, "r+", encoding="utf8") as f:
+        f.seek(0)
         json.dump(cmdrstates, f, indent=4)
+        f.truncate()
 
 
 def load_cmdr(cmdr):
