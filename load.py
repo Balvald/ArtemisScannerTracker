@@ -17,6 +17,11 @@ from journalcrawler import build_biodata_json
 
 frame: Optional[tk.Frame] = None
 
+# Shows debug fields in preferences when True
+debug = False
+
+logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
+
 PLUGIN_NAME = "AST"
 
 AST_VERSION = "v0.2.0"
@@ -24,6 +29,18 @@ AST_VERSION = "v0.2.0"
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
+
+vistagenomicsprices = orgi.getvistagenomicprices()
+
+firstdashboard = True
+
+not_yet_sold_data = {}
+sold_exobiology = {}
+currententrytowrite = {}
+currentcommander = ""
+cmdrstates = {}
+
+plugin = None
 
 # Gonna need the files directory to store data for full
 # tracking of all the biological things that the CMDR scans.
@@ -36,16 +53,18 @@ for file in filenames:
         f = open(directory + file, "w", encoding="utf8")
         f.write(r"{}")
         f.close()
-
-firstdashboard = True
-
-not_yet_sold_data = {}
-sold_exobiology = {}
-currententrytowrite = {}
-currentcommander = ""
-cmdrstates = {}
-
-plugin = None
+    elif file == "\\soldbiodata.json" or file == "\\notsoldbiodata.json":
+        # (not)soldbiodata file already exists
+        with open(directory + file, "r+", encoding="utf8") as f:
+            test = json.load(f)
+            if type([]) == type(test):
+                # we have an old version of the (not)soldbiodata.json
+                # clear it, have the user do the journal crawling again.
+                logger.warning(f"Found old {file} format")
+                logger.warning("Clearing file...")
+                f.seek(0)
+                f.write(r"{}")
+                f.truncate()
 
 # load notyetsolddata
 
@@ -54,13 +73,6 @@ with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
 
 with open(directory + "\\cmdrstates.json", "r+", encoding="utf8") as f:
     cmdrstates = json.load(f)
-
-# Shows debug fields in preferences when True
-debug = False
-
-logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
-
-vistagenomicsprices = orgi.getvistagenomicprices()
 
 
 class ArtemisScannerTracker:
