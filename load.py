@@ -555,7 +555,9 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
 
-            if plugin.AST_value.get() == "None":
+            if (plugin.AST_value.get() == "None"
+               or plugin.AST_value.get() == ""
+               or plugin.AST_value.get() is None):
                 plugin.AST_value.set("0 Cr.")
             # remove thousand seperators for before casting to int from the AST_value.get()
             newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) + \
@@ -838,7 +840,7 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
     # This means that there was data on the Scanner that
     # the plugin was unable to record by not being active.
     # If the value was reset before we will reset it here again.
-    if int(plugin.AST_value.get().split(" ")[0]) < 0:
+    if int(plugin.AST_value.get().replace(",", "").split(" ")[0]) < 0:
         logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
     # Now write the data into the local file
@@ -847,12 +849,16 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
         solddata = json.load(f)
 
         if cmdr not in solddata.keys():
-            solddata[cmdr] = []
+            solddata[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
 
         if sold_exobiology[cmdr] != []:
-            for item in sold_exobiology[cmdr]:
-                solddata[cmdr].append(item)
-            sold_exobiology[cmdr] = []
+            for letter in sold_exobiology[cmdr]:
+                for system in sold_exobiology[cmdr][letter]:
+                    if system not in solddata[cmdr][letter].keys():
+                        solddata[cmdr][letter][system] = []
+                    for item in sold_exobiology[cmdr][letter][system]:
+                        solddata[cmdr][letter][system].append(item)
+            sold_exobiology[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
         f.seek(0)
         json.dump(solddata, f, indent=4)
         f.truncate()
