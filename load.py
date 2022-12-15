@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.0 dev by Balvald."""
+"""Artemis Scanner Tracker v0.2.0 by Balvald."""
 
 import json
 import logging
@@ -190,7 +190,7 @@ class ArtemisScannerTracker:
         current_row = 0
         frame = nb.Frame(parent)
 
-        prefs_label(frame, "Artemis Scanner Tracker v0.2.0 dev by Balvald", current_row, 0, tk.W)
+        prefs_label(frame, "Artemis Scanner Tracker v0.2.0 by Balvald", current_row, 0, tk.W)
 
         current_row += 1
 
