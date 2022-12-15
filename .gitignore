@@ -156,3 +156,4 @@ cython_debug/
 # ArtemisScannerTracker specific
 notsoldbiodata.json
 soldbiodata.json
+cmdrstates.json

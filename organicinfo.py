@@ -4,7 +4,9 @@ Contains the info for exobiology for the Artemis Scanner Tracker.
 Such as prices for different types of organic scans and colonial range.
 """
 
-# new prices, only missing sinouos tubers and amphora plant
+import math
+
+# Update 14 Prices
 u14vistagenomicsprices = {
     "Fonticulua Fluctus": 16777215,
     "Tussock Stigmasis": 16777215,
@@ -125,125 +127,125 @@ u14vistagenomicsprices = {
     "Bacterium Acies": 1500000
 }
 
-# pre U14 prices for vista genomics - will need update after U14
+# Update 14.01 prices
 vistagenomicsprices = {
-    "Fonticulua Fluctus": 900000,
-    "Tussock Stigmasis": 806300,
-    "Stratum Tectonicas": 806300,
-    "Fonticulua Segmentatus": 806300,
-    "Concha Biconcavis": 806300,
-    "Stratum Cucumisis": 711500,
-    "Recepta Deltahedronix": 711500,
-    "Fumerola Extremus": 711500,
-    "Clypeus Speculumi": 711500,
-    "Cactoida Vermis": 711500,
-    "Tussock Virgam": 645700,
-    "Recepta Conditivus": 645700,
-    "Recepta Umbrux": 596500,
-    "Osseus Discus": 596500,
-    "Aleoida Gravis": 596500,
-    "Tubus Sororibus": 557800,
-    "Clypeus Margaritus": 557800,
-    "Frutexa Flammasis": 500100,
-    "Osseus Pellebantus": 477700,
-    "Clypeus Lacrimam": 426200,
-    "Bacterium Informem": 426200,
-    "Tussock Triticum": 400500,
-    "Tubus Rosarium": 400500,
-    "Frutexa Acus": 400500,
-    "Concha Aureolas": 400500,
-    "Bacterium Volu": 400500,
-    "Fumerola Nitris": 389400,
-    "Aleoida Arcus": 379300,
-    "Tussock Capillum": 370000,
-    "Fumerola Carbosis": 339100,
-    "Fumerola Aquatis": 339100,
-    "Electricae Radialem": 339100,
-    "Electricae Pluma": 339100,
-    "Aleoida Coronamus": 339100,
-    "Frutexa Sponsae": 326500,
-    "Tussock Pennata": 320700,
-    "Tubus Conifer": 315300,
-    "Fonticulua Upupam": 315300,
-    "Bacterium Nebulus": 296300,
-    "Bacterium Scopulum": 280600,
-    "Bacterium Omentum": 267400,
-    "Concha Renibus": 264300,
-    "Tussock Serrati": 258700,
-    "Osseus Fractus": 239400,
-    "Bacterium Verrata": 233300,
-    "Fungoida Bullarum": 224100,
-    "Cactoida Pullulanta": 222500,
-    "Cactoida Cortexum": 222500,
-    "Tussock Caputus": 213100,
-    "Aleoida Spica": 208900,
-    "Aleoida Laminiae": 208900,
-    "Fungoida Gelata": 206300,
-    "Tussock Albata": 202500,
-    "Tussock Ventusa": 201300,
-    "Osseus Pumice": 197800,
-    "Fonticulua Lapida": 195600,
-    "Stratum Laminamus": 179500,
-    "Fungoida Stabitis": 174000,
-    "Tubus Cavas": 171900,
-    "Stratum Frigus": 171900,
-    "Cactoida Peperatis": 164000,
-    "Cactoida Lapis": 164000,
-    "Stratum Excutitus": 162200,
-    "Stratum Araneamus": 162200,
-    "Osseus Spiralis": 159900,
-    "Concha Labiata": 157100,
-    "Bacterium Tela": 135600,
-    "Tussock Ignis": 130100,
-    "Frutexa Flabellum": 127900,
-    "Fonticulua Digitos": 127700,
-    "Tussock Divisa": 125600,
-    "Tussock Cultro": 125600,
-    "Tussock Catena": 125600,
-    "Bacterium Cerbrus": 121300,
-    "Fungoida Setisis": 120200,
-    "Bacterium Alcyoneum": 119500,
-    "Frutexa Collum": 118500,
-    "Frutexa Metallicum": 118100,
-    "Frutexa Fera": 118100,
-    "Crystalline Shards": 117900,
-    "Amphora Plant": 117900,
-    "Viride Brain Tree": 115900,
-    "Roseum Brain Tree": 115900,
-    "Puniceum Brain Tree": 115900,
-    "Ostrinum Brain Tree": 115900,
-    "Lividum Brain Tree": 115900,
-    "Lindigoticum Brain Tree": 115900,
-    "Gypseeum Brain Tree": 115900,
-    "Aureum Brain Tree": 115900,
-    "Viride Sinuous Tubers": 111300,
-    "Violaceum Sinuous Tubers": 111300,
-    "Roseum Sinuous Tubers": 111300,
-    "Prasinum Sinuous Tubers": 111300,
-    "Lindigoticum Sinuous Tubers": 111300,
-    "Caeruleum Sinuous Tubers": 111300,
-    "Blatteum Sinuous Tubers": 111300,
-    "Albidum Sinuous Tubers": 111300,
-    "Rubeum Bioluminescent Anemone": 110500,
-    "Roseum Bioluminescent Anemone": 110500,
-    "Roseum Anemone": 110500,
-    "Puniceum Anemone": 110500,
-    "Prasinum Bioluminescent Anemone": 110500,
-    "Luteolum Anemone": 110500,
-    "Croceum Anemone": 110500,
-    "Blatteum Bioluminescent Anemone": 110500,
-    "Osseus Cornibus": 109500,
-    "Bark Mounds": 108900,
-    "Tubus Compagibus": 102700,
-    "Stratum Paleas": 102500,
-    "Stratum Limaxus": 102500,
-    "Bacterium Bullaris": 89900,
-    "Bacterium Aurasus": 78500,
-    "Tussock Propagito": 71300,
-    "Fonticulua Campestris": 63600,
-    "Tussock Pennatis": 59600,
-    "Bacterium Vesicula": 56100,
-    "Bacterium Acies": 50000
+    "Fonticulua Fluctus": 20000000,
+    "Tussock Stigmasis": 19010800,
+    "Stratum Tectonicas": 19010800,
+    "Fonticulua Segmentatus": 19010800,
+    "Concha Biconcavis": 19010800,
+    "Stratum Cucumisis": 16202800,
+    "Recepta Deltahedronix": 16202800,
+    "Fumerola Extremus": 16202800,
+    "Clypeus Speculumi": 16202800,
+    "Cactoida Vermis": 16202800,
+    "Tussock Virgam": 14313700,
+    "Recepta Conditivus": 14313700,
+    "Recepta Umbrux": 12934900,
+    "Osseus Discus": 12934900,
+    "Aleoida Gravis": 12934900,
+    "Tubus Cavas": 11873200,
+    "Clypeus Margaritus": 11873200,
+    "Frutexa Flammasis": 10326000,
+    "Osseus Pellebantus": 9739000,
+    "Clypeus Lacrimam": 8418000,
+    "Bacterium Informem": 8418000,
+    "Tussock Triticum": 7774700,
+    "Tubus Compagibus": 7774700,
+    "Frutexa Acus": 7774700,
+    "Concha Aureolas": 7774700,
+    "Bacterium Volu": 7774700,
+    "Fumerola Nitris": 7500900,
+    "Aleoida Arcus": 7252500,
+    "Tussock Capillum": 7025800,
+    "Fumerola Carbosis": 6284600,
+    "Fumerola Aquatis": 6284600,
+    "Electricae Radialem": 6284600,
+    "Electricae Pluma": 6284600,
+    "Aleoida Coronamus": 6284600,
+    "Frutexa Sponsae": 5988000,
+    "Tussock Pennata": 5853800,
+    "Tubus Sororibus": 5727600,
+    "Fonticulua Upupam": 5727600,
+    "Bacterium Nebulus": 5289900,
+    "Bacterium Scopulum": 4934500,
+    "Bacterium Omentum": 4638900,
+    "Concha Renibus": 4572400,
+    "Tussock Serrati": 4447100,
+    "Osseus Fractus": 4027800,
+    "Bacterium Verrata": 3897000,
+    "Fungoida Bullarum": 3703200,
+    "Cactoida Pullulanta": 3667600,
+    "Cactoida Cortexum": 3667600,
+    "Tussock Caputus": 3472400,
+    "Aleoida Spica": 3385200,
+    "Aleoida Laminiae": 3385200,
+    "Fungoida Gelata": 3330300,
+    "Tussock Albata": 3252500,
+    "Tussock Ventusa": 3227700,
+    "Osseus Pumice": 3156300,
+    "Fonticulua Lapida": 3111000,
+    "Stratum Laminamus": 2788300,
+    "Fungoida Stabitis": 2680300,
+    "Tubus Rosarium": 2637500,
+    "Stratum Frigus": 2637500,
+    "Cactoida Peperatis": 2483600,
+    "Cactoida Lapis": 2483600,
+    "Stratum Excutitus": 2448900,
+    "Stratum Araneamus": 2448900,
+    "Tubus Conifer": 2415500,
+    "Osseus Spiralis": 2404700,
+    "Concha Labiata": 2352400,
+    "Bacterium Tela": 1949000,
+    "Tussock Ignis": 1849000,
+    "Frutexa Flabellum": 1808900,
+    "Fonticulua Digitos": 1804100,
+    "Tussock Divisa": 1766600,
+    "Tussock Cultro": 1766600,
+    "Tussock Catena": 1766600,
+    "Bacterium Cerbrus": 1689800,
+    "Fungoida Setisis": 1670100,
+    "Bacterium Alcyoneum": 1658500,
+    "Frutexa Collum": 1639800,
+    "Frutexa Metallicum": 1632500,
+    "Frutexa Fera": 1632500,
+    "Amphora Plant": 1628800,
+    "Crystalline Shards": 1628800,
+    "Viride Brain Tree": 1593700,
+    "Roseum Brain Tree": 1593700,
+    "Puniceum Brain Tree": 1593700,
+    "Ostrinum Brain Tree": 1593700,
+    "Lividum Brain Tree": 1593700,
+    "Lindigoticum Brain Tree": 1593700,
+    "Gypseeum Brain Tree": 1593700,
+    "Aureum Brain Tree": 1593700,
+    "Viride Sinuous Tubers": 1514500,
+    "Violaceum Sinuous Tubers": 1514500,
+    "Lindigoticum Sinuous Tubers": 1514500,
+    "Blatteum Sinuous Tubers": 1514500,
+    "Roseum Sinuous Tubers": 1514500,
+    "Albidum Sinuous Tubers": 1514500,
+    "Prasinum Sinuous Tubers": 1514500,
+    "Caeruleum Sinuous Tubers": 1514500,
+    "Rubeum Bioluminescent Anemone": 1499900,
+    "Roseum Bioluminescent Anemone": 1499900,
+    "Roseum Anemone": 1499900,
+    "Puniceum Anemone": 1499900,
+    "Prasinum Bioluminescent Anemone": 1499900,
+    "Luteolum Anemone": 1499900,
+    "Croceum Anemone": 1499900,
+    "Blatteum Bioluminescent Anemone": 1499900,
+    "Osseus Cornibus": 1483000,
+    "Bark Mounds": 1471900,
+    "Stratum Paleas": 1362000,
+    "Stratum Limaxus": 1362000,
+    "Bacterium Bullaris": 1152500,
+    "Bacterium Aurasus": 1000000,
+    "Tussock Propagito": 1000000,
+    "Fonticulua Campestris": 1000000,
+    "Tussock Pennatis": 1000000,
+    "Bacterium Vesicula": 1000000,
+    "Bacterium Acies": 1000000
 }
 
 # Journal name translation
@@ -256,7 +258,7 @@ organicnamesjournaltolocal = {
     "$codex_ent_conchas_04_name;": "Concha Biconcavis",
     "$codex_ent_stratum_06_name;": "Stratum Cucumisis",
     "$codex_ent_recepta_02_name;": "Recepta Deltahedronix",
-    "$codex_Ent_fumerolas_02_name;": "Fumerola Extremus",
+    "$codex_ent_fumerolas_02_name;": "Fumerola Extremus",
     "$codex_ent_clypeus_03_name;": "Clypeus Speculumi",
     "$codex_ent_cactoid_03_name;": "Cactoida Vermis",
     "$codex_ent_tussocks_14_name;": "Tussock Virgam",
@@ -275,11 +277,11 @@ organicnamesjournaltolocal = {
     "$codex_ent_shrubs_02_name;": "Frutexa Acus",
     "$codex_ent_conchas_02_name;": "Concha Aureolas",
     "$codex_ent_bacterial_09_name;": "Bacterium Volu",
-    "$codex_Ent_fumerolas_03_name;": "Fumerola Nitris",
+    "$codex_ent_fumerolas_03_name;": "Fumerola Nitris",
     "$codex_ent_aleoids_01_name;": "Aleoida Arcus",
     "$codex_ent_tussocks_15_name;": "Tussock Capillum",
-    "$codex_Ent_fumerolas_01_name;": "Fumerola Carbosis",
-    "$codex_Ent_fumerolas_04_name;": "Fumerola Aquatis",
+    "$codex_ent_fumerolas_01_name;": "Fumerola Carbosis",
+    "$codex_ent_fumerolas_04_name;": "Fumerola Aquatis",
     "$codex_ent_electricae_02_name;": "Electricae Radialem",
     "$codex_ent_electricae_01_name;": "Electricae Pluma",
     "$codex_ent_aleoids_02_name;": "Aleoida Coronamus",
@@ -369,8 +371,32 @@ organicnamesjournaltolocal = {
 }
 
 
-# Colonial ranges in m, TODO: find clonal colonial ranges for missing bio types
-# later check if any of these is in the localised name of the space plant as in the key being a substring.
+genusnamesjournaltolocal = {
+    "$Codex_Ent_Aleoids_Genus_Name;": "Aleoida",
+    "$Codex_Ent_Vents_Name;": "Amphora Plant",
+    "$Codex_Ent_Sphere_Name;": "Anemone",
+    "$Codex_Ent_Bacterial_Genus_Name;": "Bacterium",
+    "$Codex_Ent_Cone_Name;": "Bark Mound",
+    "$Codex_Ent_Brancae_Name;": "Brain Tree",
+    "$Codex_Ent_Cactoid_Genus_Name;": "Cactoida",
+    "$Codex_Ent_Conchas_Genus_Name;": "Concha",
+    "$Codex_Ent_Clypeus_Genus_Name;": "Clypeus",
+    "$Codex_Ent_Ground_Struct_Ice_Name;": "Crystalline Shards",
+    "$Codex_Ent_Electricae_Genus_Name;": "Electricae",
+    "$Codex_Ent_Fonticulus_Genus_Name;": "Fonticulua",
+    "$Codex_Ent_Shrubs_Genus_Name;": "Frutexa",
+    "$Codex_Ent_Fumerolas_Genus_Name;": "Fumerola",
+    "$Codex_Ent_Fungoids_Genus_Name;": "Fungoida",
+    "$Codex_Ent_Osseus_Genus_Name;": "Osseus",
+    "$Codex_Ent_Recepta_Genus_Name;": "Recepta",
+    "$Codex_Ent_Tube_Name;": "Sinuous Tubers",
+    "$Codex_Ent_Stratum_Genus_Name;": "Stratum",
+    "$Codex_Ent_Tubus_Genus_Name;": "Tubus",
+    "$Codex_Ent_Tussocks_Genus_Name;": "Tussock"
+}
+
+
+# Colonial ranges in m.
 clonalcolonialranges = {
     "Brain Tree": 100,
     "Bark Mound": 100,
@@ -391,7 +417,7 @@ clonalcolonialranges = {
     "Tubus": 800,
     "Frutexa": 150,
     "Tussock": 200,
-    "Crystalline Shards": None,  # fix pl0x, Check Range
+    "Crystalline Shards": 100,  # According to fandom. Gotta check it.
     "Amphora Plant": 100
 }
 
@@ -401,20 +427,64 @@ def getvistagenomicprices():
     return vistagenomicsprices
 
 
-def getu14vistagenomicprices():
-    """Get price table."""
-    return u14vistagenomicsprices
-
-
-def getclonalcolonialranges():
+def getclonalcolonialranges(name: str) -> int:
     """Get clonal colonial ranges in m."""
-    return clonalcolonialranges
+    return clonalcolonialranges[name]
 
 
-def generaltolocalised(name):
+def genusgeneraltolocalised(name: str) -> str:
+    """
+    Translate journal name to localised name for organic scan.
+
+    expects the full journal name with preceding "$"
+    """
+    return genusnamesjournaltolocal[name]
+
+
+def generaltolocalised(name: str) -> str:
     """
     Translate journal name to localised name for organic scan.
 
     expects the full journal name with preceding "$" in all lowercase letters
     """
     return organicnamesjournaltolocal[name]
+
+
+def computedistanceangle(lat1: float, long1: float, lat2: float, long2: float) -> float:
+    """Compute the angle between two positions on a sphere."""
+    result = math.acos(math.sin(math.radians(lat1)) * math.sin(math.radians(lat2)) +
+                       math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+                       math.cos(math.radians(long2 - long1)))
+    return result
+
+
+def computedistance(lat1: float, long1: float, lat2: float, long2: float, r: float) -> float:
+    """Compute distance between two points (lat1, long1), (lat2, long2) on a planet with radius r."""
+    angle = computedistanceangle(lat1, long1, lat2, long2)
+    return angle * r
+
+
+def bearing(lat1: float, lon1: float, lat2: float, lon2: float):
+    """Compute the bearing to lat2, lon2 from the pos lat1, lon1."""
+    # Convert latitude and longitude to radians
+    lat1 = math.radians(lat1)
+    lon1 = math.radians(lon1)
+    lat2 = math.radians(lat2)
+    lon2 = math.radians(lon2)
+
+    # Compute the parameters for atan2
+    x = math.sin(lon2 - lon1) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1)
+
+    # Compute the bearing in radians
+    theta = math.atan2(x, y)
+
+    # Return the bearing in degrees
+    result = math.degrees(theta)
+
+    # Adjustment to get the same bearing numbers as in E:D
+    # Otherwise switches sign at 180 degrees
+    if result < 0:
+        result += 360
+
+    return result
