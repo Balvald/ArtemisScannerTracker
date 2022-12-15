@@ -23,6 +23,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - A handy Button in the preferences that'll let the plugin scan through your journal files to retroactively track exobiology scans you've done in the past.
 
 *NEW*: Multi Commander Support. The plugin can handle you playing with many different CMDRs on the same machine with the same EDMC installation.
+
 -> This introduces an incompatability between the new _notsoldbiodata.json_ and _soldbiodata.json_ and the ones used by v0.1.2 and earlier. Please do sell any unsold data use the journal crawling buttons to rebuild an up to date _soldbiodata.json_
 
 *NEW*: Shows the Clonal Colony Range of the last scanned exobiology scan, and your current distance to up to two previous scan locations with corresponding bearing.
