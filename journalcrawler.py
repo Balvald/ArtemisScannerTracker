@@ -274,6 +274,8 @@ class loggingthing:
     def __init__(self):
         self.info = print
         self.debug = print
+        self.warning = print
+        self.error = print
         pass
 
 
