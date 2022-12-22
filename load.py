@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.0 by Balvald."""
+"""Artemis Scanner Tracker v0.2.1 dev by Balvald."""
 
 import json
 import logging
@@ -24,7 +24,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.0"
+AST_VERSION = "v0.2.1"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -95,6 +95,7 @@ class ArtemisScannerTracker:
         self.AST_hide_value: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_value"))
         self.AST_hide_sold_bio: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_sold_bio"))
         self.AST_hide_CCR: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_CCR"))
+        self.AST_hide_after_selling: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_after_selling"))
 
         # bool to steer when the CCR feature is visible
         self.AST_near_planet: Optional[tk.BooleanVar] = False
@@ -105,6 +106,9 @@ class ArtemisScannerTracker:
         self.AST_scan_2_pos_vector = [None, None]
 
         self.AST_CCR: Optional[tk.IntVar] = tk.IntVar(value=0)
+
+        # value to steer the autohiding functionality
+        self.AST_after_selling: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_after_selling"))
 
         # radius of the most current planet
         self.AST_current_radius: Optional[tk.StringVar] = tk.StringVar(value="")
@@ -165,8 +169,7 @@ class ArtemisScannerTracker:
         """
         self.on_preferences_closed("", False)  # Save our prefs
 
-    def setup_preferences(self, parent: nb.Notebook,  # noqa #CCR001
-                          cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
+    def setup_preferences(self, parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]: # noqa #CCR001
         """
         setup_preferences is called by plugin_prefs below.
 
@@ -174,8 +177,7 @@ class ArtemisScannerTracker:
         own settings page in EDMC's settings window.
         Our tab is defined for us.
 
-        :param parent: the tkinter parent that our
-                       returned Frame will want to inherit from
+        :param parent: the tkinter parent that our returned Frame will want to inherit from
         :param cmdr: The current ED Commander
         :param is_beta: Whether or not EDMC is currently marked as in beta mode
         :return: The frame to add to the settings window
@@ -185,12 +187,12 @@ class ArtemisScannerTracker:
         if currentcommander != "" and currentcommander is not None:
             load_cmdr(cmdr)
 
-        line = "___________________________________________________________"
+        line = "___________________________________________________"
 
         current_row = 0
         frame = nb.Frame(parent)
 
-        prefs_label(frame, "Artemis Scanner Tracker v0.2.0 by Balvald", current_row, 0, tk.W)
+        prefs_label(frame, f"Artemis Scanner Tracker {AST_VERSION} by Balvald", current_row, 0, tk.W)
 
         current_row += 1
 
@@ -201,14 +203,14 @@ class ArtemisScannerTracker:
 
         checkboxlistleft = ["Hide Full Status", "Hide Species",
                             "Hide System of last Scan", "Hide Current System",
-                            "Hide Scanned/Sold Species in System"]
+                            "Hide Scanned/Sold Species in System", "Autohide values after selling"]
         checkboxlistright = ["Hide Value of unsold Scans", "Hide Scan Progress",
                              "Hide Body of last Scan", "Hide Current Body",
-                             "Hide Clonal Colonial Distances"]
+                             "Hide Clonal Colonial Distances", "Force Hide/Show Autohidden"]
 
         variablelistleft = [self.AST_hide_fullscan, self.AST_hide_species,
                             self.AST_hide_last_system, self.AST_hide_system,
-                            self.AST_hide_sold_bio]
+                            self.AST_hide_sold_bio, self.AST_hide_after_selling]
         variablelistright = [self.AST_hide_value, self.AST_hide_progress,
                              self.AST_hide_last_body, self.AST_hide_body,
                              self.AST_hide_CCR]
@@ -217,6 +219,10 @@ class ArtemisScannerTracker:
             if i < len(checkboxlistleft):
                 prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
             if i < len(checkboxlistright):
+                if checkboxlistright[i] == "Force Hide/Show Autohidden":
+                    prefs_button(frame, checkboxlistright[i], self.forcehideshow, current_row, 1, tk.W)
+                    current_row += 1
+                    continue
                 prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
             current_row += 1
 
@@ -233,7 +239,7 @@ class ArtemisScannerTracker:
                 if i < len(debuglistleft):
                     prefs_label(frame, debuglistleft[i], current_row, 0, tk.W)
                 if i < len(debuglistright):
-                    prefs_entry(frame, debuglistright[i], current_row, 0, tk.W)
+                    prefs_entry(frame, debuglistright[i], current_row, 1, tk.W)
                 current_row += 1
 
         prefs_label(frame, line, current_row, 0, tk.W)
@@ -278,7 +284,7 @@ class ArtemisScannerTracker:
         :param cmdr: The current ED Commander
         :param is_beta: Whether or not EDMC is currently marked as in beta mode
         """
-        global currentcommander
+        global currentcommander, plugin
         if currentcommander != "" and currentcommander is not None:
             save_cmdr(currentcommander)
         if currentcommander != cmdr and cmdr != "" and cmdr is not None:
@@ -287,8 +293,6 @@ class ArtemisScannerTracker:
 
         # for formatting the string with thousands seperators we have to remove them here again.
         config.set("AST_value", int(self.AST_value.get().replace(",", "").split(" ")[0]))
-
-        """        config.set("AST_CCR", int(self.AST_CCR.get()))"""
 
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
         config.set("AST_hide_fullscan", int(self.AST_hide_fullscan.get()))
@@ -300,12 +304,17 @@ class ArtemisScannerTracker:
         config.set("AST_hide_body", int(self.AST_hide_body.get()))
         config.set("AST_hide_sold_bio", int(self.AST_hide_sold_bio.get()))
         config.set("AST_hide_CCR", int(self.AST_hide_CCR.get()))
+        config.set("AST_hide_after_selling", int(self.AST_hide_after_selling.get()))
+
+        config.set("AST_after_selling", int(self.AST_after_selling.get()))
 
         logger.info(f"Currently last Commander is: {cmdr}")
 
         config.set("AST_last_CMDR", str(cmdr))
 
         logger.debug("ArtemisScannerTracker saved preferences")
+
+        rebuild_ui(plugin, cmdr)
 
     def setup_main_ui(self, parent: tk.Frame) -> tk.Frame:
         """
@@ -345,6 +354,14 @@ class ArtemisScannerTracker:
         dummytk.clipboard_clear()
         dummytk.clipboard_append(plugin.AST_value.get()[:-4].replace(",", ""))
         dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
+
+    def forcehideshow(self):
+        """Force plugin to show values when Auto hide is on."""
+        global currentcommander, frame
+
+        state = bool(self.AST_after_selling.get())
+        self.AST_after_selling.set(int(not(state)))
+        rebuild_ui(self, currentcommander)
 
     def buildsoldbiodatajsonlocal(self):
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
@@ -510,7 +527,9 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     # Prepare to fix probable bugs before a user might report them:
 
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
-    # TODO: Check how real death differs from frontline solutions ground combat zone death.
+    # Probably?
+    # Check how real death differs from frontline solutions ground combat zone death.
+    # Yes it does. Frontline solutions does not have a Resurrect event.
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
@@ -530,10 +549,9 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if flag:
         # we changed a value so we update line.
-        plugin.AST_state.set(
-            plugin.AST_last_scan_plant.get()
-            + " (" + plugin.AST_current_scan_progress.get()
-            + ") on: " + plugin.AST_last_scan_body.get())
+        plugin.AST_state.set(plugin.AST_last_scan_plant.get() + " (" +
+                             plugin.AST_current_scan_progress.get() + ") on: " +
+                             plugin.AST_last_scan_body.get())
 
         # save most recent relevant state so in case of crash of the system
         # we still have a proper record as long as it finishes saving below.
@@ -613,6 +631,8 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
         # If anyone ever sees "Excuse me what the fuck"
         # we know they added a new ScanType, that we might need to handle
         plugin.AST_current_scan_progress.set("Excuse me what the fuck")
+
+    plugin.AST_after_selling.set(0)
 
     # We now need to rebuild regardless how far we progressed
     rebuild_ui(plugin, cmdr)
@@ -875,6 +895,11 @@ def biosell_event(cmdr: str, entry):  # noqa #CCR001
         json.dump(solddata, f, indent=4)
         f.truncate()
 
+    # After selling all the unsold value we finished selling and things switch to hiding things if
+    # we are in autohiding mode
+    if int(plugin.AST_value.get().replace(",", "").split(" ")[0]) == 0:
+        plugin.AST_after_selling.set(1)
+
     # If we sell the exobiodata in the same system as where we currently are
     # Then we want to remove the "*" around the body names of the newly sold biodata
     # So just rebuild the ui for good measure.
@@ -896,15 +921,12 @@ def save_cmdr(cmdr):
     if cmdr not in cmdrstates.keys():
         cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
 
-    cmdrstates[cmdr][0] = plugin.AST_last_scan_plant.get()
-    cmdrstates[cmdr][1] = plugin.AST_last_scan_system.get()
-    cmdrstates[cmdr][2] = plugin.AST_last_scan_body.get()
-    cmdrstates[cmdr][3] = plugin.AST_current_scan_progress.get()
-    cmdrstates[cmdr][4] = plugin.AST_state.get()
-    cmdrstates[cmdr][5] = plugin.AST_value.get()
-    cmdrstates[cmdr][6] = plugin.AST_CCR.get()
-    cmdrstates[cmdr][7] = plugin.AST_scan_1_pos_vector.copy()
-    cmdrstates[cmdr][8] = plugin.AST_scan_2_pos_vector.copy()
+    valuelist = [plugin.AST_last_scan_plant.get(), plugin.AST_last_scan_system.get(), plugin.AST_last_scan_body.get(),
+                 plugin.AST_current_scan_progress.get(), plugin.AST_state.get(), plugin.AST_value.get(),
+                 plugin.AST_CCR.get(), plugin.AST_scan_1_pos_vector.copy(), plugin.AST_scan_2_pos_vector.copy()]
+
+    for i in range(len(cmdrstates[cmdr])):
+        cmdrstates[cmdr][i] = valuelist[i]
 
     file = directory + "\\cmdrstates.json"
 
@@ -957,7 +979,7 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
     current_row = 0
 
     if plugin.updateavailable:
-        latest = "github.com/Balvald/ArtemisScannerTracker/releases/latest"
+        latest = f"github.com/{AST_REPO}/releases/latest"
         HyperlinkLabel(frame, text="Update available!", url=latest, underline=True).grid(row=current_row, sticky=tk.W)
         current_row += 1
 
@@ -972,8 +994,22 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
                           plugin.AST_current_system, plugin.AST_current_body]
     uielementlistextra = [None, None, None, None, None, "clipboardbutton", None, None]
 
+    skipafterselling = ["Last Exobiology Scan:", "Last Species:", "Scan Progress:",
+                        "System of last Scan:", "Body of last Scan:"]
+
     for i in range(max(len(uielementlistleft), len(uielementlistright))):
         if uielementcheck[i] != 1:
+            if plugin.AST_after_selling.get() != 0:
+                if uielementlistleft[i] in skipafterselling:
+                    continue
+            if (uielementlistleft[i] in ["System of last Scan:", "Body of last Scan:", "Unsold Scan Value:"]
+               and plugin.AST_hide_after_selling.get() != 0):
+                if uielementlistleft[i] == "Unsold Scan Value:":
+                    if int(uielementlistright[i].get().replace(",", "").split(" ")[0]) == 0:
+                        continue
+                else:
+                    if uielementlistright[i].get() == uielementlistright[i+3].get():
+                        continue
             if i < len(uielementlistleft):
                 ui_label(frame, uielementlistleft[i], current_row, 0, tk.W)
             if i < len(uielementlistright):
@@ -1001,7 +1037,6 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
 
     theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
 
-
 def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
     # Create a Button to make it shorter?
     soldbiodata = {}
@@ -1017,7 +1052,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
 
     tk.Label(frame, text="Scans in this System:").grid(row=current_row, sticky=tk.W)
 
-    if cmdr == "":
+    if cmdr == "" or cmdr is None or cmdr == "None":
         return
 
     # Check if we even got a cmdr yet!
@@ -1026,8 +1061,13 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
     # logger.info(f"data: {notsoldbiodata}.")
 
     bodylistofspecies = {}
-
-    firstletter = plugin.AST_current_system.get()[0].lower()
+    try:
+        firstletter = plugin.AST_current_system.get()[0].lower()
+    except IndexError:
+        tk.Label(frame, text="None").grid(row=current_row, column=1, sticky=tk.W)
+        # length of string is 0. there is no current system yet.
+        # So there is no reason to do anything
+        return
 
     try:
         if plugin.AST_current_system.get() in soldbiodata[cmdr][firstletter].keys():
