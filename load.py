@@ -384,7 +384,6 @@ class ArtemisScannerTracker:
 
     def buildsoldbiodatajsonlocal(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
-
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 
@@ -400,7 +399,7 @@ class ArtemisScannerTracker:
 
 # region eventhandling
 
-def dashboard_entry(cmdr: str, is_beta, entry):  # noqa #CCR001
+def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     """
     React to changes in the CMDRs status (Movement for CCR feature).
 
@@ -493,7 +492,7 @@ def dashboard_entry(cmdr: str, is_beta, entry):  # noqa #CCR001
         rebuild_ui(plugin, cmdr)
 
 
-def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state):  # noqa #CCR001
+def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state) -> None:  # noqa #CCR001
     """
     React accordingly to events in the journal.
 
@@ -540,9 +539,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         plugin.AST_current_system.set(str(system))
 
     flag = False
-
-    # Prepare to fix probable bugs before a user might report them:
-
+    
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # Probably?
     # Check how real death differs from frontline solutions ground combat zone death.
@@ -575,13 +572,13 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         plugin.on_preferences_closed(cmdr, is_beta)
 
 
-def resurrection_event(cmdr: str):
+def resurrection_event(cmdr: str) -> None:
     """Handle resurrection event aka dying."""
     global not_yet_sold_data
     not_yet_sold_data[cmdr] = []
 
 
-def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
+def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin
     plugin.AST_last_scan_plant.set(orgi.generaltolocalised(entry["Species"].lower()))
@@ -658,7 +655,7 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
     rebuild_ui(plugin, cmdr)
 
 
-def system_body_change_event(cmdr: str, entry):  # noqa #CCR001
+def system_body_change_event(cmdr: str, entry) -> None:  # noqa #CCR001
     """Handle all events that give a tell in which system we are or on what planet we are on."""
     global plugin
 
@@ -695,7 +692,7 @@ def system_body_change_event(cmdr: str, entry):  # noqa #CCR001
         save_cmdr(cmdr)
 
 
-def biosell_event(cmdr: str, entry):  # noqa #CCR001
+def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
     """Handle the SellOrganicData event."""
     global currententrytowrite, not_yet_sold_data, sold_exobiology
     soldvalue = 0
@@ -934,7 +931,7 @@ plugin = ArtemisScannerTracker()
 # region saving/loading
 
 
-def save_cmdr(cmdr):
+def save_cmdr(cmdr) -> None:
     """Save information specific to the cmdr in the cmdrstates.json."""
     global plugin, directory
 
@@ -957,7 +954,7 @@ def save_cmdr(cmdr):
         f.truncate()
 
 
-def load_cmdr(cmdr):
+def load_cmdr(cmdr) -> None:
     """Load information about a cmdr from cmdrstates.json."""
     global cmdrstates, plugin
     file = directory + "\\cmdrstates.json"
@@ -981,7 +978,7 @@ def load_cmdr(cmdr):
 # region UI
 
 
-def clear_ui():
+def clear_ui() -> None:
     """Remove all labels from this plugin."""
     global frame
     # remove all labels from the frame
@@ -989,7 +986,7 @@ def clear_ui():
         label.destroy()
 
 
-def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
+def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
     """Rebuild the UI in case of preferences change."""
     global frame
 
@@ -1029,7 +1026,7 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
                     continue
             # Hide when system is the same as the current one.
             if (uielementlistleft[i] in ["System of last Scan:", "Body of last Scan:"]
-               and plugin.AST_hide_after_selling.get() == 0):
+               and (plugin.AST_hide_after_selling.get() == 1 or plugin.AST_hide_after_full_scan.get == 1)):
                 if uielementlistright[i].get() == uielementlistright[i+3].get():
                     continue
             if i < len(uielementlistleft):
@@ -1059,7 +1056,7 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
 
     theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
 
-def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
+def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
     # Create a Button to make it shorter?
     soldbiodata = {}
     notsoldbiodata = {}
