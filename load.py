@@ -1039,7 +1039,7 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
         ui_label(frame, "Distance to Scan #2: ", current_row, 0, tk.W)
         ui_entry(frame, plugin.AST_scan_2_pos_dist, current_row, 1, tk.W)
         current_row += 1
-        ui_label(frame, "Currentpos: ", current_row, 0, tk.W)
+        ui_label(frame, "Current Position: ", current_row, 0, tk.W)
         ui_entry(frame, plugin.AST_current_pos, current_row, 1, tk.W)
         current_row += 1
 
