@@ -110,6 +110,9 @@ class ArtemisScannerTracker:
         # value to steer the autohiding functionality
         self.AST_after_selling: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_after_selling"))
 
+        # hide feature for Scans in the system for the button:
+        self.AST_hide_scans_in_system: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_scans_in_system"))
+
         # radius of the most current planet
         self.AST_current_radius: Optional[tk.StringVar] = tk.StringVar(value="")
 
@@ -308,6 +311,8 @@ class ArtemisScannerTracker:
 
         config.set("AST_after_selling", int(self.AST_after_selling.get()))
 
+        config.set("AST_hide_scans_in_system", int(self.AST_hide_scans_in_system.get()))
+
         logger.info(f"Currently last Commander is: {cmdr}")
 
         config.set("AST_last_CMDR", str(cmdr))
@@ -361,6 +366,13 @@ class ArtemisScannerTracker:
 
         state = bool(self.AST_after_selling.get())
         self.AST_after_selling.set(int(not(state)))
+        rebuild_ui(self, currentcommander)
+
+    def switchhidesoldexobio(self):
+        """Switch the ui button to expand and collapse the list of sold/scanned exobiology."""
+        global currentcommander, frame
+        state = bool(self.AST_hide_scans_in_system.get())
+        self.AST_hide_scans_in_system.set(int(not(state)))
         rebuild_ui(self, currentcommander)
 
     def buildsoldbiodatajsonlocal(self):
@@ -1021,14 +1033,14 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
     # Clonal Colonial Range here.
     if plugin.AST_hide_CCR.get() != 1 and plugin.AST_near_planet is True:
         # show distances for the last scans.
-        tk.Label(frame, text="Distance to Scan #1: ").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_scan_1_pos_dist).grid(row=current_row, column=1, sticky=tk.W)
+        ui_label(frame, "Distance to Scan #1: ", current_row, 0, tk.W)
+        ui_entry(frame, plugin.AST_scan_1_pos_dist, current_row, 1, tk.W)
         current_row += 1
-        tk.Label(frame, text="Distance to Scan #2: ").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_scan_2_pos_dist).grid(row=current_row, column=1, sticky=tk.W)
+        ui_label(frame, "Distance to Scan #2: ", current_row, 0, tk.W)
+        ui_entry(frame, plugin.AST_scan_2_pos_dist, current_row, 1, tk.W)
         current_row += 1
-        tk.Label(frame, text="Currentpos: ").grid(row=current_row, sticky=tk.W)
-        tk.Label(frame, textvariable=plugin.AST_current_pos).grid(row=current_row, column=1, sticky=tk.W)
+        ui_label(frame, "Currentpos: ", current_row, 0, tk.W)
+        ui_entry(frame, plugin.AST_current_pos, current_row, 1, tk.W)
         current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI
@@ -1050,7 +1062,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
     with open(file, "r+", encoding="utf8") as f:
         notsoldbiodata = json.load(f)
 
-    tk.Label(frame, text="Scans in this System:").grid(row=current_row, sticky=tk.W)
+    ui_label(frame, "Scans in this System:", current_row, 0, tk.W)
 
     if cmdr == "" or cmdr is None or cmdr == "None":
         return
@@ -1064,10 +1076,12 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
     try:
         firstletter = plugin.AST_current_system.get()[0].lower()
     except IndexError:
-        tk.Label(frame, text="None").grid(row=current_row, column=1, sticky=tk.W)
+        ui_label(frame, "None", current_row, 1, tk.W)
         # length of string is 0. there is no current system yet.
         # So there is no reason to do anything
         return
+
+    count = 0
 
     try:
         if plugin.AST_current_system.get() in soldbiodata[cmdr][firstletter].keys():
@@ -1085,6 +1099,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
                     bodylistofspecies[sold["species"]] = [[bodyname, True]]
                 else:
                     bodylistofspecies[sold["species"]].append([bodyname, True])
+
+                count += 1
     except KeyError:
         # if we don't have the cmdr in the sold data yet we just pass all sold data.
         pass
@@ -1106,16 +1122,28 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
                     bodylistofspecies[notsold["species"]] = [[bodyname, False]]
                 else:
                     bodylistofspecies[notsold["species"]].append([bodyname, False])
+
+                count += 1
     except KeyError:
         # if we don't have the cmdr in the notsold data yet we just pass.
         pass
 
     if bodylistofspecies == {}:
-        tk.Label(frame, text="None").grid(row=current_row, column=1, sticky=tk.W)
+        ui_label(frame, "None", current_row, 1, tk.W)
+    else:
+        ui_label(frame, count, current_row, 1, tk.W)
+
+    # skip
+    if plugin.AST_hide_scans_in_system.get() != 0:
+        ui_button(frame, "▼", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+
+        return
+
+    ui_button(frame, "▲", plugin.switchhidesoldexobio, current_row, 2, tk.W)
 
     for species in bodylistofspecies.keys():
         current_row += 1
-        tk.Label(frame, text=species).grid(row=current_row, column=0, sticky=tk.W)
+        ui_label(frame, species, current_row, 0, tk.W)
         bodies = ""
         for body in bodylistofspecies[species]:
             if body[1]:
@@ -1125,7 +1153,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row):  # noqa #CCR001
         while (bodies[-1] == "," or bodies[-1] == " "):
             bodies = bodies[:-1]
 
-        tk.Label(frame, text=bodies).grid(row=current_row, column=1, sticky=tk.W)
+        ui_label(frame, bodies, current_row, 1, tk.W)
 
 
 def prefs_label(frame, text, row: int, col: int, sticky) -> None:
