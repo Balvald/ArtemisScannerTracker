@@ -28,6 +28,8 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - A button that copies the value of your currently unsold scans to your clipboard
 
+*NEW*: Additional feature to automatically hide non relevant
+
 
 ## Usage
 
