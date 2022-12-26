@@ -96,6 +96,8 @@ class ArtemisScannerTracker:
         self.AST_hide_sold_bio: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_sold_bio"))
         self.AST_hide_CCR: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_CCR"))
         self.AST_hide_after_selling: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_after_selling"))
+        self.AST_hide_after_full_scan: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_after_full_scan"))
+        self.AST_hide_value_when_zero: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_value_when_zero"))
 
         # bool to steer when the CCR feature is visible
         self.AST_near_planet: Optional[tk.BooleanVar] = False
@@ -204,25 +206,28 @@ class ArtemisScannerTracker:
 
         current_row += 1
 
-        checkboxlistleft = ["Hide Full Status", "Hide Species",
-                            "Hide System of last Scan", "Hide Current System",
-                            "Hide Scanned/Sold Species in System", "Autohide values after selling"]
-        checkboxlistright = ["Hide Value of unsold Scans", "Hide Scan Progress",
-                             "Hide Body of last Scan", "Hide Current Body",
-                             "Hide Clonal Colonial Distances", "Force Hide/Show Autohidden"]
+        checkboxlistleft = ["Hide full status", "Hide species",
+                            "Hide system of last Scan", "Hide current system",
+                            "Hide scanned/sold species in system", "Autom. hide values after selling all",
+                            "Autom. hide unsold value when 0 Cr."]
+        checkboxlistright = ["Hide value of unsold Scans", "Hide scan progress",
+                             "Hide body of last Scan", "Hide current Body",
+                             "Hide clonal colonial distances", "Autom. hide values after finished scan",
+                             "Force hide/show autom. hidden"]
 
         variablelistleft = [self.AST_hide_fullscan, self.AST_hide_species,
                             self.AST_hide_last_system, self.AST_hide_system,
-                            self.AST_hide_sold_bio, self.AST_hide_after_selling]
+                            self.AST_hide_sold_bio, self.AST_hide_after_selling,
+                            self.AST_hide_value_when_zero]
         variablelistright = [self.AST_hide_value, self.AST_hide_progress,
                              self.AST_hide_last_body, self.AST_hide_body,
-                             self.AST_hide_CCR]
+                             self.AST_hide_CCR, self.AST_hide_after_full_scan]
 
         for i in range(max(len(checkboxlistleft), len(checkboxlistright))):
             if i < len(checkboxlistleft):
                 prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
             if i < len(checkboxlistright):
-                if checkboxlistright[i] == "Force Hide/Show Autohidden":
+                if checkboxlistright[i] == "Force hide/show autom. hidden":
                     prefs_button(frame, checkboxlistright[i], self.forcehideshow, current_row, 1, tk.W)
                     current_row += 1
                     continue
@@ -231,7 +236,7 @@ class ArtemisScannerTracker:
 
         if debug:
 
-            debuglistleft = ["Species", "System of last Scan",
+            debuglistleft = ["species", "System of last Scan",
                              "Body of last Scan", "Scan progress",
                              "Scanned Value"]
             debuglistright = [self.AST_last_scan_plant, self.AST_last_scan_system,
@@ -308,6 +313,8 @@ class ArtemisScannerTracker:
         config.set("AST_hide_sold_bio", int(self.AST_hide_sold_bio.get()))
         config.set("AST_hide_CCR", int(self.AST_hide_CCR.get()))
         config.set("AST_hide_after_selling", int(self.AST_hide_after_selling.get()))
+        config.set("AST_hide_after_full_scan", int(self.AST_hide_after_full_scan.get()))
+        config.set("AST_hide_value_when_zero", int(self.AST_hide_value_when_zero.get()))
 
         config.set("AST_after_selling", int(self.AST_after_selling.get()))
 
@@ -344,7 +351,7 @@ class ArtemisScannerTracker:
 
         return frame
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset function of the Reset Button."""
         self.AST_current_scan_progress.set("0/3")
         self.AST_last_scan_system.set("")
@@ -353,14 +360,14 @@ class ArtemisScannerTracker:
         self.AST_state.set("None")
         self.AST_value.set("0 Cr.")
 
-    def clipboard(self):
+    def clipboard(self) -> None:
         """Copy value to clipboard."""
         dummytk = tk.Tk()  # creates a window we don't want
         dummytk.clipboard_clear()
         dummytk.clipboard_append(plugin.AST_value.get()[:-4].replace(",", ""))
         dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
 
-    def forcehideshow(self):
+    def forcehideshow(self) -> None:
         """Force plugin to show values when Auto hide is on."""
         global currentcommander, frame
 
@@ -368,28 +375,26 @@ class ArtemisScannerTracker:
         self.AST_after_selling.set(int(not(state)))
         rebuild_ui(self, currentcommander)
 
-    def switchhidesoldexobio(self):
+    def switchhidesoldexobio(self) -> None:
         """Switch the ui button to expand and collapse the list of sold/scanned exobiology."""
         global currentcommander, frame
         state = bool(self.AST_hide_scans_in_system.get())
         self.AST_hide_scans_in_system.set(int(not(state)))
         rebuild_ui(self, currentcommander)
 
-    def buildsoldbiodatajsonlocal(self):
+    def buildsoldbiodatajsonlocal(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
-        # Always uses the game journal directory
 
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 
         build_biodata_json(logger, os.path.join(directory, "journals"))
 
-    def buildsoldbiodatajson(self):
+    def buildsoldbiodatajson(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py."""
         # Always uses the game journal directory
 
         global logger
-
         build_biodata_json(logger, config.default_journal_dir)
 
 
@@ -645,6 +650,9 @@ def bioscan_event(cmdr: str, is_beta, entry):  # noqa #CCR001
         plugin.AST_current_scan_progress.set("Excuse me what the fuck")
 
     plugin.AST_after_selling.set(0)
+
+    if plugin.AST_hide_after_full_scan.get() == 1 and plugin.AST_current_scan_progress.get() == "3/3":
+        plugin.AST_after_selling.set(1)
 
     # We now need to rebuild regardless how far we progressed
     rebuild_ui(plugin, cmdr)
@@ -1014,14 +1022,16 @@ def rebuild_ui(plugin, cmdr: str):  # noqa #CCR001
             if plugin.AST_after_selling.get() != 0:
                 if uielementlistleft[i] in skipafterselling:
                     continue
-            if (uielementlistleft[i] in ["System of last Scan:", "Body of last Scan:", "Unsold Scan Value:"]
-               and plugin.AST_hide_after_selling.get() != 0):
-                if uielementlistleft[i] == "Unsold Scan Value:":
-                    if int(uielementlistright[i].get().replace(",", "").split(" ")[0]) == 0:
-                        continue
-                else:
-                    if uielementlistright[i].get() == uielementlistright[i+3].get():
-                        continue
+            # Check when we hide the value of unsold scans when it is 0
+            if uielementlistleft[i] == "Unsold Scan Value:":
+                if (plugin.AST_hide_value_when_zero.get() == 1
+                   and int(uielementlistright[i].get().replace(",", "").split(" ")[0]) == 0):
+                    continue
+            # Hide when system is the same as the current one.
+            if (uielementlistleft[i] in ["System of last Scan:", "Body of last Scan:"]
+               and plugin.AST_hide_after_selling.get() == 0):
+                if uielementlistright[i].get() == uielementlistright[i+3].get():
+                    continue
             if i < len(uielementlistleft):
                 ui_label(frame, uielementlistleft[i], current_row, 0, tk.W)
             if i < len(uielementlistright):
