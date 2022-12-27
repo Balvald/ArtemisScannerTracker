@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.1 dev by Balvald."""
+"""Artemis Scanner Tracker v0.2.1 by Balvald."""
 
 import json
 import logging
@@ -539,7 +539,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         plugin.AST_current_system.set(str(system))
 
     flag = False
-    
+
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # Probably?
     # Check how real death differs from frontline solutions ground combat zone death.
@@ -1026,7 +1026,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
                     continue
             # Hide when system is the same as the current one.
             if (uielementlistleft[i] in ["System of last Scan:", "Body of last Scan:"]
-               and (plugin.AST_hide_after_selling.get() == 1 or plugin.AST_hide_after_full_scan.get == 1)):
+               and (plugin.AST_hide_after_selling.get() == 1 or plugin.AST_hide_after_full_scan.get() == 1)):
                 if uielementlistright[i].get() == uielementlistright[i+3].get():
                     continue
             if i < len(uielementlistleft):

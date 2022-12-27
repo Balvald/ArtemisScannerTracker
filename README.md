@@ -7,6 +7,7 @@
 1. Find your EDMC _plugins_ folder (In EDMC settings under _plugins_ you can click the button _Open_ to open the _plugins_ folder)
 2. Download the latest release.
 3. Unpack the _.zip_ archive of the latest release and move the _ArtemisScannerTracker_ folder into said _plugins_ folder. (folder may have a version number)
+4. Overwrite anything if there was an old version installed.
 
 You will need to re-start EDMC if EDMC was open while you installed the plugin. Otherwise just start EDMC
 
@@ -28,7 +29,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - A button that copies the value of your currently unsold scans to your clipboard
 
-*NEW*: Additional feature to automatically hide non relevant
+*NEW*: Additional feature to automatically hide values with a through new preference settings.
 
 
 ## Usage
@@ -36,6 +37,8 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - You have to do mostly _nothing_ (yay) apart from having to play Elite Dangerous while using this plugin with EDMC.
 
 - For the sake of making it impossible for the exobiology data tracking to accitentially assume the wrong system as already sold please do sell your whole batch of data.
+
+![AST UI](https://i.imgur.com/ERZ2sLt.png?raw=true "UI")
 
 - When using the "Scan game journals for sold exobiology":
 In the case of journals from your journal-limpet backup you can move them into the local journal folder inside the plugin folder
