@@ -38,14 +38,30 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - For the sake of making it impossible for the exobiology data tracking to accitentially assume the wrong system as already sold please do sell your whole batch of data.
 
-![AST UI](https://i.imgur.com/IOWZbOL.png?raw=true "UI")
+# Main UI
+![AST UI](https://i.imgur.com/nemRFxj.png "main plugin ui pic annotated")
 
-- When using the "Scan game journals for sold exobiology":
-In the case of journals from your journal-limpet backup you can move them into the local journal folder inside the plugin folder
-and press the "Scan local journal folder for sold exobiology"-button.
+- #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release. Will lead the user to the newest release.
+- #2 Full Status display. Includes Info about species, scan progress and the body it was scanned on. Can be automatically hidden after selling all exobiology or fully finishing a scan.
+- #3 Species and Scan Progress display. Can be automatically hidden after selling all exobiology or fully finishing a scan.
+- #4 System/Body of last Scan display. Can be automatically hidden after selling all exobiology or fully finishing a scan, if any of these options are activated they will also hide if they are the same as the current system or body.
+- #5 Unsold Scan value display. Shows the amount of all unsold exobiology data is worth. The button copies value to clipboard. Can be automatically hidden when the unsold value is 0 Cr.
+- #6 Current System and Body display.
+- #7 Clonal Colonial Range display. Will only show up when near a planet. Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
+- #8 Finished Scan display. Shows how many Scans are in the current system. Lists them by Planet names assigned to their respective species. Button expands and collapses the list of finished scans. Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
 
-Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly and please wait a good second or two when scanning through a lot of journal files.
+# Settings
+![Preferences](https://i.imgur.com/e9kaSED.png "preferences ui")
 
+- All tickbox "Hide X" options will just hide the respective information regardless of what happens in the game.
+    - Note that when you are not close to a planets surface the option "Hide clonal colonial distances" may seem to not do anything. If activated the Clonal Colonial Range display will just not pop up when approaching a planets' surface.
+- "Autom. hide values after selling all": Will automatically hide the full status, species, scan progress, system/body of last scan after all unsold exobiology was sold. The mentioned information will show up upon the next exobiology scan unless they are manually hidden with a option further up in the settings.
+- "Autom. hide values after finished scan": Will automatically hide the full status, species, scan progress, system/body of last scan after a Scan is completely finished after scanning the third. The mentioned information will show up upon the next exobiology scan unless they are manually hidden with a option further up in the settings.
+- "Autom. hide unsold value when 0 Cr.": Will hide the unsold value together with the button to copy the value to clipboard when the unsold value reaches 0 Cr.
+- "Force hide/show autom. hidden": Will force to hide or show the full status, species, scan progress, system/body of last scan unless a display is manually hidden by an option further up in the settings.
+- "Scan game journals for sold exobiology": Will update the plugins' soldbiodata.json by crawling through all journals in the folder specified in the EDMC Configuration.
+- "Scan local journal folder for sold exobiology": Will update the plugins' soldbiodata.json by crawling through all journals placed in the journals folder 
+    -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly and please wait a good second or two when scanning through a lot of journal files.
 
 ## Motivation
 
