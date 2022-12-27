@@ -1,4 +1,4 @@
-## ArtemisScannerTracker v0.2.1
+# ArtemisScannerTracker v0.2.1
  An [EDMC](https://github.com/EDCD/EDMarketConnector) plugin that keeps track of the exobiology scanner of a CMDRs artemis suit in ED:Odyssey
 
 
@@ -38,7 +38,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - For the sake of making it impossible for the exobiology data tracking to accitentially assume the wrong system as already sold please do sell your whole batch of data.
 
-# Main UI
+### Main UI
 ![AST UI](https://i.imgur.com/nemRFxj.png "main plugin ui pic annotated")
 
 - #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release. Will lead the user to the newest release.
@@ -50,7 +50,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - #7 Clonal Colonial Range display. Will only show up when near a planet. Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
 - #8 Finished Scan display. Shows how many Scans are in the current system. Lists them by Planet names assigned to their respective species. Button expands and collapses the list of finished scans. Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
 
-# Settings
+### Settings
 ![Preferences](https://i.imgur.com/e9kaSED.png "preferences ui")
 
 - All tickbox "Hide X" options will just hide the respective information regardless of what happens in the game.
