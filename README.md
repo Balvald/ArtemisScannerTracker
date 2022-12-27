@@ -41,14 +41,21 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 ### Main UI
 ![AST UI](https://i.imgur.com/nemRFxj.png "main plugin ui pic annotated")
 
-- #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release. Will lead the user to the newest release.
-- #2 Full Status display. Includes Info about species, scan progress and the body it was scanned on. Can be automatically hidden after selling all exobiology or fully finishing a scan.
-- #3 Species and Scan Progress display. Can be automatically hidden after selling all exobiology or fully finishing a scan.
-- #4 System/Body of last Scan display. Can be automatically hidden after selling all exobiology or fully finishing a scan, if any of these options are activated they will also hide if they are the same as the current system or body.
-- #5 Unsold Scan value display. Shows the amount of all unsold exobiology data is worth. The button copies value to clipboard. Can be automatically hidden when the unsold value is 0 Cr.
+- #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release.
+    - Will lead the user to the newest release.
+- #2 Full Status display. Includes Info about species, scan progress and the body it was scanned on.
+    - Can be automatically hidden after selling all exobiology or fully finishing a scan.
+- #3 Species and Scan Progress display.
+    - Can be automatically hidden after selling all exobiology or fully finishing a scan.
+- #4 System/Body of last Scan display.
+    - Can be automatically hidden after selling all exobiology or fully finishing a scan, if any of these options are activated they will also hide if they are the same as the current system or body.
+- #5 Unsold Scan value display. Shows the amount of all unsold exobiology data is worth.
+    - The button copies the value shown to your clipboard. Can be automatically hidden when the unsold value is 0 Cr.
 - #6 Current System and Body display.
-- #7 Clonal Colonial Range display. Will only show up when near a planet. Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
-- #8 Finished Scan display. Shows how many Scans are in the current system. Lists them by Planet names assigned to their respective species. Button expands and collapses the list of finished scans. Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
+- #7 Clonal Colonial Range display. Will only show up when near a planet.
+    - Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
+- #8 Finished Scan display. Shows how many Scans are in the current system.
+    - Lists them by Planet names assigned to their respective species. Button expands and collapses the list of finished scans. Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
 
 ### Settings
 ![Preferences](https://i.imgur.com/e9kaSED.png "preferences ui")
