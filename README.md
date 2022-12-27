@@ -38,7 +38,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - For the sake of making it impossible for the exobiology data tracking to accitentially assume the wrong system as already sold please do sell your whole batch of data.
 
-![AST UI](https://i.imgur.com/ERZ2sLt.png?raw=true "UI")
+![AST UI](https://i.imgur.com/IOWZbOL.png?raw=true "UI")
 
 - When using the "Scan game journals for sold exobiology":
 In the case of journals from your journal-limpet backup you can move them into the local journal folder inside the plugin folder
