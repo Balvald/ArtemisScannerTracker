@@ -17,7 +17,7 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 - The plugin keeps track of the Exobiology Scanner through a Cmdr's journal entries.
 It tracks which species (Tussock, Fungoida, ...), and on which body the last exobiology scan occurred (Futes A 2, Moriosong A 1 a, ...) and also the state of the progress of the last exobiological scan. (1/3 found, 2/3 found...)
 
-- It keeps track of unsold profits. Vista genomics prices in this plugin are at the state of U14.01 after the buff.
+- It keeps track of unsold profits. Vista genomics prices in this plugin are at the state of U14.01
  
 - It also keeps track of your sold and scanned but unsold exobiology once it is installed and running, and show it when you're in the corresponding system.
 
