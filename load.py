@@ -798,8 +798,6 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
             if done:
                 break
 
-            """if cmdr not in sold_exobiology.keys():
-                sold_exobiology[cmdr] = []"""
             firstletter = not_yet_sold_data[cmdr][i]["system"][0].lower()
             if firstletter not in alphabet:
                 firstletter = "-"
@@ -810,10 +808,6 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
             if (thesystem not in sold_exobiology[cmdr][firstletter].keys()
                and (thesystem[0].lower() == firstletter or firstletter == "-")):
                 sold_exobiology[cmdr][firstletter][thesystem] = []
-
-            """check = (not_yet_sold_data[cmdr][i]["system"] == thesystem
-                     and not_yet_sold_data[cmdr][i] not in sold_exobiology[cmdr]
-                     and not_yet_sold_data[cmdr][i]["species"] in currentbatch.keys())"""
 
             check = (not_yet_sold_data[cmdr][i]["system"] == thesystem
                      and not_yet_sold_data[cmdr][i]
@@ -914,7 +908,7 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
 
     # After selling all the unsold value we finished selling and things switch to hiding things if
     # we are in autohiding mode
-    if int(plugin.AST_value.get().replace(",", "").split(" ")[0]) == 0:
+    if (int(plugin.AST_value.get().replace(",", "").split(" ")[0]) == 0 and plugin.AST_hide_after_selling.get() == 1):
         plugin.AST_after_selling.set(1)
 
     # If we sell the exobiodata in the same system as where we currently are
