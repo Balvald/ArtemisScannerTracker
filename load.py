@@ -142,8 +142,8 @@ class ArtemisScannerTracker:
 
         self.rawvalue = int(config.get_int("AST_value"))
 
-        if plugin.rawvalue is None:
-            plugin.rawvalue = 0
+        if self.rawvalue is None:
+            self.rawvalue = 0
 
         self.AST_value: Optional[tk.StringVar] = tk.StringVar(value=((f"{self.rawvalue:,} Cr.")))
 
@@ -613,12 +613,18 @@ def resurrection_event(cmdr: str) -> None:
     not_yet_sold_data[cmdr] = []
     plugin.rawvalue = 0
     plugin.AST_value.set("0 Cr.")
+    plugin.AST_current_scan_progress.set("0/3")
 
 
 def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     """Handle the ScanOrganic event."""
-    global currententrytowrite, plugin
-    plugin.AST_last_scan_plant.set(orgi.generaltolocalised(entry["Species"].lower()))
+    global currententrytowrite, plugin, vistagenomicsprices
+    plantname = orgi.generaltolocalised(entry["Species"].lower())
+    plantworth = vistagenomicsprices[plantname]
+    worthstring = f"{plantworth:,} Cr."
+    if plugin.AST_shorten_value.get():
+        worthstring = shortcreditstring(plantworth)
+    plugin.AST_last_scan_plant.set(plantname + " Worth: " + worthstring)
 
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
@@ -636,7 +642,7 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
 
-            plugin.rawvalue += int(vistagenomicsprices[orgi.generaltolocalised(entry["Species"].lower())])
+            plugin.rawvalue += int(plantworth)
             # remove thousand seperators for before casting to int from the AST_value.get()
             # newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) + \
             #    int(vistagenomicsprices[orgi.generaltolocalised(entry["Species"].lower())])
@@ -653,7 +659,7 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
             plugin.AST_CCR.set(0)
             plugin.AST_scan_1_pos_dist.set("")
             plugin.AST_scan_2_pos_dist.set("")
-            currententrytowrite["species"] = orgi.generaltolocalised(entry["Species"].lower())
+            currententrytowrite["species"] = plantname
             currententrytowrite["system"] = plugin.AST_current_system.get()
             currententrytowrite["body"] = plugin.AST_current_body.get()
             if cmdr not in not_yet_sold_data.keys():
@@ -1256,14 +1262,14 @@ def ui_label(frame, text, row: int, col: int, sticky) -> None:
     tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
-def ui_colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
-    """Create a label with coloured text for the ui of the plugin."""
-    tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
-
-
 def ui_entry(frame, textvariable, row: int, col: int, sticky) -> None:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
     tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
+
+
+def ui_colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
+    """Create a label with coloured text for the ui of the plugin."""
+    tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
 def ui_colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> None:
