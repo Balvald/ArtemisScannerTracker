@@ -317,7 +317,7 @@ class ArtemisScannerTracker:
             load_cmdr(currentcommander)
 
         # for formatting the string with thousands seperators we have to remove them here again.
-        # config.set("AST_value", int(self.AST_value.get().replace(",", "").split(" ")[0]))
+
         config.set("AST_value", int(self.rawvalue))
 
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
@@ -345,6 +345,14 @@ class ArtemisScannerTracker:
         config.set("AST_last_CMDR", str(cmdr))
 
         logger.debug("ArtemisScannerTracker saved preferences")
+
+        # Update last scan plant for switch of the shortening value option
+        update_last_scan_plant()
+
+        if self.AST_shorten_value.get():
+            self.AST_value.set(shortcreditstring(self.rawvalue))
+        else:
+            self.AST_value.set(f"{self.rawvalue:,} Cr.")
 
         rebuild_ui(plugin, cmdr)
 
@@ -444,7 +452,7 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
         # New Commander not in cmdr states file.
         if cmdr not in cmdrstates.keys():
             # completely new cmdr theres nothing to load
-            cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
+            cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", 0, "None", "None", "None"]
         else:
             if cmdr is not None and cmdr != "":
                 load_cmdr(cmdr)
@@ -558,7 +566,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         # New Commander not in cmdr states file.
         if cmdr not in cmdrstates.keys():
             # completely new cmdr theres nothing to load
-            cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
+            cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", 0, "None", "None", "None"]
         else:
             # Load cmdr from cmdr states.
             if cmdr is not None:
@@ -602,7 +610,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     if flag:
         # we changed a value so we update line.
         worth = plugin.AST_last_scan_plant.get().split(" ")[1:]
-        plugin.AST_state.set(plugin.AST_last_scan_plant.get().split(" ")[0] + " (" +
+        plugin.AST_state.set(str(plugin.AST_last_scan_plant.get().split(" ")[0]) + " (" +
                              plugin.AST_current_scan_progress.get() + ") on: " +
                              plugin.AST_last_scan_body.get() + " " + worth)
 
@@ -623,12 +631,8 @@ def resurrection_event(cmdr: str) -> None:
 def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin, vistagenomicsprices
-    plantname = orgi.generaltolocalised(entry["Species"].lower())
-    plantworth = vistagenomicsprices[plantname]
-    worthstring = f"{plantworth:,} Cr."
-    if plugin.AST_shorten_value.get():
-        worthstring = shortcreditstring(plantworth)
-    plugin.AST_last_scan_plant.set(plantname + " Worth: " + worthstring)
+
+    plantname, plantworth = update_last_scan_plant(entry)
 
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
@@ -648,9 +652,7 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
         if (entry["ScanType"] == "Analyse"):
 
             plugin.rawvalue += int(plantworth)
-            # remove thousand seperators for before casting to int from the AST_value.get()
-            # newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) + \
-            #    int(vistagenomicsprices[orgi.generaltolocalised(entry["Species"].lower())])
+
             if plugin.AST_shorten_value.get():
                 plugin.AST_value.set(shortcreditstring(plugin.rawvalue))
             else:
@@ -661,6 +663,8 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
             # clear the scan locations to [None, None]
             plugin.AST_scan_1_pos_vector = [None, None]
             plugin.AST_scan_2_pos_vector = [None, None]
+            plugin.AST_scan_1_dist_green = False
+            plugin.AST_scan_2_dist_green = False
             plugin.AST_CCR.set(0)
             plugin.AST_scan_1_pos_dist.set("")
             plugin.AST_scan_2_pos_dist.set("")
@@ -701,6 +705,20 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
 
     # We now need to rebuild regardless how far we progressed
     rebuild_ui(plugin, cmdr)
+
+
+def update_last_scan_plant(entry=None):
+    """."""
+    global plugin
+    plantname = str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
+    if entry is not None:
+        plantname = orgi.generaltolocalised(entry["Species"].lower())
+    plantworth = vistagenomicsprices[plantname]
+    worthstring = f"{plantworth:,} Cr."
+    if plugin.AST_shorten_value.get():
+        worthstring = shortcreditstring(plantworth)
+    plugin.AST_last_scan_plant.set(plantname + " (Worth: " + worthstring + ")")
+    return plantname, plantworth
 
 
 def system_body_change_event(cmdr: str, entry) -> None:  # noqa #CCR001
@@ -765,8 +783,7 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
         # If I add a counter for all biodata sold
         # I would also need to look at biodata["Bonus"]
         # -> Nah its impossible to track bonus while not sold yet
-        # Could only be used for a profit since last reset
-        # metric.
+        # Could only be used for a profit since last reset metric.
     # build by system dict, has the form of {<system> : {<species> : <amount>}}
     logger.info(f'Value that was sold: {soldvalue}')
     bysystem = {}
@@ -984,10 +1001,10 @@ def save_cmdr(cmdr) -> None:
     global plugin, directory
 
     if cmdr not in cmdrstates.keys():
-        cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", "0 Cr.", "None", "None", "None"]
+        cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", 0, "None", "None", "None"]
 
     valuelist = [plugin.AST_last_scan_plant.get(), plugin.AST_last_scan_system.get(), plugin.AST_last_scan_body.get(),
-                 plugin.AST_current_scan_progress.get(), plugin.AST_state.get(), plugin.AST_value.get(),
+                 plugin.AST_current_scan_progress.get(), plugin.AST_state.get(), plugin.rawvalue,
                  plugin.AST_CCR.get(), plugin.AST_scan_1_pos_vector.copy(), plugin.AST_scan_2_pos_vector.copy()]
 
     for i in range(len(cmdrstates[cmdr])):
@@ -1015,7 +1032,7 @@ def load_cmdr(cmdr) -> None:
     plugin.AST_last_scan_body.set(cmdrstates[cmdr][2])
     plugin.AST_current_scan_progress.set(cmdrstates[cmdr][3])
     plugin.AST_state.set(cmdrstates[cmdr][4])
-    plugin.AST_value.set(cmdrstates[cmdr][5])
+    plugin.rawvalue = int(str(cmdrstates[cmdr][5]).split(" ")[0].replace(",", ""))
     plugin.AST_CCR.set(cmdrstates[cmdr][6])
     plugin.AST_scan_1_pos_vector = cmdrstates[cmdr][7]
     plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8]
