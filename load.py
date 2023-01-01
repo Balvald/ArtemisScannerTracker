@@ -380,6 +380,8 @@ class ArtemisScannerTracker:
         self.AST_state.set("None")
         self.rawvalue = 0
         self.AST_value.set("0 Cr.")
+        self.AST_scan_1_pos_vector = [None, None]
+        self.AST_scan_2_pos_vector = [None, None]
 
     def clipboard(self) -> None:
         """Copy value to clipboard."""
@@ -640,6 +642,7 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
         plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
         plugin.AST_scan_1_pos_vector[0] = plugin.AST_current_pos_vector[0]
         plugin.AST_scan_1_pos_vector[1] = plugin.AST_current_pos_vector[1]
+        plugin.AST_scan_2_pos_vector = [None, None]
         plugin.on_preferences_closed(cmdr, is_beta)
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
@@ -1086,12 +1089,16 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
     if plugin.AST_hide_CCR.get() != 1 and plugin.AST_near_planet is True:
         # show distances for the last scans.
         colour = "red"
+        if plugin.AST_current_scan_progress.get() in ["0/3", "3/3"]:
+            colour = None
         if plugin.AST_scan_1_dist_green:
             colour = "green"
         ui_colourlabel(frame, "Distance to Scan #1: ", current_row, 0, colour, tk.W)
         ui_colourentry(frame, plugin.AST_scan_1_pos_dist, current_row, 1, colour, tk.W)
         current_row += 1
         colour = "red"
+        if plugin.AST_current_scan_progress.get() in ["0/3", "1/3", "3/3"]:
+            colour = None
         if plugin.AST_scan_2_dist_green:
             colour = "green"
         ui_colourlabel(frame, "Distance to Scan #2: ", current_row, 0, colour, tk.W)
@@ -1099,10 +1106,10 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
         current_row += 1
         colour = None
         if ((plugin.AST_scan_1_dist_green
-             and plugin.AST_current_scan_progress == "1/3")
+             and plugin.AST_current_scan_progress.get() == "1/3")
             or (plugin.AST_scan_1_dist_green
                 and plugin.AST_scan_2_dist_green
-                and plugin.AST_current_scan_progress == "2/3")):
+                and plugin.AST_current_scan_progress.get() == "2/3")):
             colour = "green"
         ui_colourlabel(frame, "Current Position: ", current_row, 0, colour, tk.W)
         ui_colourentry(frame, plugin.AST_current_pos, current_row, 1, colour, tk.W)
@@ -1235,7 +1242,10 @@ def shortcreditstring(number):
     unit = " " + prefix[prefixindex] + "Cr."
     index = fullstring.find(",") + 1
     fullstring = fullstring[:index].replace(",", ".")+fullstring[index:].replace(",", "")
-    fullstring = f"{float(fullstring):.6f}"[:5]
+    fullstring = f"{round(float(fullstring), (4-index+1)):.6f}"[:5]
+    if fullstring[1] == ".":
+        fullstring = fullstring[0] + "," + fullstring[2:]
+        unit = " " + prefix[prefixindex-1] + "Cr."
     return fullstring + unit
 
 
