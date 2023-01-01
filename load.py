@@ -99,6 +99,9 @@ class ArtemisScannerTracker:
         self.AST_hide_after_full_scan: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_after_full_scan"))
         self.AST_hide_value_when_zero: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_value_when_zero"))
 
+        # option for shorterned numbers
+        self.AST_shorten_value: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_shorten_value"))
+
         # bool to steer when the CCR feature is visible
         self.AST_near_planet: Optional[tk.BooleanVar] = False
 
@@ -125,6 +128,9 @@ class ArtemisScannerTracker:
         # last Commander
         self.AST_last_CMDR: Optional[tk.StringVar] = tk.StringVar(value=str(config.get_str("AST_last_CMDR")))
 
+        self.AST_scan_1_dist_green = False
+        self.AST_scan_2_dist_green = False
+
         # Artemis Scanner State infos
         self.AST_last_scan_plant: Optional[tk.StringVar] = tk.StringVar(value=str())
         self.AST_last_scan_system: Optional[tk.StringVar] = tk.StringVar(value=str())
@@ -134,10 +140,12 @@ class ArtemisScannerTracker:
         self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(value=str())
         self.AST_state: Optional[tk.StringVar] = tk.StringVar(value=str())
 
-        rawvalue = int(config.get_int("AST_value"))
+        self.rawvalue = int(config.get_int("AST_value"))
 
-        self.AST_value: Optional[tk.StringVar] = tk.StringVar(
-            value=((f"{rawvalue:,}") + str(" Cr.")))
+        if plugin.rawvalue is None:
+            plugin.rawvalue = 0
+
+        self.AST_value: Optional[tk.StringVar] = tk.StringVar(value=((f"{self.rawvalue:,} Cr.")))
 
         self.updateavailable = False
 
@@ -255,6 +263,15 @@ class ArtemisScannerTracker:
 
         current_row += 1
 
+        prefs_tickbutton(frame, "Shorten unscanned values", self.AST_shorten_value, current_row, 0, tk.W)
+
+        current_row += 1
+
+        prefs_label(frame, line, current_row, 0, tk.W)
+        prefs_label(frame, line, current_row, 1, tk.W)
+
+        current_row += 1
+
         text = "Scan game journals for sold exobiology"
         prefs_button(frame, text, self.buildsoldbiodatajson, current_row, 0, tk.W)
         text = "Scan local journal folder for sold exobiology"
@@ -300,7 +317,8 @@ class ArtemisScannerTracker:
             load_cmdr(currentcommander)
 
         # for formatting the string with thousands seperators we have to remove them here again.
-        config.set("AST_value", int(self.AST_value.get().replace(",", "").split(" ")[0]))
+        # config.set("AST_value", int(self.AST_value.get().replace(",", "").split(" ")[0]))
+        config.set("AST_value", int(self.rawvalue))
 
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
         config.set("AST_hide_fullscan", int(self.AST_hide_fullscan.get()))
@@ -315,6 +333,8 @@ class ArtemisScannerTracker:
         config.set("AST_hide_after_selling", int(self.AST_hide_after_selling.get()))
         config.set("AST_hide_after_full_scan", int(self.AST_hide_after_full_scan.get()))
         config.set("AST_hide_value_when_zero", int(self.AST_hide_value_when_zero.get()))
+
+        config.set("AST_shorten_value", int(self.AST_shorten_value.get()))
 
         config.set("AST_after_selling", int(self.AST_after_selling.get()))
 
@@ -358,13 +378,14 @@ class ArtemisScannerTracker:
         self.AST_last_scan_body.set("")
         self.AST_last_scan_plant.set("None")
         self.AST_state.set("None")
+        self.rawvalue = 0
         self.AST_value.set("0 Cr.")
 
     def clipboard(self) -> None:
         """Copy value to clipboard."""
         dummytk = tk.Tk()  # creates a window we don't want
         dummytk.clipboard_clear()
-        dummytk.clipboard_append(plugin.AST_value.get()[:-4].replace(",", ""))
+        dummytk.clipboard_append(plugin.rawvalue)
         dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
 
     def forcehideshow(self) -> None:
@@ -450,33 +471,47 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
             # Within a vehicle (srv, ship) its (0, 360) but on foot it is (-180, 180) ffs!
             # With this change we force every bearing to be in the (0, 360) interval
             plugin.AST_current_pos_vector[2] += 360
-        text = "lat: " + str(plugin.AST_current_pos_vector[0]) + \
-               ", long: " + str(plugin.AST_current_pos_vector[1]) + ", B:" + \
+        text = "lat: " + str(round(plugin.AST_current_pos_vector[0], 2)) + \
+               ", long: " + str(round(plugin.AST_current_pos_vector[1], 2)) + ", B:" + \
                str(plugin.AST_current_pos_vector[2])  # + ", " + str(plugin.AST_current_radius)
         plugin.AST_current_pos.set(text)
 
         if plugin.AST_current_scan_progress.get() in ["1/3", "2/3"] and plugin.AST_scan_1_pos_vector[0] is not None:
-            plugin.AST_scan_1_pos_dist.set(str(round(orgi.computedistance(plugin.AST_current_pos_vector[0],
-                                                                          plugin.AST_current_pos_vector[1],
-                                                                          plugin.AST_scan_1_pos_vector[0],
-                                                                          plugin.AST_scan_1_pos_vector[1],
-                                                                          plugin.AST_current_radius), 2))
+            distance1 = orgi.computedistance(plugin.AST_current_pos_vector[0],
+                                             plugin.AST_current_pos_vector[1],
+                                             plugin.AST_scan_1_pos_vector[0],
+                                             plugin.AST_scan_1_pos_vector[1],
+                                             plugin.AST_current_radius)
+            plugin.AST_scan_1_pos_dist.set(str(round(distance1))
                                            + " m / " + str(plugin.AST_CCR.get()) + " m, B:" +
                                            str(round(orgi.bearing(plugin.AST_current_pos_vector[0],
                                                                   plugin.AST_current_pos_vector[1],
                                                                   plugin.AST_scan_1_pos_vector[0],
                                                                   plugin.AST_scan_1_pos_vector[1]), 2)))
+            olddist1check = plugin.AST_scan_1_dist_green
+            plugin.AST_scan_1_dist_green = False
+            if plugin.AST_CCR.get() < distance1:
+                plugin.AST_scan_1_dist_green = True
+            if olddist1check != plugin.AST_scan_1_dist_green:
+                flag = True
         if plugin.AST_current_scan_progress.get() == "2/3" and plugin.AST_scan_1_pos_vector[0] is not None:
-            plugin.AST_scan_2_pos_dist.set(str(round(orgi.computedistance(plugin.AST_current_pos_vector[0],
-                                                                          plugin.AST_current_pos_vector[1],
-                                                                          plugin.AST_scan_2_pos_vector[0],
-                                                                          plugin.AST_scan_2_pos_vector[1],
-                                                                          plugin.AST_current_radius), 2))
+            distance2 = orgi.computedistance(plugin.AST_current_pos_vector[0],
+                                             plugin.AST_current_pos_vector[1],
+                                             plugin.AST_scan_2_pos_vector[0],
+                                             plugin.AST_scan_2_pos_vector[1],
+                                             plugin.AST_current_radius)
+            plugin.AST_scan_2_pos_dist.set(str(round(distance2, 2))
                                            + " m / " + str(plugin.AST_CCR.get()) + " m, B:" +
                                            str(round(orgi.bearing(plugin.AST_current_pos_vector[0],
                                                                   plugin.AST_current_pos_vector[1],
                                                                   plugin.AST_scan_2_pos_vector[0],
                                                                   plugin.AST_scan_2_pos_vector[1]), 2)))
+            olddist2check = plugin.AST_scan_2_dist_green
+            plugin.AST_scan_2_dist_green = False
+            if plugin.AST_CCR.get() < distance2:
+                plugin.AST_scan_2_dist_green = True
+            if olddist2check != plugin.AST_scan_2_dist_green:
+                flag = True
     else:
         if plugin.AST_near_planet:
             # Switch happened we went too far from the planet to get any reference from it.
@@ -574,8 +609,10 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
 def resurrection_event(cmdr: str) -> None:
     """Handle resurrection event aka dying."""
-    global not_yet_sold_data
+    global not_yet_sold_data, plugin
     not_yet_sold_data[cmdr] = []
+    plugin.rawvalue = 0
+    plugin.AST_value.set("0 Cr.")
 
 
 def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
@@ -599,14 +636,14 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
 
-            if (plugin.AST_value.get() == "None"
-               or plugin.AST_value.get() == ""
-               or plugin.AST_value.get() is None):
-                plugin.AST_value.set("0 Cr.")
+            plugin.rawvalue += int(vistagenomicsprices[orgi.generaltolocalised(entry["Species"].lower())])
             # remove thousand seperators for before casting to int from the AST_value.get()
-            newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) + \
-                int(vistagenomicsprices[orgi.generaltolocalised(entry["Species"].lower())])
-            plugin.AST_value.set(f"{newvalue:,}" + " Cr.")
+            # newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) + \
+            #    int(vistagenomicsprices[orgi.generaltolocalised(entry["Species"].lower())])
+            if plugin.AST_shorten_value.get():
+                plugin.AST_value.set(shortcreditstring(plugin.rawvalue))
+            else:
+                plugin.AST_value.set(f"{plugin.rawvalue:,} Cr.")
             # Found some cases where the analyse happened
             # seemingly directly after a log.
             plugin.AST_current_scan_progress.set("3/3")
@@ -863,6 +900,7 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
         # we end up with a reset of the Scanned value metric
         logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
+        plugin.rawvalue = 0
         f = open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8")
         scanneddata = json.load(f)
         scanneddata[cmdr] = []
@@ -876,16 +914,21 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
     # Specifically so that the plugin still keeps track properly,
     # when the player sells on a by system basis.
     logger.info(f'Removing {soldvalue} from plugin value')
-    newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) - soldvalue
-    plugin.AST_value.set(str(f"{newvalue:,}") + " Cr.")
+    plugin.rawvalue -= soldvalue
+    # newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) - soldvalue
+    if plugin.AST_shorten_value.get():
+        plugin.AST_value.set(shortcreditstring(plugin.rawvalue))
+    else:
+        plugin.AST_value.set(f"{plugin.rawvalue:,} Cr.")
 
     # No negative value of biodata could still be unsold on the Scanner
     # This means that there was data on the Scanner that
     # the plugin was unable to record by not being active.
     # If the value was reset before we will reset it here again.
-    if int(plugin.AST_value.get().replace(",", "").split(" ")[0]) < 0:
+    if int(plugin.rawvalue) < 0:
         logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
+        plugin.rawvalue = 0
     # Now write the data into the local file
     file = directory + "\\soldbiodata.json"
     with open(file, "r+", encoding="utf8") as f:
@@ -908,7 +951,7 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
 
     # After selling all the unsold value we finished selling and things switch to hiding things if
     # we are in autohiding mode
-    if (int(plugin.AST_value.get().replace(",", "").split(" ")[0]) == 0 and plugin.AST_hide_after_selling.get() == 1):
+    if (plugin.rawvalue == 0 and plugin.AST_hide_after_selling.get() == 1):
         plugin.AST_after_selling.set(1)
 
     # If we sell the exobiodata in the same system as where we currently are
@@ -1034,14 +1077,27 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
     # Clonal Colonial Range here.
     if plugin.AST_hide_CCR.get() != 1 and plugin.AST_near_planet is True:
         # show distances for the last scans.
-        ui_label(frame, "Distance to Scan #1: ", current_row, 0, tk.W)
-        ui_entry(frame, plugin.AST_scan_1_pos_dist, current_row, 1, tk.W)
+        colour = None
+        if plugin.AST_scan_1_dist_green:
+            colour = "green"
+        ui_colourlabel(frame, "Distance to Scan #1: ", current_row, 0, colour, tk.W)
+        ui_colourentry(frame, plugin.AST_scan_1_pos_dist, current_row, 1, colour, tk.W)
         current_row += 1
-        ui_label(frame, "Distance to Scan #2: ", current_row, 0, tk.W)
-        ui_entry(frame, plugin.AST_scan_2_pos_dist, current_row, 1, tk.W)
+        colour = None
+        if plugin.AST_scan_2_dist_green:
+            colour = "green"
+        ui_colourlabel(frame, "Distance to Scan #2: ", current_row, 0, colour, tk.W)
+        ui_colourentry(frame, plugin.AST_scan_2_pos_dist, current_row, 1, colour, tk.W)
         current_row += 1
-        ui_label(frame, "Current Position: ", current_row, 0, tk.W)
-        ui_entry(frame, plugin.AST_current_pos, current_row, 1, tk.W)
+        colour = None
+        if ((plugin.AST_scan_1_dist_green
+             and plugin.AST_current_scan_progress == "1/3")
+            or (plugin.AST_scan_1_dist_green
+                and plugin.AST_scan_2_dist_green
+                and plugin.AST_current_scan_progress == "2/3")):
+            colour = "green"
+        ui_colourlabel(frame, "Current Position: ", current_row, 0, colour, tk.W)
+        ui_colourentry(frame, plugin.AST_current_pos, current_row, 1, colour, tk.W)
         current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI
@@ -1157,6 +1213,24 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
         ui_label(frame, bodies, current_row, 1, tk.W)
 
 
+def shortcreditstring(number):
+    """Create string given given number of credits with SI symbol prefix and money unit e.g. KCr. MCr. GCr. TCr."""
+    prefix = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
+    fullstring = f"{number:,}"
+    prefixindex = fullstring.count(",")
+    if prefixindex <= 0:
+        # no unit prefix just -> write a shorter number
+        return fullstring + " Cr."
+    if prefixindex >= len(prefix):
+        # Game probably won't be able to handle it if someone sold this at once.
+        return "SELL ALREADY! WE RAN OUT OF SI PREFIXES (╯°□°）╯︵ ┻━┻"
+    unit = " " + prefix[prefixindex] + "Cr."
+    index = fullstring.find(",") + 1
+    fullstring = fullstring[:index].replace(",", ".")+fullstring[index:].replace(",", "")
+    fullstring = f"{float(fullstring):.6f}"[:5]
+    return fullstring + unit
+
+
 def prefs_label(frame, text, row: int, col: int, sticky) -> None:
     """Create label for the preferences of the plugin."""
     nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
@@ -1182,9 +1256,19 @@ def ui_label(frame, text, row: int, col: int, sticky) -> None:
     tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
+def ui_colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
+    """Create a label with coloured text for the ui of the plugin."""
+    tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
+
+
 def ui_entry(frame, textvariable, row: int, col: int, sticky) -> None:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
     tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
+
+
+def ui_colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> None:
+    """Create a label that displays the content of a textvariable for the ui of the plugin."""
+    tk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
 def ui_button(frame, text, command, row: int, col: int, sticky) -> None:
