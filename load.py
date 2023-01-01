@@ -386,7 +386,7 @@ class ArtemisScannerTracker:
         dummytk = tk.Tk()  # creates a window we don't want
         dummytk.clipboard_clear()
         dummytk.clipboard_append(plugin.rawvalue)
-        dummytk.destroy()  # destroying it again we don't need full another window everytime we copy to clipboard.
+        dummytk.destroy()  # destroying it again we don't need another full window everytime we copy to clipboard.
 
     def forcehideshow(self) -> None:
         """Force plugin to show values when Auto hide is on."""
@@ -582,6 +582,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
+        flag = True
         resurrection_event(cmdr)
 
     if entry["event"] == "ScanOrganic":
@@ -598,9 +599,10 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if flag:
         # we changed a value so we update line.
-        plugin.AST_state.set(plugin.AST_last_scan_plant.get() + " (" +
+        worth = plugin.AST_last_scan_plant.get().split(" ")[1:]
+        plugin.AST_state.set(plugin.AST_last_scan_plant.get().split(" ")[0] + " (" +
                              plugin.AST_current_scan_progress.get() + ") on: " +
-                             plugin.AST_last_scan_body.get())
+                             plugin.AST_last_scan_body.get() + " " + worth)
 
         # save most recent relevant state so in case of crash of the system
         # we still have a proper record as long as it finishes saving below.
@@ -685,9 +687,9 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
             plugin.AST_scan_2_pos_vector[1] = plugin.AST_current_pos_vector[1]
     else:
         # Something is horribly wrong if we end up here
-        # If anyone ever sees "Excuse me what the fuck"
+        # If anyone ever sees this
         # we know they added a new ScanType, that we might need to handle
-        plugin.AST_current_scan_progress.set("Excuse me what the fuck")
+        plugin.AST_current_scan_progress.set("Excuse me what the fuck ¯\\(°_o)/¯")
 
     plugin.AST_after_selling.set(0)
 
@@ -1065,7 +1067,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
             # Check when we hide the value of unsold scans when it is 0
             if uielementlistleft[i] == "Unsold Scan Value:":
                 if (plugin.AST_hide_value_when_zero.get() == 1
-                   and int(uielementlistright[i].get().replace(",", "").split(" ")[0]) == 0):
+                   and int(plugin.rawvalue) == 0):
                     continue
             # Hide when system is the same as the current one.
             if (uielementlistleft[i] in ["System of last Scan:", "Body of last Scan:"]
@@ -1083,13 +1085,13 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
     # Clonal Colonial Range here.
     if plugin.AST_hide_CCR.get() != 1 and plugin.AST_near_planet is True:
         # show distances for the last scans.
-        colour = None
+        colour = "red"
         if plugin.AST_scan_1_dist_green:
             colour = "green"
         ui_colourlabel(frame, "Distance to Scan #1: ", current_row, 0, colour, tk.W)
         ui_colourentry(frame, plugin.AST_scan_1_pos_dist, current_row, 1, colour, tk.W)
         current_row += 1
-        colour = None
+        colour = "red"
         if plugin.AST_scan_2_dist_green:
             colour = "green"
         ui_colourlabel(frame, "Distance to Scan #2: ", current_row, 0, colour, tk.W)
