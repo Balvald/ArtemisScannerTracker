@@ -316,7 +316,18 @@ class ArtemisScannerTracker:
             currentcommander = cmdr
             load_cmdr(currentcommander)
 
-        # for formatting the string with thousands seperators we have to remove them here again.
+        # Update last scan plant for switch of the shortening value option
+        update_last_scan_plant()
+
+        if self.AST_shorten_value.get():
+            self.AST_value.set(shortcreditstring(self.rawvalue))
+        else:
+            self.AST_value.set(f"{self.rawvalue:,} Cr.")
+
+        worth = self.AST_last_scan_plant.get().split(" (")[1]
+        self.AST_state.set(str(self.AST_last_scan_plant.get().split(" (")[0]) + " (" +
+                           self.AST_current_scan_progress.get() + ") on: " +
+                           self.AST_last_scan_body.get() + " (" + str(worth))
 
         config.set("AST_value", int(self.rawvalue))
 
@@ -345,14 +356,6 @@ class ArtemisScannerTracker:
         config.set("AST_last_CMDR", str(cmdr))
 
         logger.debug("ArtemisScannerTracker saved preferences")
-
-        # Update last scan plant for switch of the shortening value option
-        update_last_scan_plant()
-
-        if self.AST_shorten_value.get():
-            self.AST_value.set(shortcreditstring(self.rawvalue))
-        else:
-            self.AST_value.set(f"{self.rawvalue:,} Cr.")
 
         rebuild_ui(plugin, cmdr)
 
@@ -608,12 +611,6 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         biosell_event(cmdr, entry)
 
     if flag:
-        # we changed a value so we update line.
-        worth = plugin.AST_last_scan_plant.get().split(" ")[1:]
-        plugin.AST_state.set(str(plugin.AST_last_scan_plant.get().split(" ")[0]) + " (" +
-                             plugin.AST_current_scan_progress.get() + ") on: " +
-                             plugin.AST_last_scan_body.get() + " " + worth)
-
         # save most recent relevant state so in case of crash of the system
         # we still have a proper record as long as it finishes saving below.
         plugin.on_preferences_closed(cmdr, is_beta)
@@ -632,14 +629,13 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     """Handle the ScanOrganic event."""
     global currententrytowrite, plugin, vistagenomicsprices
 
-    plantname, plantworth = update_last_scan_plant(entry)
-
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
     # these lines wouldn"t be able to do anything but to
     # set the System and body of the last Scan to "None"
     plugin.AST_last_scan_system.set(plugin.AST_current_system.get())
     plugin.AST_last_scan_body.set(plugin.AST_current_body.get())
+    plantname, plantworth = update_last_scan_plant(entry)
 
     if entry["ScanType"] == "Log":
         plugin.AST_current_scan_progress.set("1/3")
