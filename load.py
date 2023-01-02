@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.1 by Balvald."""
+"""Artemis Scanner Tracker v0.2.2 by Balvald."""
 
 import json
 import logging
@@ -24,7 +24,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.1"
+AST_VERSION = "v0.2.2"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -216,25 +216,33 @@ class ArtemisScannerTracker:
 
         checkboxlistleft = ["Hide full status", "Hide species",
                             "Hide system of last Scan", "Hide current system",
-                            "Hide scanned/sold species in system", "Autom. hide values after selling all",
-                            "Autom. hide unsold value when 0 Cr."]
+                            "Hide scanned/sold species in system", line,
+                            "Autom. hide values after selling all", "Autom. hide unsold value when 0 Cr."]
         checkboxlistright = ["Hide value of unsold Scans", "Hide scan progress",
                              "Hide body of last Scan", "Hide current Body",
-                             "Hide clonal colonial distances", "Autom. hide values after finished scan",
-                             "Force hide/show autom. hidden"]
+                             "Hide clonal colonial distances", line,
+                             "Autom. hide values after finished scan", "Force hide/show autom. hidden"]
 
         variablelistleft = [self.AST_hide_fullscan, self.AST_hide_species,
                             self.AST_hide_last_system, self.AST_hide_system,
-                            self.AST_hide_sold_bio, self.AST_hide_after_selling,
+                            self.AST_hide_sold_bio, line, self.AST_hide_after_selling,
                             self.AST_hide_value_when_zero]
         variablelistright = [self.AST_hide_value, self.AST_hide_progress,
                              self.AST_hide_last_body, self.AST_hide_body,
-                             self.AST_hide_CCR, self.AST_hide_after_full_scan]
+                             self.AST_hide_CCR, line,
+                             self.AST_hide_after_full_scan]
 
         for i in range(max(len(checkboxlistleft), len(checkboxlistright))):
             if i < len(checkboxlistleft):
-                prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
+                if checkboxlistleft[i] == line:
+                    prefs_label(frame, line, current_row, 0, tk.W)
+                else:
+                    prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
             if i < len(checkboxlistright):
+                if checkboxlistright[i] == line:
+                    prefs_label(frame, line, current_row, 1, tk.W)
+                    current_row += 1
+                    continue
                 if checkboxlistright[i] == "Force hide/show autom. hidden":
                     prefs_button(frame, checkboxlistright[i], self.forcehideshow, current_row, 1, tk.W)
                     current_row += 1
@@ -263,7 +271,7 @@ class ArtemisScannerTracker:
 
         current_row += 1
 
-        prefs_tickbutton(frame, "Shorten unscanned values", self.AST_shorten_value, current_row, 0, tk.W)
+        prefs_tickbutton(frame, "Shorten credit values", self.AST_shorten_value, current_row, 0, tk.W)
 
         current_row += 1
 
