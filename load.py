@@ -200,7 +200,7 @@ class ArtemisScannerTracker:
         if currentcommander != "" and currentcommander is not None:
             load_cmdr(cmdr)
 
-        line = "___________________________________________________"
+        line = "_______________________________________________"
 
         current_row = 0
         frame = nb.Frame(parent)
@@ -272,9 +272,9 @@ class ArtemisScannerTracker:
 
         current_row += 1
 
-        text = "Scan game journals for sold exobiology"
+        text = "Scan game journals for exobiology"
         prefs_button(frame, text, self.buildsoldbiodatajson, current_row, 0, tk.W)
-        text = "Scan local journal folder for sold exobiology"
+        text = "Scan local journal folder for exobiology"
         prefs_button(frame, text, self.buildsoldbiodatajsonlocal, current_row, 1, tk.W)
 
         current_row += 1

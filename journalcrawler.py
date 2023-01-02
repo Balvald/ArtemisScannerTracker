@@ -38,6 +38,8 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
     currentsystem = ""
     currentbody = ""
 
+    totalcmdrlist = []
+
     currententrytowrite = {}
 
     logger.info(directory)
@@ -69,11 +71,14 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
                 entry = json.loads(line)
 
                 if entry["event"] in ["LoadGame", "Commander"]:
-                    logger.info("CMDR change event!")
+                    # logger.info("CMDR change event!")
                     if entry["event"] == "Commander":
                         cmdr = entry["Name"]
                     else:
                         cmdr = entry["Commander"]
+
+                    if cmdr != "" and cmdr is not None and cmdr not in totalcmdrlist:
+                        totalcmdrlist.append(cmdr)
 
                     if cmdr != "" and cmdr is not None and cmdr not in sold_exobiology.keys():
                         sold_exobiology[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
@@ -259,17 +264,56 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
 
     logger.info("Saving file now")
 
+    solddata = None
+
     with open(directory + "\\soldbiodata.json", "r+", encoding="utf8") as f:
-        # f.write(json.dumps(sold_exobiology))
-        # Same as below but creates smaller filesizes
-        # and aren't as human readable
-        f.write(json.dumps(sold_exobiology, indent=4))
+        solddata = json.load(f)
+
+        for currentcmdr in totalcmdrlist:
+            if currentcmdr not in solddata.keys():
+                solddata[currentcmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
+            if sold_exobiology[currentcmdr] != []:
+                for letter in sold_exobiology[currentcmdr].keys():
+                    for system in sold_exobiology[currentcmdr][letter]:
+                        if system not in solddata[currentcmdr][letter].keys():
+                            solddata[currentcmdr][letter][system] = []
+                        for item in sold_exobiology[currentcmdr][letter][system]:
+                            alreadylogged = False
+                            for loggeditem in solddata[currentcmdr][letter][system]:
+                                if loggeditem["body"] == item["body"]:
+                                    if loggeditem["species"] == item["species"]:
+                                        alreadylogged = True
+                                        continue
+                            if not alreadylogged:
+                                solddata[currentcmdr][letter][system].append(item)
+                sold_exobiology[currentcmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
+        f.seek(0)
+        json.dump(solddata, f, indent=4)
         f.truncate()
-        f.close()
+
+    with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
+        notsolddata = json.load(f)
+        for currentcmdr in totalcmdrlist:
+            if currentcmdr not in notsolddata.keys():
+                notsolddata[currentcmdr] = []
+            for element in possibly_sold_data[currentcmdr]:
+                try:
+                    if element in solddata[currentcmdr][element["system"][0].lower()][element["system"]]:
+                        continue
+                except KeyError:
+                    # Yay KeyError this means the element is not in there! woo
+                    pass
+                if element not in notsolddata[currentcmdr]:
+                    notsolddata[currentcmdr].append(element)
+        f.seek(0)
+        json.dump(notsolddata, f, indent=4)
+        f.truncate()
+
+    logger.info("Done with journalcrawling!")
 
 
-"""
 # to use it as standalone
+"""
 class loggingthing:
     def __init__(self):
         self.info = print
@@ -281,8 +325,9 @@ class loggingthing:
 
 if __name__ == "__main__":
     logger = loggingthing()
-    journaldir = "<Path1>"
+    directory, sourcename = os.path.split(os.path.realpath(__file__))
+    journaldir = directory + "\\journals\\"
     build_biodata_json(logger, journaldir)
-    journaldir = "<Path2>"
+    journaldir = "<Path>"
     build_biodata_json(logger, journaldir)
 """
