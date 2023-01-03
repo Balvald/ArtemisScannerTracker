@@ -18,7 +18,7 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 It tracks which species (Tussock, Fungoida, ...), and on which body the last exobiology scan occurred (Futes A 2, Moriosong A 1 a, ...) and also the state of the progress of the last exobiological scan. (1/3 found, 2/3 found...)
 
 - It keeps track of unsold profits. Vista genomics prices in this plugin are at the state of U14.01
-    - *NEW*: the credit amounts can be shortened (e.g. 1,000 KCr. ...) with another setting
+    - *NEW*: the credit amounts shown can be shortened (e.g. 1,000 KCr. ...) with another setting
  
 - It also keeps track of your sold and scanned but unsold exobiology once it is installed and running, and show it when you're in the corresponding system.
 
@@ -46,7 +46,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release.
     - Will lead the user to the newest release.
 - #2 Full Status display. Includes Info about species, scan progress and the body it was scanned on.
-    -  Full Status display also shows the value of the unfinished sample since v0.2.2 as: `(Worth: <amount>)`
+    - Full Status display also shows the value of the unfinished sample since v0.2.2 as: `(Worth: <amount>)`
     - Can be automatically hidden after selling all exobiology or fully finishing a scan.
 - #3 Species and Scan Progress display.
     - Species display also shows the value of the unfinished sample since v0.2.2 as: `(Worth: <amount>)`
@@ -70,7 +70,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - "Autom. hide values after finished scan": Will automatically hide the full status, species, scan progress, system/body of last scan after a Scan is completely finished after scanning the third. The mentioned information will show up upon the next exobiology scan unless they are manually hidden with a option further up in the settings.
 - "Autom. hide unsold value when 0 Cr.": Will hide the unsold value together with the button to copy the value to clipboard when the unsold value reaches 0 Cr.
 - "Force hide/show autom. hidden": Will force to hide or show the full status, species, scan progress, system/body of last scan unless a display is manually hidden by an option further up in the settings.
-- "Shorten credit values": Will shorten the credit values displayed. e.g. 
+- "Shorten credit values": Will shorten the credit values displayed. e.g. "134,534,909 Cr." will become "134.5 MCr." etc.
 - "Scan game journals for exobiology": Will update the plugins' soldbiodata.json and notsoldbiodata.json by crawling through all journals in the folder specified in the EDMC Configuration.
 - "Scan local journal folder for exobiology": Will update the plugins' soldbiodata.json and notsoldbiodata.json by crawling through all journals placed in the journals folder 
     -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly and please wait a good second or two when scanning through a lot of journal files.
