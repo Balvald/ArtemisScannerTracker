@@ -296,6 +296,9 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
         for currentcmdr in totalcmdrlist:
             if currentcmdr not in notsolddata.keys():
                 notsolddata[currentcmdr] = []
+            if len(notsolddata[currentcmdr]) > 0:
+                possibly_sold_data[currentcmdr].extend(notsolddata[currentcmdr])
+                notsolddata[currentcmdr] = []
             for element in possibly_sold_data[currentcmdr]:
                 try:
                     if element in solddata[currentcmdr][element["system"][0].lower()][element["system"]]:
