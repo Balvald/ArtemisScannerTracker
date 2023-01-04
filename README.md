@@ -23,7 +23,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - It also keeps track of your sold and scanned but unsold exobiology once it is installed and running, and show it when you're in the corresponding system.
 
 - Handy buttons in the preferences that'll let the plugin scan through your journal files to retroactively track exobiology scans you've done in the past.
-    - *NEW*: It now also tracks the amount of money that is still unsold.
+    - *NEW*: It now also tracks the value of old scans that are still unsold.
 
 - Multi Commander Support. The plugin can handle you playing with many different CMDRs on the same machine with the same EDMC installation.
 
