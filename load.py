@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.2 by Balvald."""
+"""Artemis Scanner Tracker v0.2.3 by Balvald."""
 
 import json
 import logging
@@ -24,7 +24,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.2"
+AST_VERSION = "v0.2.3"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -429,14 +429,14 @@ class ArtemisScannerTracker:
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 
-        build_biodata_json(logger, os.path.join(directory, "journals"))
+        self.rawvalue = build_biodata_json(logger, os.path.join(directory, "journals"))
 
     def buildsoldbiodatajson(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py."""
         # Always uses the game journal directory
 
         global logger
-        build_biodata_json(logger, config.default_journal_dir)
+        self.rawvalue = build_biodata_json(logger, config.default_journal_dir)
 
 
 # region eventhandling
