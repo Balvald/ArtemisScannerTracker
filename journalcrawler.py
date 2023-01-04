@@ -6,7 +6,7 @@ It retraces all exobiology scans and sell actions.
 import json
 import os
 
-from organicinfo import generaltolocalised
+from organicinfo import generaltolocalised, getvistagenomicprices
 
 # This goes through a folder of journals that it'll parse
 # and check for analysed bio signals and the selling of it.
@@ -26,8 +26,11 @@ from organicinfo import generaltolocalised
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
-def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
-    """Build a soldbiodata.json that includes all sold organic scans that the player sold."""
+def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
+    """Build a soldbiodata.json and a notsoldbiodata that includes all sold organic scans that the player sold.
+
+    Also return the value of still unsold scans.
+    """
     logger.info = print
 
     logger.info("start logging")
@@ -291,6 +294,8 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
         json.dump(solddata, f, indent=4)
         f.truncate()
 
+    notsolddata = None
+
     with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
         notsolddata = json.load(f)
         for currentcmdr in totalcmdrlist:
@@ -312,7 +317,16 @@ def build_biodata_json(logger: any, journaldir: str):  # noqa #CCR001
         json.dump(notsolddata, f, indent=4)
         f.truncate()
 
+    unsoldvalue = 0
+
+    vistagenomicsprices = getvistagenomicprices()
+
+    for element in notsolddata:
+        unsoldvalue += vistagenomicsprices[element[species]]
+
     logger.info("Done with journalcrawling!")
+
+    return unsoldvalue
 
 
 # to use it as standalone
