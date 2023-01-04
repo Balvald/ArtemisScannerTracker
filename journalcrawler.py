@@ -322,7 +322,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
     vistagenomicsprices = getvistagenomicprices()
 
     for element in notsolddata:
-        unsoldvalue += vistagenomicsprices[element[species]]
+        unsoldvalue += vistagenomicsprices[element["species"]]
 
     logger.info("Done with journalcrawling!")
 
