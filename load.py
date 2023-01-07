@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.3 by Balvald."""
+"""Artemis Scanner Tracker v0.2.4 by Balvald."""
 
 import json
 import logging
@@ -24,7 +24,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.3"
+AST_VERSION = "v0.2.4"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
