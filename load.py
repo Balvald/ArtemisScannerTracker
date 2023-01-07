@@ -359,7 +359,7 @@ class ArtemisScannerTracker:
 
         config.set("AST_hide_scans_in_system", int(self.AST_hide_scans_in_system.get()))
 
-        logger.info(f"Currently last Commander is: {cmdr}")
+        logger.debug(f"Currently last Commander is: {cmdr}")
 
         config.set("AST_last_CMDR", str(cmdr))
 
@@ -406,7 +406,7 @@ class ArtemisScannerTracker:
         """Copy value to clipboard."""
         dummytk = tk.Tk()  # creates a window we don't want
         dummytk.clipboard_clear()
-        dummytk.clipboard_append(plugin.rawvalue)
+        dummytk.clipboard_append(self.rawvalue)
         dummytk.destroy()  # destroying it again we don't need another full window everytime we copy to clipboard.
 
     def forcehideshow(self) -> None:
@@ -717,8 +717,11 @@ def update_last_scan_plant(entry=None):
     plantname = str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
     if entry is not None:
         plantname = orgi.generaltolocalised(entry["Species"].lower())
-    plantworth = vistagenomicsprices[plantname]
-    worthstring = f"{plantworth:,} Cr."
+        plantworth = vistagenomicsprices[plantname]
+        worthstring = f"{plantworth:,} Cr."
+    else:
+        plantworth = None
+        worthstring = "N/A"
     if plugin.AST_shorten_value.get():
         worthstring = shortcreditstring(plantworth)
     plugin.AST_last_scan_plant.set(plantname + " (Worth: " + worthstring + ")")
@@ -1251,6 +1254,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
 
 def shortcreditstring(number):
     """Create string given given number of credits with SI symbol prefix and money unit e.g. KCr. MCr. GCr. TCr."""
+    if number is None:
+        return "N/A"
     prefix = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
     fullstring = f"{number:,}"
     prefixindex = fullstring.count(",")
