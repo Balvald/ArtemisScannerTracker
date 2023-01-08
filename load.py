@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.4 by Balvald."""
+"""Artemis Scanner Tracker v0.2.5 dev by Balvald."""
 
 import json
 import logging
@@ -24,7 +24,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.4"
+AST_VERSION = "v0.2.5"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -641,6 +641,12 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     # the "Location" event happens and directly scans a plant
     # these lines wouldn"t be able to do anything but to
     # set the System and body of the last Scan to "None"
+    old_AST_last_scan_system = plugin.AST_last_scan_system.get()
+    old_AST_last_scan_body = plugin.AST_last_scan_body.get()
+    old_AST_last_scan_plant = plugin.AST_last_scan_plant.get()
+
+    str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
+
     plugin.AST_last_scan_system.set(plugin.AST_current_system.get())
     plugin.AST_last_scan_body.set(plugin.AST_current_body.get())
     plantname, plantworth = update_last_scan_plant(entry)
@@ -692,10 +698,25 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
                     f.truncate()
                 currententrytowrite = {}
         else:
+
+            # Check if we already have scan progress 2/3 with same species on the same body.
+            # case 1: "2/3" with same species and body -> don't change 2nd dist
+            # case 2: "1/3" with same species and body -> change 2nd dist
+            # case 3: "1/3" without same species and body -> change 2nd dist, clear 1st dist. skipped a log
+            # case 4: "3/3" with same species and body -> impossible, do nothing, we can tag along with case 2
+            # case 5: "3/3" not same species and body -> change 2nd dist, clear 1st dist. skipped a log like case 3
+            if plugin.AST_current_scan_progress.get() in ["1/3", "3/3"]:
+                # case 2, 3, 4, 5.
+                plugin.AST_scan_2_pos_vector[0] = plugin.AST_current_pos_vector[0]
+                plugin.AST_scan_2_pos_vector[1] = plugin.AST_current_pos_vector[1]
+                if not(old_AST_last_scan_system == plugin.AST_last_scan_system.get()
+                       and old_AST_last_scan_body == plugin.AST_last_scan_body.get()
+                       and old_AST_last_scan_plant == plugin.AST_last_scan_plant.get()):
+                    # case 3 and 5
+                    plugin.AST_scan_1_pos_vector = [None, None]
+
             plugin.AST_current_scan_progress.set("2/3")
             plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
-            plugin.AST_scan_2_pos_vector[0] = plugin.AST_current_pos_vector[0]
-            plugin.AST_scan_2_pos_vector[1] = plugin.AST_current_pos_vector[1]
     else:
         # Something is horribly wrong if we end up here
         # If anyone ever sees this
@@ -717,9 +738,10 @@ def update_last_scan_plant(entry=None):
     plantname = str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
     if entry is not None:
         plantname = orgi.generaltolocalised(entry["Species"].lower())
+    try:
         plantworth = vistagenomicsprices[plantname]
         worthstring = f"{plantworth:,} Cr."
-    else:
+    except KeyError:
         plantworth = None
         worthstring = "N/A"
     if plugin.AST_shorten_value.get():
