@@ -11,6 +11,12 @@
 
 You will need to re-start EDMC if EDMC was open while you installed the plugin. Otherwise just start EDMC
 
+## Reviews
+
+> this plugin is like the best doggo of all plugins.  
+> always helpful.  always doin what him can.  
+> best for biology ever.  13/10.  
+>     — CMDR SlippyCheeze
 
 ## Features
 
