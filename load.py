@@ -643,9 +643,7 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
     # set the System and body of the last Scan to "None"
     old_AST_last_scan_system = plugin.AST_last_scan_system.get()
     old_AST_last_scan_body = plugin.AST_last_scan_body.get()
-    old_AST_last_scan_plant = plugin.AST_last_scan_plant.get()
-
-    str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
+    old_AST_last_scan_plant = str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
 
     plugin.AST_last_scan_system.set(plugin.AST_current_system.get())
     plugin.AST_last_scan_body.set(plugin.AST_current_body.get())
