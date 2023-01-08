@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.5 dev by Balvald."""
+"""Artemis Scanner Tracker v0.2.5 by Balvald."""
 
 import json
 import logging
