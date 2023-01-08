@@ -31,9 +31,9 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
 
     Also return the value of still unsold scans.
     """
-    logger.info = print
+    # logger.debug = print
 
-    logger.info("start logging")
+    logger.debug("start logging")
 
     directory, sourcename = os.path.split(os.path.realpath(__file__))
 
@@ -45,7 +45,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
 
     currententrytowrite = {}
 
-    logger.info(directory)
+    logger.debug(directory)
 
     sold_exobiology = {}
     possibly_sold_data = {}
@@ -57,15 +57,15 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
 
     with open(directory + "\\soldbiodata.json", "r", encoding="utf8") as f:
         sold_exobiology = json.load(f)
-        # logger.info(sold_exobiology)
-        # logger.info(len(sold_exobiology))
+        # logger.debug(sold_exobiology)
+        # logger.debug(len(sold_exobiology))
         pass
 
     edlogs = [f for f in os.listdir(journaldir) if f.endswith(".log")]
 
     for filename in edlogs:
         f = os.path.join(journaldir, filename)
-        logger.info("Current file: " + f)
+        logger.debug("Current file: " + f)
         # checking if it is a file
         if os.path.isfile(f):
             file = open(f, "r", encoding="utf8")
@@ -74,7 +74,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                 entry = json.loads(line)
 
                 if entry["event"] in ["LoadGame", "Commander"]:
-                    # logger.info("CMDR change event!")
+                    # logger.debug("CMDR change event!")
                     if entry["event"] == "Commander":
                         cmdr = entry["Name"]
                     else:
@@ -85,7 +85,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
 
                     if cmdr != "" and cmdr is not None and cmdr not in sold_exobiology.keys():
                         sold_exobiology[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
-                        logger.info(sold_exobiology)
+                        logger.debug(sold_exobiology)
 
                     if cmdr != "" and cmdr not in possibly_sold_data.keys():
                         possibly_sold_data[cmdr] = []
@@ -99,11 +99,11 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                     except KeyError:
                         # Was playing in old Horizons so
                         # Touchdown and Liftoff don't have body nor system
-                        logger.info("We've encountered a KeyError in the code "
-                                    + "for updating the current system and body.")
-                        logger.info(entry)
+                        logger.debug("We've encountered a KeyError in the code "
+                                     + "for updating the current system and body.")
+                        logger.debug(entry)
                 if entry["event"] == "ScanOrganic":
-                    logger.info("Scan organic Event!")
+                    logger.debug("Scan organic Event!")
                     if entry["ScanType"] in ["Sample", "Analyse"]:
                         if entry["ScanType"] == "Analyse":
                             currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
@@ -116,11 +116,11 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
 
                 if entry["event"] == "Resurrect":
                     # Reset - player was unable to sell before death
-                    logger.info("We died")
+                    logger.debug("We died")
                     possibly_sold_data[cmdr] = []
 
                 if entry["event"] == "SellOrganicData":
-                    logger.info("SellOrganicData event!")
+                    logger.debug("SellOrganicData event!")
                     currentbatch = {}
                     # Lets create a more human readable list of different types
                     # of sold biodata to see how we can continue from there.
@@ -140,10 +140,10 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                             bysystem[biodata["system"]] = {}
                             bysystem[biodata["system"]][biodata["species"]] = 1
                     soldbysystempossible = {}
-                    logger.info("bysystem:")
-                    logger.info(bysystem)
-                    logger.info("Currentbatch:")
-                    logger.info(currentbatch)
+                    logger.debug("bysystem:")
+                    logger.debug(bysystem)
+                    logger.debug("Currentbatch:")
+                    logger.debug(currentbatch)
                     # input()
 
                     # Get every system
@@ -186,7 +186,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
 
                     # An eligible system was found and we selected the first
                     if thesystem != "":
-                        logger.info("CMDR sold by system: " + thesystem)
+                        logger.debug("CMDR sold by system: " + thesystem)
                         i = 0
                         while i < len(possibly_sold_data[cmdr]):
                             # For the case when we are done when we havent sold everything
@@ -197,7 +197,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                             if done:
                                 break
 
-                            logger.info(" i = " + str(i))
+                            logger.debug(" i = " + str(i))
 
                             firstletter = possibly_sold_data[cmdr][i]["system"][0].lower()
                             if firstletter not in alphabet:
@@ -208,10 +208,10 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                             # the specifc data was sold only
                             # in one system that at this point
                             # is saved in the variable "thesystem"
-                            logger.info("possibly sold data")
-                            logger.info(possibly_sold_data[cmdr])
-                            logger.info("current batch")
-                            logger.info(currentbatch)
+                            logger.debug("possibly sold data")
+                            logger.debug(possibly_sold_data[cmdr])
+                            logger.debug("current batch")
+                            logger.debug(currentbatch)
 
                             if (thesystem not in sold_exobiology[cmdr][firstletter].keys()
                                and (thesystem[0].lower() == firstletter or firstletter == "-")):
@@ -223,7 +223,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                                      and possibly_sold_data[cmdr][i]["species"] in currentbatch.keys())
                             if check:
                                 if currentbatch[possibly_sold_data[cmdr][i]["species"]] > 0:
-                                    logger.info("We append in specific system")
+                                    logger.debug("We append in specific system")
                                     sold_exobiology[cmdr][firstletter][thesystem].append(possibly_sold_data[cmdr][i])
                                     currentbatch[possibly_sold_data[cmdr][i]["species"]] -= 1
                                     thing = possibly_sold_data[cmdr].pop(i)
@@ -236,11 +236,11 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                                                  + " this is a problem")
                             i += 1
                     else:
-                        logger.info("CMDR sold the whole batch.")
-                        logger.info("possibly sold data")
-                        logger.info(possibly_sold_data[cmdr])
-                        logger.info("current batch")
-                        logger.info(currentbatch)
+                        logger.debug("CMDR sold the whole batch.")
+                        logger.debug("possibly sold data")
+                        logger.debug(possibly_sold_data[cmdr])
+                        logger.debug("current batch")
+                        logger.debug(currentbatch)
 
                         for data in possibly_sold_data[cmdr]:
                             firstletter = data["system"][0].lower()
@@ -258,14 +258,14 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                                and currentbatch[data["species"]] > 0):
                                 currentbatch[data["species"]] -= 1
 
-                                logger.info("We append single bit of whole batch")
+                                logger.debug("We append single bit of whole batch")
                                 sold_exobiology[cmdr][firstletter][data["system"]].append(data)
-                                logger.info("We appended single bit of whole batch")
+                                logger.debug("We appended single bit of whole batch")
                         possibly_sold_data[cmdr] = []
 
             file.close()
 
-    logger.info("Saving file now")
+    logger.debug("Saving file now")
 
     solddata = None
 
@@ -326,7 +326,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
             print(element)
             unsoldvalue += vistagenomicsprices[element["species"]]
 
-    logger.info("Done with journalcrawling!")
+    logger.debug("Done with journalcrawling!")
 
     return unsoldvalue
 

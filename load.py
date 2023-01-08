@@ -200,7 +200,7 @@ class ArtemisScannerTracker:
         if currentcommander != "" and currentcommander is not None:
             load_cmdr(cmdr)
 
-        line = "_______________________________________________"
+        line = "_____________________________________________________"
 
         current_row = 0
         frame = nb.Frame(parent)
@@ -515,7 +515,7 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
                 plugin.AST_scan_1_dist_green = True
             if olddist1check != plugin.AST_scan_1_dist_green:
                 flag = True
-        if plugin.AST_current_scan_progress.get() == "2/3" and plugin.AST_scan_1_pos_vector[0] is not None:
+        if plugin.AST_current_scan_progress.get() in ["1/3", "2/3"] and plugin.AST_scan_2_pos_vector[0] is not None:
             distance2 = orgi.computedistance(plugin.AST_current_pos_vector[0],
                                              plugin.AST_current_pos_vector[1],
                                              plugin.AST_scan_2_pos_vector[0],
@@ -655,6 +655,7 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
         plugin.AST_scan_1_pos_vector[0] = plugin.AST_current_pos_vector[0]
         plugin.AST_scan_1_pos_vector[1] = plugin.AST_current_pos_vector[1]
         plugin.AST_scan_2_pos_vector = [None, None]
+        plugin.AST_scan_2_pos_dist.set("")
         plugin.on_preferences_closed(cmdr, is_beta)
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
@@ -696,22 +697,23 @@ def bioscan_event(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
                     f.truncate()
                 currententrytowrite = {}
         else:
-
             # Check if we already have scan progress 2/3 with same species on the same body.
             # case 1: "2/3" with same species and body -> don't change 2nd dist
             # case 2: "1/3" with same species and body -> change 2nd dist
             # case 3: "1/3" without same species and body -> change 2nd dist, clear 1st dist. skipped a log
             # case 4: "3/3" with same species and body -> impossible, do nothing, we can tag along with case 2
             # case 5: "3/3" not same species and body -> change 2nd dist, clear 1st dist. skipped a log like case 3
-            if plugin.AST_current_scan_progress.get() in ["1/3", "3/3"]:
+            # cases for "0/3" same as 2 and 3
+            if (plugin.AST_current_scan_progress.get() != "2/3"):
                 # case 2, 3, 4, 5.
                 plugin.AST_scan_2_pos_vector[0] = plugin.AST_current_pos_vector[0]
                 plugin.AST_scan_2_pos_vector[1] = plugin.AST_current_pos_vector[1]
-                if not(old_AST_last_scan_system == plugin.AST_last_scan_system.get()
-                       and old_AST_last_scan_body == plugin.AST_last_scan_body.get()
-                       and old_AST_last_scan_plant == plugin.AST_last_scan_plant.get()):
+                if (not(old_AST_last_scan_system == plugin.AST_last_scan_system.get()
+                        and old_AST_last_scan_body == plugin.AST_last_scan_body.get()
+                        and old_AST_last_scan_plant == str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0]))):
                     # case 3 and 5
                     plugin.AST_scan_1_pos_vector = [None, None]
+                    plugin.AST_scan_1_pos_dist.set("")
 
             plugin.AST_current_scan_progress.set("2/3")
             plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
