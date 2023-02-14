@@ -414,14 +414,14 @@ class ArtemisScannerTracker:
         global currentcommander, frame
 
         state = bool(self.AST_after_selling.get())
-        self.AST_after_selling.set(int(not(state)))
+        self.AST_after_selling.set(int(not (state)))
         rebuild_ui(self, currentcommander)
 
     def switchhidesoldexobio(self) -> None:
         """Switch the ui button to expand and collapse the list of sold/scanned exobiology."""
         global currentcommander, frame
         state = bool(self.AST_hide_scans_in_system.get())
-        self.AST_hide_scans_in_system.set(int(not(state)))
+        self.AST_hide_scans_in_system.set(int(not (state)))
         rebuild_ui(self, currentcommander)
 
     def buildsoldbiodatajsonlocal(self) -> None:
@@ -436,7 +436,15 @@ class ArtemisScannerTracker:
         # Always uses the game journal directory
 
         global logger
-        self.rawvalue = build_biodata_json(logger, config.default_journal_dir)
+
+        # this the actual path from the config.
+        journaldir = config.get_str('journaldir')
+
+        if journaldir in [None, "", "None"]:
+            # config.default_journal_dir is a fallback that won't work in a linux context
+            journaldir = config.default_journal_dir
+
+        self.rawvalue = build_biodata_json(logger, journaldir)
 
 
 # region eventhandling
