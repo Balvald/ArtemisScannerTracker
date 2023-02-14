@@ -254,7 +254,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
                             if data["species"] not in currentbatch.keys():
                                 continue
 
-                            if(data not in sold_exobiology[cmdr][firstletter][data["system"]]
+                            if (data not in sold_exobiology[cmdr][firstletter][data["system"]]
                                and currentbatch[data["species"]] > 0):
                                 currentbatch[data["species"]] -= 1
 
