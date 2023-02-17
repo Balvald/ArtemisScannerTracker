@@ -63,6 +63,10 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
 
     edlogs = [f for f in os.listdir(journaldir) if f.endswith(".log")]
 
+    # Order from os.listdir might depend on filesystem.
+
+    edlogs.sort()
+
     for filename in edlogs:
         f = os.path.join(journaldir, filename)
         logger.debug("Current file: " + f)
