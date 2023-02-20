@@ -321,18 +321,21 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
         json.dump(notsolddata, f, indent=4)
         f.truncate()
 
-    unsoldvalue = 0
+    unsoldvalues = {}
 
     vistagenomicsprices = getvistagenomicprices()
 
     for cmdr in notsolddata.keys():
+        unsoldvalue = 0
+
         for element in notsolddata[cmdr]:
             print(element)
             unsoldvalue += vistagenomicsprices[element["species"]]
+        unsoldvalues[cmdr] = unsoldvalue
 
     logger.debug("Done with journalcrawling!")
 
-    return unsoldvalue
+    return unsoldvalues
 
 
 # to use it as standalone

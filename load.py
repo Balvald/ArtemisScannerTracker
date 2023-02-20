@@ -429,7 +429,7 @@ class ArtemisScannerTracker:
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 
-        self.rawvalue = build_biodata_json(logger, os.path.join(directory, "journals"))
+        self.rawvalue = build_biodata_json(logger, os.path.join(directory, "journals"))[currentcommander]
 
     def buildsoldbiodatajson(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py."""
@@ -444,7 +444,7 @@ class ArtemisScannerTracker:
             # config.default_journal_dir is a fallback that won't work in a linux context
             journaldir = config.default_journal_dir
 
-        self.rawvalue = build_biodata_json(logger, journaldir)
+        self.rawvalue = build_biodata_json(logger, journaldir)[currentcommander]
 
 
 # region eventhandling
