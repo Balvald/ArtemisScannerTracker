@@ -497,8 +497,10 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
         if not plugin.AST_near_planet:
             # We just came into range of a planet again.
             flag = True
-            if currentbody not in ["", None, "None"]:
-                plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[currentbody]
+        if currentbody not in ["", None, "None"]:
+            logger.debug(plugin.AST_bios_on_planet)
+            plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[
+                currentbody.replace(plugin.AST_current_system.get(), "")[1:]]
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
         plugin.AST_current_pos_vector[0] = entry["Latitude"]
@@ -1205,6 +1207,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
 
     count = 0
     count_from_planet = 0
+    currentbody = plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), "")[1:]
+    logger.debug(plugin.AST_num_bios_on_planet)
 
     try:
         if plugin.AST_current_system.get() in soldbiodata[cmdr][firstletter].keys():
@@ -1223,7 +1227,9 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
                 else:
                     bodylistofspecies[sold["species"]].append([bodyname, True])
 
-                if plugin.AST_current_body.get() == bodyname:
+                logger.debug(f"{bodyname} checked and this is the current: {currentbody}")
+
+                if currentbody == bodyname:
                     count_from_planet += 1
                 count += 1
     except KeyError:
@@ -1248,7 +1254,9 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
                 else:
                     bodylistofspecies[notsold["species"]].append([bodyname, False])
 
-                if plugin.AST_current_body.get() == bodyname:
+                logger.debug(f"{bodyname} checked and this is the current: {currentbody}")
+
+                if currentbody == bodyname:
                     count_from_planet += 1
                 count += 1
     except KeyError:
@@ -1300,11 +1308,7 @@ def ask_canonn_nicely(system: str):
         for body in data["SAAsignals"]:
             if body["hud_category"] != "Biology":
                 continue
-            bodyname = body["body"]
-            if len(body["body"]) < 2 or body["body"][1] == " ":
-                # we have a standard type name:
-                bodyname = system + " " + body["body"]
-            dict_of_biological_counts[bodyname] = body["count"]
+            dict_of_biological_counts[body["body"]] = body["count"]
     except KeyError:
         # If there are no SAAsignals to search through
         pass
