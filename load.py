@@ -492,13 +492,13 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
         plugin.on_preferences_closed(cmdr, is_beta)
 
     if "PlanetRadius" in entry.keys():
-        currentbody = None
-        plugin.AST_bios_on_planet[currentbody]
+        currentbody = plugin.AST_current_body.get()
         # We found a PlanetRadius again, this means we are near a planet.
         if not plugin.AST_near_planet:
             # We just came into range of a planet again.
             flag = True
-            plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[currentbody]
+            if currentbody not in ["", None, "None"]:
+                plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[currentbody]
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
         plugin.AST_current_pos_vector[0] = entry["Latitude"]
