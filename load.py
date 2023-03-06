@@ -12,6 +12,8 @@ from config import appname, config  # type: ignore
 from theme import theme  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
+import ui
+import saving
 import organicinfo as orgi
 from journalcrawler import build_biodata_json
 
@@ -24,7 +26,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.6"
+AST_VERSION = "v0.2.7 dev"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -200,19 +202,19 @@ class ArtemisScannerTracker:
         global currentcommander
         currentcommander = cmdr
         if currentcommander != "" and currentcommander is not None:
-            load_cmdr(cmdr)
+            saving.load_cmdr(cmdr, plugin, directory, cmdrstates)
 
         line = "_____________________________________________________"
 
         current_row = 0
         frame = nb.Frame(parent)
 
-        prefs_label(frame, f"Artemis Scanner Tracker {AST_VERSION} by Balvald", current_row, 0, tk.W)
+        ui.prefs_label(frame, f"Artemis Scanner Tracker {AST_VERSION} by Balvald", current_row, 0, tk.W)
 
         current_row += 1
 
-        prefs_label(frame, line, current_row, 0, tk.W)
-        prefs_label(frame, line, current_row, 1, tk.W)
+        ui.prefs_label(frame, line, current_row, 0, tk.W)
+        ui.prefs_label(frame, line, current_row, 1, tk.W)
 
         current_row += 1
 
@@ -237,19 +239,19 @@ class ArtemisScannerTracker:
         for i in range(max(len(checkboxlistleft), len(checkboxlistright))):
             if i < len(checkboxlistleft):
                 if checkboxlistleft[i] == line:
-                    prefs_label(frame, line, current_row, 0, tk.W)
+                    ui.prefs_label(frame, line, current_row, 0, tk.W)
                 else:
-                    prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
+                    ui.prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
             if i < len(checkboxlistright):
                 if checkboxlistright[i] == line:
-                    prefs_label(frame, line, current_row, 1, tk.W)
+                    ui.prefs_label(frame, line, current_row, 1, tk.W)
                     current_row += 1
                     continue
                 if checkboxlistright[i] == "Force hide/show autom. hidden":
-                    prefs_button(frame, checkboxlistright[i], self.forcehideshow, current_row, 1, tk.W)
+                    ui.prefs_button(frame, checkboxlistright[i], self.forcehideshow, current_row, 1, tk.W)
                     current_row += 1
                     continue
-                prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
+                ui.prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
             current_row += 1
 
         if debug:
@@ -263,48 +265,48 @@ class ArtemisScannerTracker:
 
             for i in range(max(len(debuglistleft), len(debuglistright))):
                 if i < len(debuglistleft):
-                    prefs_label(frame, debuglistleft[i], current_row, 0, tk.W)
+                    ui.prefs_label(frame, debuglistleft[i], current_row, 0, tk.W)
                 if i < len(debuglistright):
-                    prefs_entry(frame, debuglistright[i], current_row, 1, tk.W)
+                    ui.prefs_entry(frame, debuglistright[i], current_row, 1, tk.W)
                 current_row += 1
 
-        prefs_label(frame, line, current_row, 0, tk.W)
-        prefs_label(frame, line, current_row, 1, tk.W)
+        ui.prefs_label(frame, line, current_row, 0, tk.W)
+        ui.prefs_label(frame, line, current_row, 1, tk.W)
 
         current_row += 1
 
-        prefs_tickbutton(frame, "Shorten credit values", self.AST_shorten_value, current_row, 0, tk.W)
+        ui.prefs_tickbutton(frame, "Shorten credit values", self.AST_shorten_value, current_row, 0, tk.W)
 
         current_row += 1
 
-        prefs_label(frame, line, current_row, 0, tk.W)
-        prefs_label(frame, line, current_row, 1, tk.W)
+        ui.prefs_label(frame, line, current_row, 0, tk.W)
+        ui.prefs_label(frame, line, current_row, 1, tk.W)
 
         current_row += 1
 
         text = "Scan game journals for exobiology"
-        prefs_button(frame, text, self.buildsoldbiodatajson, current_row, 0, tk.W)
+        ui.prefs_button(frame, text, self.buildsoldbiodatajson, current_row, 0, tk.W)
         text = "Scan local journal folder for exobiology"
-        prefs_button(frame, text, self.buildsoldbiodatajsonlocal, current_row, 1, tk.W)
+        ui.prefs_button(frame, text, self.buildsoldbiodatajsonlocal, current_row, 1, tk.W)
 
         current_row += 1
 
-        prefs_label(frame, line, current_row, 0, tk.W)
-        prefs_label(frame, line, current_row, 1, tk.W)
+        ui.prefs_label(frame, line, current_row, 0, tk.W)
+        ui.prefs_label(frame, line, current_row, 1, tk.W)
 
         current_row += 1
 
         text = "To reset the status, body, system and species"
-        prefs_label(frame, text, current_row, 0, tk.W)
+        ui.prefs_label(frame, text, current_row, 0, tk.W)
 
         current_row += 1
 
         text = "of the last scan press the button below"
-        prefs_label(frame, text, current_row, 0, tk.W)
+        ui.prefs_label(frame, text, current_row, 0, tk.W)
 
         current_row += 1
 
-        prefs_button(frame, "RESET", self.reset, current_row, 0, tk.W)
+        ui.prefs_button(frame, "RESET", self.reset, current_row, 0, tk.W)
 
         current_row += 1
 
@@ -321,10 +323,10 @@ class ArtemisScannerTracker:
         """
         global currentcommander, plugin
         if currentcommander != "" and currentcommander is not None:
-            save_cmdr(currentcommander)
+            saving.save_cmdr(currentcommander, plugin, directory, cmdrstates)
         if currentcommander != cmdr and cmdr != "" and cmdr is not None:
             currentcommander = cmdr
-            load_cmdr(currentcommander)
+            saving.load_cmdr(currentcommander, plugin, directory, cmdrstates)
 
         # Update last scan plant for switch of the shortening value option
         update_last_scan_plant()
@@ -381,7 +383,7 @@ class ArtemisScannerTracker:
         global frame, currentcommander
 
         try:
-            load_cmdr(self.AST_last_CMDR.get())
+            saving.load_cmdr(self.AST_last_CMDR.get(), plugin, directory, cmdrstates)
         except KeyError:
             # last Commander saved is just not known
             pass
@@ -469,14 +471,14 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
 
     if currentcommander != cmdr and currentcommander != "" and currentcommander is not None:
         # Check if new and old Commander are in the cmdrstates file.
-        save_cmdr(currentcommander)
+        saving.save_cmdr(currentcommander, plugin, directory, cmdrstates)
         # New Commander not in cmdr states file.
         if cmdr not in cmdrstates.keys():
             # completely new cmdr theres nothing to load
             cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", 0, "None", "None", "None"]
         else:
             if cmdr is not None and cmdr != "":
-                load_cmdr(cmdr)
+                saving.load_cmdr(cmdr, plugin, directory, cmdrstates)
 
         # Set new Commander to currentcommander
         currentcommander = cmdr
@@ -583,7 +585,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if currentcommander != cmdr and currentcommander != "" and currentcommander is not None:
         # Check if new and old Commander are in the cmdrstates file.
-        save_cmdr(currentcommander)
+        saving.save_cmdr(currentcommander, plugin, directory, cmdrstates)
         # New Commander not in cmdr states file.
         if cmdr not in cmdrstates.keys():
             # completely new cmdr theres nothing to load
@@ -591,7 +593,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         else:
             # Load cmdr from cmdr states.
             if cmdr is not None:
-                load_cmdr(cmdr)
+                saving.load_cmdr(cmdr, plugin, directory, cmdrstates)
         # Set new Commander to currentcommander
         currentcommander = cmdr
 
@@ -816,7 +818,7 @@ def system_body_change_event(cmdr: str, entry) -> None:  # noqa #CCR001
     if cmdrstates[cmdr][1] == "" or cmdrstates[cmdr][2] == "":
         cmdrstates[cmdr][1] = plugin.AST_last_scan_system.get()
         cmdrstates[cmdr][2] = plugin.AST_last_scan_body.get()
-        save_cmdr(cmdr)
+        saving.save_cmdr(cmdr, plugin, directory, cmdrstates)
 
 
 def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
@@ -1166,11 +1168,11 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
                 if uielementlistright[i].get() == uielementlistright[i+3].get():
                     continue
             if i < len(uielementlistleft):
-                ui_label(frame, uielementlistleft[i], current_row, 0, tk.W)
+                ui.label(frame, uielementlistleft[i], current_row, 0, tk.W)
             if i < len(uielementlistright):
-                ui_entry(frame, uielementlistright[i], current_row, 1, tk.W)
+                ui.entry(frame, uielementlistright[i], current_row, 1, tk.W)
             if uielementlistextra[i] == "clipboardbutton":
-                ui_button(frame, "📋", plugin.clipboard, current_row, 2, tk.E)
+                ui.button(frame, "📋", plugin.clipboard, current_row, 2, tk.E)
             current_row += 1
 
     # Clonal Colonial Range here.
@@ -1181,16 +1183,16 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
             colour = None
         if plugin.AST_scan_1_dist_green:
             colour = "green"
-        ui_colourlabel(frame, "Distance to Scan #1: ", current_row, 0, colour, tk.W)
-        ui_colourentry(frame, plugin.AST_scan_1_pos_dist, current_row, 1, colour, tk.W)
+        ui.colourlabel(frame, "Distance to Scan #1: ", current_row, 0, colour, tk.W)
+        ui.colourentry(frame, plugin.AST_scan_1_pos_dist, current_row, 1, colour, tk.W)
         current_row += 1
         colour = "red"
         if plugin.AST_current_scan_progress.get() in ["0/3", "1/3", "3/3"]:
             colour = None
         if plugin.AST_scan_2_dist_green:
             colour = "green"
-        ui_colourlabel(frame, "Distance to Scan #2: ", current_row, 0, colour, tk.W)
-        ui_colourentry(frame, plugin.AST_scan_2_pos_dist, current_row, 1, colour, tk.W)
+        ui.colourlabel(frame, "Distance to Scan #2: ", current_row, 0, colour, tk.W)
+        ui.colourentry(frame, plugin.AST_scan_2_pos_dist, current_row, 1, colour, tk.W)
         current_row += 1
         colour = None
         if ((plugin.AST_scan_1_dist_green
@@ -1199,8 +1201,8 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
                 and plugin.AST_scan_2_dist_green
                 and plugin.AST_current_scan_progress.get() == "2/3")):
             colour = "green"
-        ui_colourlabel(frame, "Current Position: ", current_row, 0, colour, tk.W)
-        ui_colourentry(frame, plugin.AST_current_pos, current_row, 1, colour, tk.W)
+        ui.colourlabel(frame, "Current Position: ", current_row, 0, colour, tk.W)
+        ui.colourentry(frame, plugin.AST_current_pos, current_row, 1, colour, tk.W)
         current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI
@@ -1208,6 +1210,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
         build_sold_bio_ui(plugin, cmdr, current_row)
 
     theme.update(frame)  # Apply theme colours to the frame and its children, including the new widgets
+
 
 def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
     # Create a Button to make it shorter?
@@ -1222,7 +1225,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
     with open(file, "r+", encoding="utf8") as f:
         notsoldbiodata = json.load(f)
 
-    ui_label(frame, "Scans in this System:", current_row, 0, tk.W)
+    ui.label(frame, "Scans in this System:", current_row, 0, tk.W)
 
     if cmdr == "" or cmdr is None or cmdr == "None":
         return
@@ -1236,7 +1239,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
     try:
         firstletter = plugin.AST_current_system.get()[0].lower()
     except IndexError:
-        ui_label(frame, "None", current_row, 1, tk.W)
+        ui.label(frame, "None", current_row, 1, tk.W)
         # length of string is 0. there is no current system yet.
         # So there is no reason to do anything
         return
@@ -1289,21 +1292,21 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
         pass
 
     if bodylistofspecies == {}:
-        ui_label(frame, "None", current_row, 1, tk.W)
+        ui.label(frame, "None", current_row, 1, tk.W)
     else:
-        ui_label(frame, count, current_row, 1, tk.W)
+        ui.label(frame, count, current_row, 1, tk.W)
 
     # skip
     if plugin.AST_hide_scans_in_system.get() != 0:
-        ui_button(frame, "▼", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+        ui.button(frame, "▼", plugin.switchhidesoldexobio, current_row, 2, tk.W)
 
         return
 
-    ui_button(frame, "▲", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+    ui.button(frame, "▲", plugin.switchhidesoldexobio, current_row, 2, tk.W)
 
     for species in bodylistofspecies.keys():
         current_row += 1
-        ui_label(frame, species, current_row, 0, tk.W)
+        ui.label(frame, species, current_row, 0, tk.W)
         bodies = ""
         for body in bodylistofspecies[species]:
             if body[1]:
@@ -1313,7 +1316,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
         while (bodies[-1] == "," or bodies[-1] == " "):
             bodies = bodies[:-1]
 
-        ui_label(frame, bodies, current_row, 1, tk.W)
+        ui.label(frame, bodies, current_row, 1, tk.W)
 
 
 def ask_canonn_nicely(system: str):
