@@ -140,6 +140,8 @@ class ArtemisScannerTracker:
         self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(value=str())
         self.AST_state: Optional[tk.StringVar] = tk.StringVar(value=str())
 
+        self.AST_testvar = {}
+
         self.rawvalue = int(config.get_int("AST_value"))
 
         if self.rawvalue is None:
@@ -597,10 +599,12 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if plugin.AST_current_system.get() != system:
         plugin.AST_current_system.set(system)
+        plugin.AST_testvar = ask_canonn_nicely(system)
         rebuild_ui(plugin, cmdr)
 
     if plugin.AST_current_system.get() == "" or plugin.AST_current_system.get() == "None":
         plugin.AST_current_system.set(str(system))
+        plugin.AST_testvar = ask_canonn_nicely(system)
 
     flag = False
 
@@ -791,6 +795,7 @@ def system_body_change_event(cmdr: str, entry) -> None:  # noqa #CCR001
         pass
 
     if systemchange:
+        plugin.AST_testvar = ask_canonn_nicely(entry["StarSystem"])
         rebuild_ui(plugin, cmdr)
 
     # To fix the aforementioned eventuality where the systems end up
@@ -1296,6 +1301,23 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
             bodies = bodies[:-1]
 
         ui_label(frame, bodies, current_row, 1, tk.W)
+
+
+def ask_canonn_nicely(system: str):
+    """Ask Canonn how many biological signals are on any planets"""
+    response = requests.get(
+        f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}")
+    data = json.loads(response.content)
+    dict_of_biological_counts = {}
+    for body in data["SAAsignals"]:
+        if body["hud_category"] != "Biology":
+            continue
+        bodyname = body["body"]
+        if len(body["body"]) < 2 or body["body"][1] == " ":
+            # we have a standard type name:
+            bodyname = system + " " + body["body"]
+        dict_of_biological_counts[bodyname] = body["count"]
+    return dict_of_biological_counts
 
 
 def shortcreditstring(number):
