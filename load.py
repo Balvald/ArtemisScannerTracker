@@ -140,7 +140,7 @@ class ArtemisScannerTracker:
         self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(value=str())
         self.AST_state: Optional[tk.StringVar] = tk.StringVar(value=str())
 
-        self.AST_testvar = {}
+        self.AST_testvar = ask_canonn_nicely(self.AST_current_system)
 
         self.rawvalue = int(config.get_int("AST_value"))
 
@@ -630,6 +630,9 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         flag = True
         biosell_event(cmdr, entry)
 
+    if entry["event"] == "SAASignalsFound":
+        SAASignalsFound_event(entry)
+
     if flag:
         # save most recent relevant state so in case of crash of the system
         # we still have a proper record as long as it finishes saving below.
@@ -1045,6 +1048,16 @@ def biosell_event(cmdr: str, entry) -> None:  # noqa #CCR001
     # So just rebuild the ui for good measure.
     rebuild_ui(plugin, cmdr)
 
+
+def SAASignalsFound_event(entry) -> None:
+    for i in range(len(entry["Signals"])):
+        if entry["Signals"][i]["Type"] != "$SAA_SignalType_Biological;":
+            continue
+        if entry["BodyName"] in plugin.AST_testvar.keys():
+            continue
+        plugin.AST_testvar[entry["BodyName"]] = entry["Signals"][i]["Count"]
+
+
 # endregion
 
 
@@ -1305,9 +1318,11 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
 
 def ask_canonn_nicely(system: str):
     """Ask Canonn how many biological signals are on any planets"""
+    logger.debug(f"Asking Canonn for Info about: {system}")
     response = requests.get(
         f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}")
     data = json.loads(response.content)
+    logger.debug(f"Retrieved data: {data}")
     dict_of_biological_counts = {}
     for body in data["SAAsignals"]:
         if body["hud_category"] != "Biology":
