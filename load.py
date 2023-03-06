@@ -142,7 +142,8 @@ class ArtemisScannerTracker:
         self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(value=str())
         self.AST_state: Optional[tk.StringVar] = tk.StringVar(value=str())
 
-        self.AST_testvar = ask_canonn_nicely(self.AST_current_system)
+        self.AST_bios_on_planet = None
+        self.AST_num_bios_on_planet = 0
 
         self.rawvalue = int(config.get_int("AST_value"))
 
@@ -175,6 +176,7 @@ class ArtemisScannerTracker:
         :return: The name of the plugin, which will be used by EDMC for logging
                  and for the settings window
         """
+        self.AST_bios_on_planet = ask_canonn_nicely(self.AST_current_system.get())
         return PLUGIN_NAME
 
     def on_unload(self) -> None:
@@ -490,10 +492,13 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
         plugin.on_preferences_closed(cmdr, is_beta)
 
     if "PlanetRadius" in entry.keys():
+        currentbody = None
+        plugin.AST_bios_on_planet[currentbody]
         # We found a PlanetRadius again, this means we are near a planet.
         if not plugin.AST_near_planet:
             # We just came into range of a planet again.
             flag = True
+            plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[currentbody]
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
         plugin.AST_current_pos_vector[0] = entry["Latitude"]
@@ -547,8 +552,9 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa #CCR001
                 flag = True
     else:
         if plugin.AST_near_planet:
-            # Switch happened we went too far from the planet to get any reference from it.
+            # Switch happened, we went too far from the planet to get any reference from it.
             flag = True
+        plugin.AST_num_bios_on_planet = 0
         plugin.AST_near_planet = False
         plugin.AST_current_radius = None
         plugin.AST_current_pos_vector[0] = None
@@ -601,12 +607,12 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if plugin.AST_current_system.get() != system:
         plugin.AST_current_system.set(system)
-        plugin.AST_testvar = ask_canonn_nicely(system)
+        plugin.AST_bios_on_planet = ask_canonn_nicely(system)
         rebuild_ui(plugin, cmdr)
 
     if plugin.AST_current_system.get() == "" or plugin.AST_current_system.get() == "None":
         plugin.AST_current_system.set(str(system))
-        plugin.AST_testvar = ask_canonn_nicely(system)
+        plugin.AST_bios_on_planet = ask_canonn_nicely(system)
 
     flag = False
 
@@ -800,7 +806,7 @@ def system_body_change_event(cmdr: str, entry) -> None:  # noqa #CCR001
         pass
 
     if systemchange:
-        plugin.AST_testvar = ask_canonn_nicely(entry["StarSystem"])
+        plugin.AST_bios_on_planet = ask_canonn_nicely(entry["StarSystem"])
         rebuild_ui(plugin, cmdr)
 
     # To fix the aforementioned eventuality where the systems end up
@@ -1055,62 +1061,15 @@ def SAASignalsFound_event(entry) -> None:
     for i in range(len(entry["Signals"])):
         if entry["Signals"][i]["Type"] != "$SAA_SignalType_Biological;":
             continue
-        if entry["BodyName"] in plugin.AST_testvar.keys():
+        if entry["BodyName"] in plugin.AST_bios_on_planet.keys():
             continue
-        plugin.AST_testvar[entry["BodyName"]] = entry["Signals"][i]["Count"]
+        plugin.AST_bios_on_planet[entry["BodyName"]] = entry["Signals"][i]["Count"]
 
 
 # endregion
 
 
 plugin = ArtemisScannerTracker()
-
-
-# region saving/loading
-
-
-def save_cmdr(cmdr) -> None:
-    """Save information specific to the cmdr in the cmdrstates.json."""
-    global plugin, directory
-
-    if cmdr not in cmdrstates.keys():
-        cmdrstates[cmdr] = ["None", "None", "None", "0/3", "None", 0, "None", "None", "None"]
-
-    valuelist = [plugin.AST_last_scan_plant.get(), plugin.AST_last_scan_system.get(), plugin.AST_last_scan_body.get(),
-                 plugin.AST_current_scan_progress.get(), plugin.AST_state.get(), plugin.rawvalue,
-                 plugin.AST_CCR.get(), plugin.AST_scan_1_pos_vector.copy(), plugin.AST_scan_2_pos_vector.copy()]
-
-    for i in range(len(cmdrstates[cmdr])):
-        cmdrstates[cmdr][i] = valuelist[i]
-
-    file = directory + "\\cmdrstates.json"
-
-    open(file, "r+", encoding="utf8").close()
-    with open(file, "r+", encoding="utf8") as f:
-        f.seek(0)
-        json.dump(cmdrstates, f, indent=4)
-        f.truncate()
-
-
-def load_cmdr(cmdr) -> None:
-    """Load information about a cmdr from cmdrstates.json."""
-    global cmdrstates, plugin
-    file = directory + "\\cmdrstates.json"
-
-    with open(file, "r+", encoding="utf8") as f:
-        cmdrstates = json.load(f)
-
-    plugin.AST_last_scan_plant.set(cmdrstates[cmdr][0])
-    plugin.AST_last_scan_system.set(cmdrstates[cmdr][1])
-    plugin.AST_last_scan_body.set(cmdrstates[cmdr][2])
-    plugin.AST_current_scan_progress.set(cmdrstates[cmdr][3])
-    plugin.AST_state.set(cmdrstates[cmdr][4])
-    plugin.rawvalue = int(str(cmdrstates[cmdr][5]).split(" ")[0].replace(",", ""))
-    plugin.AST_CCR.set(cmdrstates[cmdr][6])
-    plugin.AST_scan_1_pos_vector = cmdrstates[cmdr][7]
-    plugin.AST_scan_2_pos_vector = cmdrstates[cmdr][8]
-
-# endregion
 
 
 # region UI
@@ -1245,6 +1204,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
         return
 
     count = 0
+    count_from_planet = 0
 
     try:
         if plugin.AST_current_system.get() in soldbiodata[cmdr][firstletter].keys():
@@ -1263,6 +1223,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
                 else:
                     bodylistofspecies[sold["species"]].append([bodyname, True])
 
+                if plugin.AST_current_body.get() == bodyname:
+                    count_from_planet += 1
                 count += 1
     except KeyError:
         # if we don't have the cmdr in the sold data yet we just pass all sold data.
@@ -1286,6 +1248,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
                 else:
                     bodylistofspecies[notsold["species"]].append([bodyname, False])
 
+                if plugin.AST_current_body.get() == bodyname:
+                    count_from_planet += 1
                 count += 1
     except KeyError:
         # if we don't have the cmdr in the notsold data yet we just pass.
@@ -1295,6 +1259,11 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
         ui.label(frame, "None", current_row, 1, tk.W)
     else:
         ui.label(frame, count, current_row, 1, tk.W)
+
+    if plugin.AST_num_bios_on_planet != 0:
+        ui.label(frame, "on Planet:", current_row, 2, tk.W)
+        amount_found_of_total = f"{count_from_planet}/{plugin.AST_num_bios_on_planet}"
+        ui.label(frame, amount_found_of_total, current_row, 4, tk.W)
 
     # skip
     if plugin.AST_hide_scans_in_system.get() != 0:
@@ -1359,51 +1328,6 @@ def shortcreditstring(number):
         fullstring = fullstring[0] + "," + fullstring[2:]
         unit = " " + prefix[prefixindex-1] + "Cr."
     return fullstring + unit
-
-
-def prefs_label(frame, text, row: int, col: int, sticky) -> None:
-    """Create label for the preferences of the plugin."""
-    nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
-
-
-def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> None:
-    """Create an entry field for the preferences of the plugin."""
-    nb.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
-
-
-def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
-    """Create a button for the prefereces of the plugin."""
-    nb.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
-
-
-def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
-    """Create a tickbox for the preferences of the plugin."""
-    nb.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
-
-
-def ui_label(frame, text, row: int, col: int, sticky) -> None:
-    """Create a label for the ui of the plugin."""
-    tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
-
-
-def ui_entry(frame, textvariable, row: int, col: int, sticky) -> None:
-    """Create a label that displays the content of a textvariable for the ui of the plugin."""
-    tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
-
-
-def ui_colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
-    """Create a label with coloured text for the ui of the plugin."""
-    tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
-
-
-def ui_colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> None:
-    """Create a label that displays the content of a textvariable for the ui of the plugin."""
-    tk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
-
-
-def ui_button(frame, text, command, row: int, col: int, sticky) -> None:
-    """Create a button for the ui of the plugin."""
-    tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 # endregion
 
