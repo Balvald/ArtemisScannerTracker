@@ -1263,15 +1263,15 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
     if plugin.AST_num_bios_on_planet != 0:
         ui.label(frame, "on Planet:", current_row, 2, tk.W)
         amount_found_of_total = f"{count_from_planet}/{plugin.AST_num_bios_on_planet}"
-        ui.label(frame, amount_found_of_total, current_row, 4, tk.W)
+        ui.label(frame, amount_found_of_total, current_row, 3, tk.W)
 
     # skip
     if plugin.AST_hide_scans_in_system.get() != 0:
-        ui.button(frame, "▼", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+        ui.button(frame, "▼", plugin.switchhidesoldexobio, current_row, 4, tk.W)
 
         return
 
-    ui.button(frame, "▲", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+    ui.button(frame, "▲", plugin.switchhidesoldexobio, current_row, 4, tk.W)
 
     for species in bodylistofspecies.keys():
         current_row += 1
@@ -1296,14 +1296,18 @@ def ask_canonn_nicely(system: str):
     data = json.loads(response.content)
     logger.debug(f"Retrieved data: {data}")
     dict_of_biological_counts = {}
-    for body in data["SAAsignals"]:
-        if body["hud_category"] != "Biology":
-            continue
-        bodyname = body["body"]
-        if len(body["body"]) < 2 or body["body"][1] == " ":
-            # we have a standard type name:
-            bodyname = system + " " + body["body"]
-        dict_of_biological_counts[bodyname] = body["count"]
+    try:
+        for body in data["SAAsignals"]:
+            if body["hud_category"] != "Biology":
+                continue
+            bodyname = body["body"]
+            if len(body["body"]) < 2 or body["body"][1] == " ":
+                # we have a standard type name:
+                bodyname = system + " " + body["body"]
+            dict_of_biological_counts[bodyname] = body["count"]
+    except KeyError:
+        # If there are no SAAsignals to search through
+        pass
     return dict_of_biological_counts
 
 
