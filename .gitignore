@@ -157,3 +157,5 @@ cython_debug/
 notsoldbiodata.json
 soldbiodata.json
 cmdrstates.json
+
+*.py
