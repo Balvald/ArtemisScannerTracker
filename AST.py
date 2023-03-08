@@ -21,15 +21,14 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 class ArtemisScannerTracker:
     """Artemis Scanner Tracker plugin class."""
 
-    def __init__(self, AST_VERSION, AST_REPO, PLUGIN_NAME,
-                 directory, filename, cmdrstates, notyetsolddata, soldexobiology) -> None:
+    def __init__(self, AST_VERSION: str, AST_REPO: str, PLUGIN_NAME: str,
+                 directory: str, cmdrstates: dict, notyetsolddata: dict, soldexobiology: dict) -> None:
         """Initialize the plugin by getting values from the config file."""
 
         self.AST_VERSION = AST_VERSION
         self.AST_REPO = AST_REPO
         self.PLUGIN_NAME = PLUGIN_NAME
         self.AST_DIR = directory
-        self.AST_FILENAME = filename
         self.CMDR_states = cmdrstates
 
         self.frame = None
@@ -37,7 +36,7 @@ class ArtemisScannerTracker:
         self.notyetsolddata = notyetsolddata
         self.soldexobiology = soldexobiology
 
-        self.AST_in_Legacy: Optional[bool] = False
+        self.AST_in_Legacy = False
 
         self.AST_debug: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_debug"))
 
@@ -62,7 +61,7 @@ class ArtemisScannerTracker:
         self.AST_shorten_value: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_shorten_value"))
 
         # bool to steer when the CCR feature is visible
-        self.AST_near_planet: Optional[tk.BooleanVar] = False
+        self.AST_near_planet = False
 
         # positions as lat long, lat at index 0, long at index 1
         self.AST_current_pos_vector = [None, None, None]
