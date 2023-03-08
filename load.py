@@ -117,8 +117,14 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
         if currentbody not in ["", None, "None"]:
             if plugin.AST_debug.get():
                 logger.debug(plugin.AST_bios_on_planet)
-            plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[
-                currentbody.replace(plugin.AST_current_system.get(), "")[1:]]
+
+            key = currentbody.replace(plugin.AST_current_system.get(), '')[1:]
+            try:
+                plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[key]
+            except KeyError:
+                # Nothing found at currently closest planet
+                if plugin.AST_debug.get():
+                    logger.warning(f"No amount of bio signals found for body; {currentbody} with key: {key}")
 
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
