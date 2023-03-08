@@ -18,7 +18,6 @@ from AST import ArtemisScannerTracker
 frame: Optional[tk.Frame] = None
 
 # Shows debug fields in preferences when True
-debug = False
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
@@ -111,7 +110,7 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
             # We just came into range of a planet again.
             flag = True
         if currentbody not in ["", None, "None"]:
-            if bool(plugin.AST_debug.get()):
+            if plugin.AST_debug.get():
                 logger.debug(plugin.AST_bios_on_planet)
             plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[
                 currentbody.replace(plugin.AST_current_system.get(), "")[1:]]
@@ -210,14 +209,12 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     # flag determines if we have to rebuild the ui at the end.
     flag = plugin.handle_possible_cmdr_change(cmdr)
 
-    if plugin.AST_current_system.get() != system:
+    if (plugin.AST_current_system.get() != system
+       or plugin.AST_current_system.get() == ""
+       or plugin.AST_current_system.get() == "None"):
         plugin.AST_current_system.set(system)
         plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(system)
         flag = True
-
-    if plugin.AST_current_system.get() == "" or plugin.AST_current_system.get() == "None":
-        plugin.AST_current_system.set(str(system))
-        plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(system)
 
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # Probably?
@@ -255,7 +252,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
 plugin = ArtemisScannerTracker(AST_VERSION, AST_REPO, PLUGIN_NAME,
                                directory, filename, cmdrstates,
-                               debug, not_yet_sold_data, sold_exobiology)
+                               not_yet_sold_data, sold_exobiology)
 
 
 def plugin_start3(plugin_dir: str) -> str:

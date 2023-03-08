@@ -22,8 +22,7 @@ class ArtemisScannerTracker:
     """Artemis Scanner Tracker plugin class."""
 
     def __init__(self, AST_VERSION, AST_REPO, PLUGIN_NAME,
-                 directory, filename, cmdrstates,
-                 debug, notyetsolddata, soldexobiology) -> None:
+                 directory, filename, cmdrstates, notyetsolddata, soldexobiology) -> None:
         """Initialize the plugin by getting values from the config file."""
 
         self.AST_VERSION = AST_VERSION
@@ -127,7 +126,7 @@ class ArtemisScannerTracker:
 
     def on_load(self) -> str:
         """
-        on_load is called by plugin_start3 below.
+        on_load is called by plugin_start3 in load.py.
 
         It is the first point EDMC interacts with our code
         after loading our module.
@@ -135,17 +134,11 @@ class ArtemisScannerTracker:
         :return: The name of the plugin, which will be used by EDMC for logging
                  and for the settings window
         """
-        try:
-            self.AST_bios_on_planet = self.ask_canonn_nicely(self.AST_current_system.get())
-        except Exception as e:
-            logger.warning(e)
-            logger.warning(e.__doc__)
-            logger.warning("Couldn't get info about the SAAsignals in current system")
         return self.PLUGIN_NAME
 
     def on_unload(self) -> None:
         """
-        on_unload is called by plugin_stop below.
+        on_unload is called by plugin_stop in load.py.
 
         It is the last thing called before EDMC shuts down.
         Note that blocking code here will hold the shutdown process.
@@ -154,7 +147,7 @@ class ArtemisScannerTracker:
 
     def setup_preferences(self, parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
         """
-        setup_preferences is called by plugin_prefs below.
+        setup_preferences is called by plugin_prefs in load.py.
 
         It is where we can setup our
         own settings page in EDMC's settings window.
@@ -219,7 +212,7 @@ class ArtemisScannerTracker:
                 ui.prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
             current_row += 1
 
-        if (self.AST_debug.get()):
+        if self.AST_debug.get():
 
             debuglistleft = ["species", "System of last Scan",
                              "Body of last Scan", "Scan progress",
@@ -286,7 +279,7 @@ class ArtemisScannerTracker:
 
     def on_preferences_closed(self, cmdr: str, is_beta: bool) -> None:
         """
-        on_preferences_closed is called by prefs_changed below.
+        on_preferences_closed is called by prefs_changed in load.py.
 
         It is called when the preferences dialog is dismissed by the user.
 
@@ -337,12 +330,12 @@ class ArtemisScannerTracker:
 
         config.set("AST_hide_scans_in_system", int(self.AST_hide_scans_in_system.get()))
 
-        if bool(self.AST_debug.get()):
+        if self.AST_debug.get():
             logger.debug(f"Currently last Commander is: {cmdr}")
 
         config.set("AST_last_CMDR", str(cmdr))
 
-        if bool(self.AST_debug.get()):
+        if self.AST_debug.get():
             logger.debug("ArtemisScannerTracker saved preferences")
 
         ui.rebuild_ui(self, cmdr)
@@ -351,7 +344,7 @@ class ArtemisScannerTracker:
         """
         Create our entry on the main EDMC UI.
 
-        This is called by plugin_app below.
+        This is called by plugin_app in load.py.
 
         :param parent: EDMC main window Tk
         :return: Our frame
@@ -390,13 +383,13 @@ class ArtemisScannerTracker:
 
     def forcehideshow(self) -> None:
         """Force plugin to show values when Auto hide is on."""
-        state = bool(self.AST_after_selling.get())
+        state = self.AST_after_selling.get()
         self.AST_after_selling.set(int(not (state)))
         ui.rebuild_ui(self, self.AST_current_CMDR)
 
     def switchhidesoldexobio(self) -> None:
         """Switch the ui button to expand and collapse the list of sold/scanned exobiology."""
-        state = bool(self.AST_hide_scans_in_system.get())
+        state = self.AST_hide_scans_in_system.get()
         self.AST_hide_scans_in_system.set(int(not (state)))
         ui.rebuild_ui(self, self.AST_current_CMDR)
 
@@ -424,12 +417,12 @@ class ArtemisScannerTracker:
 
     def ask_canonn_nicely(self, system: str):
         """Ask Canonn how many biological signals are on any planets"""
-        if bool(self.AST_debug.get()):
+        if self.AST_debug.get():
             logger.debug(f"Asking Canonn for Info about: {system}")
         response = requests.get(
             f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}")
         data = response.json()
-        if bool(self.AST_debug.get()):
+        if self.AST_debug.get():
             logger.debug(f"Retrieved data: {data}")
         dict_of_biological_counts = {}
         try:

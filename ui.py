@@ -176,7 +176,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
         return
 
     # Check if we even got a cmdr yet!
-    if bool(plugin.AST_debug.get()):
+    if plugin.AST_debug.get():
         logger.info(f"Commander: {cmdr}. attempting to access")
         logger.info(f"data: {soldbiodata[cmdr]}.")
         logger.info(f"data: {notsoldbiodata}.")
@@ -193,7 +193,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
     count = 0
     count_from_planet = 0
     currentbody = plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), "")[1:]
-    if bool(plugin.AST_debug.get()):
+    if plugin.AST_debug.get():
         logger.debug(plugin.AST_num_bios_on_planet)
 
     try:
@@ -213,7 +213,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
                 else:
                     bodylistofspecies[sold["species"]].append([bodyname, True])
 
-                if bool(plugin.AST_debug.get()):
+                if plugin.AST_debug.get():
                     logger.debug(f"{bodyname} checked and this is the current: {currentbody}")
 
                 if currentbody == bodyname:
@@ -241,7 +241,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
                 else:
                     bodylistofspecies[notsold["species"]].append([bodyname, False])
 
-                if bool(plugin.AST_debug.get()):
+                if plugin.AST_debug.get():
                     logger.debug(f"{bodyname} checked and this is the current: {currentbody}")
 
                 if currentbody == bodyname:
@@ -251,17 +251,17 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
         # if we don't have the cmdr in the notsold data yet we just pass.
         pass
 
-    if plugin.AST_num_bios_on_planet != 0:
+    if bodylistofspecies == {}:
+        count = "None"
+
+    if plugin.AST_num_bios_on_planet != 0 and plugin.AST_near_planet:
         # whole thing gets coloured green.
         # Easier and a bigger indicator that we scanned everythong on the planet.
         colour = "green"
         if count_from_planet < plugin.AST_num_bios_on_planet:
             colour = None
-        test = "      On this Body: " + f"{count_from_planet}/{plugin.AST_num_bios_on_planet}"
+        test = (len(str(count))*"   ") + "   On this Body: " + f"{count_from_planet}/{plugin.AST_num_bios_on_planet}"
         colourlabel(plugin.frame, test, current_row, 1, colour, tk.E)
-
-    if bodylistofspecies == {}:
-        count = "None"
 
     # calling this number after the label for "On this Body: x/y" so it hopefully is just drawn over
     # the constant padding added in the string above.
