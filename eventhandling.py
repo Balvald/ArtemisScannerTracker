@@ -10,8 +10,8 @@ import saving
 import ui
 import organicinfo as orgi
 
-logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
+logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
@@ -24,7 +24,7 @@ def resurrection_event(plugin) -> None:
     return []
 
 
-def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> None:  # noqa #CCR001
+def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> None:
     """Handle the ScanOrganic event."""
 
     # In the eventuality that the user started EMDC after
@@ -138,7 +138,7 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
     ui.rebuild_ui(plugin, cmdr)
 
 
-def system_body_change_event(cmdr: str, entry, plugin) -> None:  # noqa #CCR001
+def system_body_change_event(cmdr: str, entry, plugin) -> None:
     """Handle all events that give a tell in which system we are or on what planet we are on."""
     systemchange = False
 
@@ -153,7 +153,12 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:  # noqa #CCR001
         pass
 
     if systemchange:
-        plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(entry["StarSystem"])
+        try:
+            plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(entry["StarSystem"])
+        except Exception as e:
+            logger.warning(e)
+            logger.warning(e.__doc__)
+            logger.warning("Couldn't get info about the SAAsignals in current system")
         ui.rebuild_ui(plugin, cmdr)
 
     # To fix the aforementioned eventuality where the systems end up
@@ -174,7 +179,7 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:  # noqa #CCR001
         saving.save_cmdr(cmdr, plugin)
 
 
-def biosell_event(cmdr: str, entry, plugin) -> None:  # noqa #CCR001
+def biosell_event(cmdr: str, entry, plugin) -> None:
     """Handle the SellOrganicData event."""
     soldvalue = 0
 
@@ -405,6 +410,8 @@ def biosell_event(cmdr: str, entry, plugin) -> None:  # noqa #CCR001
 
 def SAASignalsFound_event(entry, plugin) -> None:
     for i in range(len(entry["Signals"])):
+        if bool(plugin.AST_debug.get()):
+            logger.debug(f"{entry['Signals'][i]['Type']}")
         if entry["Signals"][i]["Type"] != "$SAA_SignalType_Biological;":
             continue
         if entry["BodyName"] in plugin.AST_bios_on_planet.keys():

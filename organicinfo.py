@@ -6,6 +6,7 @@ Such as prices for different types of organic scans and colonial range.
 
 import math
 
+
 # Update 14 Prices
 u14vistagenomicsprices = {
     "Fonticulua Fluctus": 16777215,

@@ -1,18 +1,20 @@
 """AST UI functions"""
 
-import logging
 import json
+import logging
 import os
-from config import appname  # type: ignore
-
 import tkinter as tk
+
 import myNotebook as nb  # type: ignore
+from config import appname  # type: ignore
 from theme import theme  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
+
+# region ui shorthand definitions
 
 def prefs_label(frame, text, row: int, col: int, sticky) -> None:
     """Create label for the preferences of the plugin."""
@@ -58,6 +60,8 @@ def button(frame, text, command, row: int, col: int, sticky) -> None:
     """Create a button for the ui of the plugin."""
     tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
+# endregion
+
 
 def clear_ui(frame) -> None:
     """Remove all labels from this plugin."""
@@ -66,7 +70,7 @@ def clear_ui(frame) -> None:
         label.destroy()
 
 
-def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
+def rebuild_ui(plugin, cmdr: str) -> None:
     """Rebuild the UI in case of preferences change."""
 
     clear_ui(plugin.frame)
@@ -154,8 +158,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa #CCR001
     theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
 
 
-def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
-    # Create a Button to make it shorter?
+def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
     soldbiodata = {}
     notsoldbiodata = {}
 
@@ -173,7 +176,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
         return
 
     # Check if we even got a cmdr yet!
-    if plugin.debug:
+    if bool(plugin.AST_debug.get()):
         logger.info(f"Commander: {cmdr}. attempting to access")
         logger.info(f"data: {soldbiodata[cmdr]}.")
         logger.info(f"data: {notsoldbiodata}.")
@@ -190,7 +193,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
     count = 0
     count_from_planet = 0
     currentbody = plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), "")[1:]
-    if plugin.debug:
+    if bool(plugin.AST_debug.get()):
         logger.debug(plugin.AST_num_bios_on_planet)
 
     try:
@@ -210,7 +213,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
                 else:
                     bodylistofspecies[sold["species"]].append([bodyname, True])
 
-                if plugin.debug:
+                if bool(plugin.AST_debug.get()):
                     logger.debug(f"{bodyname} checked and this is the current: {currentbody}")
 
                 if currentbody == bodyname:
@@ -238,7 +241,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
                 else:
                     bodylistofspecies[notsold["species"]].append([bodyname, False])
 
-                if plugin.debug:
+                if bool(plugin.AST_debug.get()):
                     logger.debug(f"{bodyname} checked and this is the current: {currentbody}")
 
                 if currentbody == bodyname:
@@ -248,23 +251,29 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa #CCR001
         # if we don't have the cmdr in the notsold data yet we just pass.
         pass
 
-    if bodylistofspecies == {}:
-        label(plugin.frame, "None", current_row, 1, tk.W)
-    else:
-        label(plugin.frame, count, current_row, 1, tk.W)
-
     if plugin.AST_num_bios_on_planet != 0:
-        label(plugin.frame, "on Planet:", current_row, 2, tk.W)
-        amount_found_of_total = f"{count_from_planet}/{plugin.AST_num_bios_on_planet}"
-        label(plugin.frame, amount_found_of_total, current_row, 3, tk.W)
+        # whole thing gets coloured green.
+        # Easier and a bigger indicator that we scanned everythong on the planet.
+        colour = "green"
+        if count_from_planet < plugin.AST_num_bios_on_planet:
+            colour = None
+        test = "      On this Body: " + f"{count_from_planet}/{plugin.AST_num_bios_on_planet}"
+        colourlabel(plugin.frame, test, current_row, 1, colour, tk.E)
+
+    if bodylistofspecies == {}:
+        count = "None"
+
+    # calling this number after the label for "On this Body: x/y" so it hopefully is just drawn over
+    # the constant padding added in the string above.
+    label(plugin.frame, count, current_row, 1, tk.W)
 
     # skip
     if plugin.AST_hide_scans_in_system.get() != 0:
-        button(plugin.frame, "▼", plugin.switchhidesoldexobio, current_row, 4, tk.W)
+        button(plugin.frame, " ▼ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
 
         return
 
-    button(plugin.frame, "▲", plugin.switchhidesoldexobio, current_row, 4, tk.W)
+    button(plugin.frame, " ▲ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
 
     for species in bodylistofspecies.keys():
         current_row += 1

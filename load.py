@@ -14,6 +14,7 @@ import ui
 import organicinfo as orgi
 from AST import ArtemisScannerTracker
 
+
 frame: Optional[tk.Frame] = None
 
 # Shows debug fields in preferences when True
@@ -42,6 +43,7 @@ directory, filename = os.path.split(os.path.realpath(__file__))
 
 filenames = ["\\soldbiodata.json", "\\notsoldbiodata.json",  "\\cmdrstates.json"]
 
+
 for file in filenames:
     if not os.path.exists(directory + file):
         f = open(directory + file, "w", encoding="utf8")
@@ -60,7 +62,8 @@ for file in filenames:
                 f.write(r"{}")
                 f.truncate()
 
-# load notyetsolddata
+
+# load notyetsolddata and cmdrstates
 
 with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
     not_yet_sold_data = json.load(f)
@@ -79,12 +82,15 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
     :param is_beta: Is the game currently in beta
     :param entry: full excerpt from status.json
     """
+    # TODO: Move most of this into AST.py class
+
     global plugin, firstdashboard
 
     if plugin.AST_in_Legacy is True:
         # We're in legacy we don't update anything through dashboard entries
         return
 
+    # flag determines if we have to rebuild the ui at the end.
     flag = plugin.handle_possible_cmdr_change(cmdr)
 
     if firstdashboard:
@@ -94,11 +100,18 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
     if "PlanetRadius" in entry.keys():
         currentbody = plugin.AST_current_body.get()
         # We found a PlanetRadius again, this means we are near a planet.
+
+        if currentbody != entry["BodyName"]:
+            # Body we are currently at isn't the one we currently assume
+            currentbody = entry["BodyName"]
+            plugin.AST_current_body.set(entry["BodyName"])
+            flag = True
+
         if not plugin.AST_near_planet:
             # We just came into range of a planet again.
             flag = True
         if currentbody not in ["", None, "None"]:
-            if plugin.debug:
+            if bool(plugin.AST_debug.get()):
                 logger.debug(plugin.AST_bios_on_planet)
             plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[
                 currentbody.replace(plugin.AST_current_system.get(), "")[1:]]
@@ -183,15 +196,18 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     :param entry: the current Journal entry
     :param state: More info about the commander, their ship, and their cargo
     """
+    # TODO: Move most of this into AST.py class
+
     global plugin
 
-    if (int(state["GameVersion"][0]) < 4) and (plugin.AST_in_Legacy is False):
+    if (int(state["GameVersion"][0]) < 4) or (plugin.AST_in_Legacy is False):
         # We're in Legacy, we'll not change the state of anything through journal entries.
         plugin.AST_in_Legacy = True
         return
     else:
         plugin.AST_in_Legacy = False
 
+    # flag determines if we have to rebuild the ui at the end.
     flag = plugin.handle_possible_cmdr_change(cmdr)
 
     if plugin.AST_current_system.get() != system:
