@@ -85,6 +85,9 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
 
     global plugin, firstdashboard
 
+    if plugin.AST_debug.get():
+        logger.debug("Called Dashboard ...")
+
     if plugin.AST_in_Legacy is True:
         # We're in legacy we don't update anything through dashboard entries
         return
@@ -108,12 +111,15 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
 
         if not plugin.AST_near_planet:
             # We just came into range of a planet again.
+            if plugin.AST_debug.get():
+                logger.debug(f"just realized we approach a planet, nearplanet: {plugin.AST_near_planet}")
             flag = True
         if currentbody not in ["", None, "None"]:
             if plugin.AST_debug.get():
                 logger.debug(plugin.AST_bios_on_planet)
             plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[
                 currentbody.replace(plugin.AST_current_system.get(), "")[1:]]
+
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
         plugin.AST_current_pos_vector[0] = entry["Latitude"]
@@ -169,6 +175,8 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
         if plugin.AST_near_planet:
             # Switch happened, we went too far from the planet to get any reference from it.
             flag = True
+            if plugin.AST_debug.get():
+                logger.debug(f"just realized we approach a planet, nearplanet: {plugin.AST_near_planet}")
         plugin.AST_num_bios_on_planet = 0
         plugin.AST_near_planet = False
         plugin.AST_current_radius = None
@@ -176,6 +184,9 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
         plugin.AST_current_pos_vector[1] = None
         plugin.AST_current_pos_vector[2] = None
         plugin.AST_current_pos.set("No reference point")
+
+    if plugin.AST_debug.get():
+        logger.debug(f"nearplanet is now: {plugin.AST_near_planet}, will rebuild UI: {flag}")
 
     if flag:
         ui.rebuild_ui(plugin, cmdr)
@@ -240,6 +251,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if entry["event"] == "SAASignalsFound":
         eventhandling.SAASignalsFound_event(entry, plugin)
+        flag = True
 
     if flag:
         # save most recent relevant state so in case of crash of the system
@@ -251,7 +263,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
 
 plugin = ArtemisScannerTracker(AST_VERSION, AST_REPO, PLUGIN_NAME,
-                               directory, filename, cmdrstates,
+                               directory, cmdrstates,
                                not_yet_sold_data, sold_exobiology)
 
 

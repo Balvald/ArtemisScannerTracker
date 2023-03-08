@@ -73,6 +73,9 @@ def clear_ui(frame) -> None:
 def rebuild_ui(plugin, cmdr: str) -> None:
     """Rebuild the UI in case of preferences change."""
 
+    if plugin.AST_debug.get():
+        logger.debug("Rebuilding UI ...")
+
     clear_ui(plugin.frame)
 
     # recreate UI
@@ -151,6 +154,9 @@ def rebuild_ui(plugin, cmdr: str) -> None:
         colourentry(plugin.frame, plugin.AST_current_pos, current_row, 1, colour, tk.W)
         current_row += 1
 
+    if plugin.AST_debug.get():
+        logger.debug("Building AST sold/scanned exobio ...")
+
     # Tracked sold bio scans as the last thing to add to the UI
     if plugin.AST_hide_sold_bio.get() != 1:
         build_sold_bio_ui(plugin, cmdr, current_row)
@@ -178,8 +184,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
     # Check if we even got a cmdr yet!
     if plugin.AST_debug.get():
         logger.info(f"Commander: {cmdr}. attempting to access")
-        logger.info(f"data: {soldbiodata[cmdr]}.")
-        logger.info(f"data: {notsoldbiodata}.")
+        # logger.info(f"data: {soldbiodata[cmdr]}.")
+        # logger.info(f"data: {notsoldbiodata}.")
 
     bodylistofspecies = {}
     try:
@@ -254,13 +260,18 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
     if bodylistofspecies == {}:
         count = "None"
 
-    if plugin.AST_num_bios_on_planet != 0 and plugin.AST_near_planet:
+    if plugin.AST_debug.get():
+        logger.debug(f"bios on planet: {plugin.AST_num_bios_on_planet}, and nearplanet: {plugin.AST_near_planet}")
+
+    if plugin.AST_num_bios_on_planet != 0 and (plugin.AST_near_planet is True):
         # whole thing gets coloured green.
         # Easier and a bigger indicator that we scanned everythong on the planet.
         colour = "green"
         if count_from_planet < plugin.AST_num_bios_on_planet:
             colour = None
         test = (len(str(count))*"   ") + "   On this Body: " + f"{count_from_planet}/{plugin.AST_num_bios_on_planet}"
+        if plugin.AST_debug.get():
+            logger.debug("Writing Label")
         colourlabel(plugin.frame, test, current_row, 1, colour, tk.E)
 
     # calling this number after the label for "On this Body: x/y" so it hopefully is just drawn over
