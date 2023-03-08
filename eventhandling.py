@@ -410,7 +410,7 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
 
 def SAASignalsFound_event(entry, plugin) -> None:
     for i in range(len(entry["Signals"])):
-        if bool(plugin.AST_debug.get()):
+        if plugin.AST_debug.get():
             logger.debug(f"{entry['Signals'][i]['Type']}")
         if entry["Signals"][i]["Type"] != "$SAA_SignalType_Biological;":
             continue
