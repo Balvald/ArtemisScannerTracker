@@ -3,10 +3,12 @@ Here resides the journalcrawler that can read through all the journal files.
 
 It retraces all exobiology scans and sell actions.
 """
+
 import json
 import os
 
 from organicinfo import generaltolocalised, getvistagenomicprices
+
 
 # This goes through a folder of journals that it'll parse
 # and check for analysed bio signals and the selling of it.
@@ -19,14 +21,14 @@ from organicinfo import generaltolocalised, getvistagenomicprices
 # Losing said exobiology data.
 # In this case the lost data is assumed as sold by this script.
 
-
 # For best results you can put your whole selection of journals
 # downloaded from Journal limpet into the journaldir
+
 
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
-def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa #CCR001
+def build_biodata_json(logger: any, journaldir: str) -> int:
     """Build a soldbiodata.json and a notsoldbiodata that includes all sold organic scans that the player sold.
 
     Also return the value of still unsold scans.

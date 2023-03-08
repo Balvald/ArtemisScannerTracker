@@ -2,17 +2,18 @@
 
 import logging
 import os
+import requests
 import tkinter as tk
 from typing import Optional
 
 import myNotebook as nb  # type: ignore
-import requests
 from config import appname, config  # type: ignore
 
+import saving
 import ui
 import organicinfo as orgi
-import saving
 from journalcrawler import build_biodata_json
+
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
@@ -39,7 +40,7 @@ class ArtemisScannerTracker:
 
         self.AST_in_Legacy: Optional[bool] = False
 
-        self.debug = debug
+        self.AST_debug: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_debug"))
 
         # Be sure to use names that wont collide in our config variables
         # Bools for show hide checkboxes
@@ -134,7 +135,12 @@ class ArtemisScannerTracker:
         :return: The name of the plugin, which will be used by EDMC for logging
                  and for the settings window
         """
-        self.AST_bios_on_planet = self.ask_canonn_nicely(self.AST_current_system.get())
+        try:
+            self.AST_bios_on_planet = self.ask_canonn_nicely(self.AST_current_system.get())
+        except Exception as e:
+            logger.warning(e)
+            logger.warning(e.__doc__)
+            logger.warning("Couldn't get info about the SAAsignals in current system")
         return self.PLUGIN_NAME
 
     def on_unload(self) -> None:
@@ -146,7 +152,7 @@ class ArtemisScannerTracker:
         """
         self.on_preferences_closed("", False)  # Save our prefs
 
-    def setup_preferences(self, parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]: # noqa #CCR001
+    def setup_preferences(self, parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
         """
         setup_preferences is called by plugin_prefs below.
 
@@ -213,7 +219,7 @@ class ArtemisScannerTracker:
                 ui.prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
             current_row += 1
 
-        if self.debug:
+        if (self.AST_debug.get()):
 
             debuglistleft = ["species", "System of last Scan",
                              "Body of last Scan", "Scan progress",
@@ -269,6 +275,13 @@ class ArtemisScannerTracker:
 
         current_row += 1
 
+        ui.prefs_label(frame, line, current_row, 0, tk.W)
+        ui.prefs_label(frame, line, current_row, 1, tk.W)
+
+        current_row += 1
+
+        ui.prefs_tickbutton(frame, "Debug Mode", self.AST_debug, current_row, 1, tk.W)
+
         return frame
 
     def on_preferences_closed(self, cmdr: str, is_beta: bool) -> None:
@@ -300,6 +313,8 @@ class ArtemisScannerTracker:
                            self.AST_current_scan_progress.get() + ") on: " +
                            self.AST_last_scan_body.get() + " (" + str(worth))
 
+        config.set("AST_debug", int(self.AST_debug.get()))
+
         config.set("AST_value", int(self.rawvalue))
 
         config.set("AST_hide_value", int(self.AST_hide_value.get()))
@@ -322,12 +337,12 @@ class ArtemisScannerTracker:
 
         config.set("AST_hide_scans_in_system", int(self.AST_hide_scans_in_system.get()))
 
-        if self.debug:
+        if bool(self.AST_debug.get()):
             logger.debug(f"Currently last Commander is: {cmdr}")
 
         config.set("AST_last_CMDR", str(cmdr))
 
-        if self.debug:
+        if bool(self.AST_debug.get()):
             logger.debug("ArtemisScannerTracker saved preferences")
 
         ui.rebuild_ui(self, cmdr)
@@ -409,12 +424,12 @@ class ArtemisScannerTracker:
 
     def ask_canonn_nicely(self, system: str):
         """Ask Canonn how many biological signals are on any planets"""
-        if self.debug:
+        if bool(self.AST_debug.get()):
             logger.debug(f"Asking Canonn for Info about: {system}")
         response = requests.get(
             f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}")
         data = response.json()
-        if self.debug:
+        if bool(self.AST_debug.get()):
             logger.debug(f"Retrieved data: {data}")
         dict_of_biological_counts = {}
         try:
