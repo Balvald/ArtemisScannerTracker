@@ -272,7 +272,7 @@ class ArtemisScannerTracker:
 
         current_row += 1
 
-        ui.prefs_tickbutton(frame, "Debug Mode", self.AST_debug, current_row, 1, tk.W)
+        ui.prefs_tickbutton(frame, "Debug Mode", self.AST_debug, current_row, 0, tk.W)
 
         return frame
 

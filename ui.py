@@ -286,9 +286,11 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
 
     button(plugin.frame, " ▲ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
 
-    for species in bodylistofspecies.keys():
+    sortedspecieslist = sorted(bodylistofspecies.keys())
+
+    for species in sortedspecieslist:
+        bodylist = [item[0] for item in bodylistofspecies[species]]
         current_row += 1
-        label(plugin.frame, species, current_row, 0, tk.W)
         bodies = ""
         for body in bodylistofspecies[species]:
             if body[1]:
@@ -298,4 +300,18 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
         while (bodies[-1] == "," or bodies[-1] == " "):
             bodies = bodies[:-1]
 
+        colour = None
+
+        if plugin.AST_debug.get():
+            logger.debug(f"current body {plugin.AST_current_body.get()}, the string we check" +
+                         f"{plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), '')[1:]}" +
+                         f"and body list of species {bodylistofspecies[species]}")
+            logger.debug(f"{bodylist}")
+
+        currentbody = plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), "")[1:]
+
+        if currentbody in bodylist:
+            colour = "green"
+
+        colourlabel(plugin.frame, species, current_row, 0, colour, tk.W)
         label(plugin.frame, bodies, current_row, 1, tk.W)
