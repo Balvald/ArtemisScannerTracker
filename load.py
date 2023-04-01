@@ -195,6 +195,8 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
         logger.debug(f"nearplanet is now: {plugin.AST_near_planet}, will rebuild UI: {flag}")
 
     if flag:
+        if not plugin.AST_near_planet:
+            plugin.AST_current_body.set("")
         ui.rebuild_ui(plugin, cmdr)
 
 
@@ -212,7 +214,6 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     :param entry: the current Journal entry
     :param state: More info about the commander, their ship, and their cargo
     """
-    # TODO: Move most of this into AST.py class
 
     global plugin
 
@@ -235,8 +236,8 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # Probably?
-    # Check how real death differs from frontline solutions ground combat zone death.
-    # Yes it does. Frontline solutions does not have a Resurrect event.
+
+    # Frontline solutions does not have a Resurrect event.
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
