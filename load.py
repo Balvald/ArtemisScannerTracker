@@ -244,8 +244,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     # Frontline solutions does not have a Resurrect event.
 
-    if plugin.AST_debug.get():
-        logger.debug(f"Current event is {entry['event']}")
+    logger.debug(f"Current event is {entry['event']}")
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
