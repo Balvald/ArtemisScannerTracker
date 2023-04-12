@@ -281,37 +281,36 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
     # skip
     if plugin.AST_hide_scans_in_system.get() != 0:
         button(plugin.frame, " ▼ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+    else:
+        button(plugin.frame, " ▲ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
 
-        return
+        sortedspecieslist = sorted(bodylistofspecies.keys())
 
-    button(plugin.frame, " ▲ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+        for species in sortedspecieslist:
+            bodylist = [item[0] for item in bodylistofspecies[species]]
+            current_row += 1
+            bodies = ""
+            for body in bodylistofspecies[species]:
+                if body[1]:
+                    bodies = bodies + body[0] + ", "
+                else:
+                    bodies = bodies + "*" + body[0] + "*, "
+            while (bodies[-1] == "," or bodies[-1] == " "):
+                bodies = bodies[:-1]
 
-    sortedspecieslist = sorted(bodylistofspecies.keys())
+            colour = None
 
-    for species in sortedspecieslist:
-        bodylist = [item[0] for item in bodylistofspecies[species]]
-        current_row += 1
-        bodies = ""
-        for body in bodylistofspecies[species]:
-            if body[1]:
-                bodies = bodies + body[0] + ", "
-            else:
-                bodies = bodies + "*" + body[0] + "*, "
-        while (bodies[-1] == "," or bodies[-1] == " "):
-            bodies = bodies[:-1]
+            if plugin.AST_debug.get():
+                logger.debug(f"current body {plugin.AST_current_body.get()}, the string we check" +
+                             f"{currentbody}" +
+                             f"and body list of species {bodylistofspecies[species]}")
+                logger.debug(f"{bodylist}")
 
-        colour = None
+            # already defined the same way?
+            # currentbody = plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), "")[1:]
 
-        if plugin.AST_debug.get():
-            logger.debug(f"current body {plugin.AST_current_body.get()}, the string we check" +
-                         f"{plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), '')[1:]}" +
-                         f"and body list of species {bodylistofspecies[species]}")
-            logger.debug(f"{bodylist}")
+            if currentbody in bodylist:
+                colour = "green"
 
-        currentbody = plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), "")[1:]
-
-        if currentbody in bodylist:
-            colour = "green"
-
-        colourlabel(plugin.frame, species, current_row, 0, colour, tk.W)
-        label(plugin.frame, bodies, current_row, 1, tk.W)
+            colourlabel(plugin.frame, species, current_row, 0, colour, tk.W)
+            label(plugin.frame, bodies, current_row, 1, tk.W)

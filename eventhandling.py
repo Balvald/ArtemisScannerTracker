@@ -27,6 +27,9 @@ def resurrection_event(plugin) -> None:
 def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> None:
     """Handle the ScanOrganic event."""
 
+    if plugin.AST_debug.get():
+        logger.debug("Handling ScanOrganic event.")
+
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
     # these lines wouldn"t be able to do anything but to
@@ -40,16 +43,22 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
     plantname, plantworth = plugin.update_last_scan_plant(entry)
 
     if entry["ScanType"] == "Log":
+        if plugin.AST_debug.get():
+            logger.debug("Found Log")
         plugin.AST_current_scan_progress.set("1/3")
         plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
         plugin.AST_scan_1_pos_vector[0] = plugin.AST_current_pos_vector[0]
         plugin.AST_scan_1_pos_vector[1] = plugin.AST_current_pos_vector[1]
         plugin.AST_scan_2_pos_vector = [None, None]
         plugin.AST_scan_2_pos_dist.set("")
-        plugin.on_preferences_closed(cmdr, is_beta)
+        if plugin.AST_debug.get():
+            logger.info("Set Everything for finishing the Log Scantype")
+            logger.info("Running on preferences closed")
+        # plugin.on_preferences_closed(cmdr, is_beta)
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
-
+            if plugin.AST_debug.get():
+                logger.debug("Analyse Event!")
             plugin.rawvalue += int(plantworth)
 
             if plugin.AST_shorten_value.get():
@@ -87,6 +96,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
                     f.truncate()
                 currententrytowrite = {}
         else:
+            if plugin.AST_debug.get():
+                logger.debug("Found Sample event")
             notthesame = (not (old_AST_last_scan_system == plugin.AST_last_scan_system.get()
                           and old_AST_last_scan_body == plugin.AST_last_scan_body.get()
                           and old_AST_last_scan_plant == str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])))
@@ -135,7 +146,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
         plugin.AST_after_selling.set(1)
 
     # We now need to rebuild regardless how far we progressed
-    ui.rebuild_ui(plugin, cmdr)
+    plugin.on_preferences_closed(cmdr, is_beta)
+    # ui.rebuild_ui(plugin, cmdr)
 
 
 def system_body_change_event(cmdr: str, entry, plugin) -> None:
@@ -165,6 +177,9 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:
     # being "None" we update the last scan location
     # When the CMDR gets another journal entry that tells us
     # the players location.
+
+    # Check if it is obsolete if we use the dashboard entry for current body.
+    # So that at any time we end up with the most current body.
 
     if (((plugin.AST_last_scan_system.get() == "")
          or (plugin.AST_last_scan_body.get() == "")
