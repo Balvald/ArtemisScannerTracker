@@ -201,7 +201,8 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
     if flag:
         if not plugin.AST_near_planet:
             plugin.AST_current_body.set("")
-        ui.rebuild_ui(plugin, cmdr)
+        plugin.on_preferences_closed(cmdr, is_beta)
+        # ui.rebuild_ui(plugin, cmdr)
 
 
 def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state) -> None:
@@ -242,6 +243,9 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     # Probably?
 
     # Frontline solutions does not have a Resurrect event.
+
+    if plugin.AST_debug.get():
+        logger.debug(f"Current event is {entry['event']}")
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
