@@ -98,11 +98,15 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
     if firstdashboard:
         firstdashboard = False
         plugin.on_preferences_closed(cmdr, is_beta)
+        if plugin.AST_debug.get():
+            logger.debug("Prepared for First Dashboard")
 
     if "PlanetRadius" in entry.keys():
         currentbody = plugin.AST_current_body.get()
+        # flag = True
         # We found a PlanetRadius again, this means we are near a planet.
-
+        if plugin.AST_debug.get():
+            logger.debug("On planet")
         if currentbody != entry["BodyName"]:
             # Body we are currently at isn't the one we currently assume
             currentbody = entry["BodyName"]
@@ -246,6 +250,8 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     if entry["event"] == "ScanOrganic":
         flag = True
+        if plugin.AST_debug.get():
+            logger.debug("Calling eventhandler")
         eventhandling.bioscan_event(cmdr, is_beta, entry, plugin, currententrytowrite)
 
     if entry["event"] in ["Location", "Embark", "Disembark", "Touchdown", "Liftoff", "FSDJump"]:
