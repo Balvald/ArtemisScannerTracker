@@ -222,6 +222,9 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     global plugin
 
+    logger.debug(entry)
+    logger.debug(f"Current event is {entry['event']}")
+
     if (int(state["GameVersion"][0]) < 4) or (plugin.AST_in_Legacy is False):
         # We're in Legacy, we'll not change the state of anything through journal entries.
         plugin.AST_in_Legacy = True
@@ -243,8 +246,6 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     # Probably?
 
     # Frontline solutions does not have a Resurrect event.
-
-    logger.debug(f"Current event is {entry['event']}")
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death
