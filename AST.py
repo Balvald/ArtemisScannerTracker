@@ -211,7 +211,7 @@ class ArtemisScannerTracker:
                 ui.prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
             current_row += 1
 
-        if self.AST_debug.get():
+        """        if self.AST_debug.get():
 
             debuglistleft = ["species", "System of last Scan",
                              "Body of last Scan", "Scan progress",
@@ -225,7 +225,7 @@ class ArtemisScannerTracker:
                     ui.prefs_label(frame, debuglistleft[i], current_row, 0, tk.W)
                 if i < len(debuglistright):
                     ui.prefs_entry(frame, debuglistright[i], current_row, 1, tk.W)
-                current_row += 1
+                current_row += 1"""
 
         ui.prefs_label(frame, line, current_row, 0, tk.W)
         ui.prefs_label(frame, line, current_row, 1, tk.W)

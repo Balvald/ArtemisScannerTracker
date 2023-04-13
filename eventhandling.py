@@ -27,8 +27,7 @@ def resurrection_event(plugin) -> None:
 def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> None:
     """Handle the ScanOrganic event."""
 
-    if plugin.AST_debug.get():
-        logger.debug("Handling ScanOrganic event.")
+    logger.debug("Handling ScanOrganic event.")
 
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
@@ -43,8 +42,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
     plantname, plantworth = plugin.update_last_scan_plant(entry)
 
     if entry["ScanType"] == "Log":
-        if plugin.AST_debug.get():
-            logger.debug("Found Log")
+        logger.debug("Found Log")
+
         plugin.AST_current_scan_progress.set("1/3")
         plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
         plugin.AST_scan_1_pos_vector[0] = plugin.AST_current_pos_vector[0]
@@ -57,8 +56,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
         # plugin.on_preferences_closed(cmdr, is_beta)
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
-            if plugin.AST_debug.get():
-                logger.debug("Analyse Event!")
+            logger.debug("Analyse Event!")
+
             plugin.rawvalue += int(plantworth)
 
             if plugin.AST_shorten_value.get():
@@ -96,8 +95,7 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
                     f.truncate()
                 currententrytowrite = {}
         else:
-            if plugin.AST_debug.get():
-                logger.debug("Found Sample event")
+            logger.debug("Found Sample event")
             notthesame = (not (old_AST_last_scan_system == plugin.AST_last_scan_system.get()
                           and old_AST_last_scan_body == plugin.AST_last_scan_body.get()
                           and old_AST_last_scan_plant == str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])))
