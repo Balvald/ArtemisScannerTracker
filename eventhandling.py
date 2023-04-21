@@ -157,7 +157,9 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:
             systemchange = True
         # Get current system name and body from events that need to happen.
         plugin.AST_current_system.set(entry["StarSystem"])
-        plugin.AST_current_body.set(entry["Body"])
+        # Change of body is handled in dashboard updates.
+        if systemchange:
+            plugin.AST_current_body.set("")
     except KeyError:
         # Could throw a KeyError in old Horizons versions
         pass
@@ -180,11 +182,9 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:
     # So that at any time we end up with the most current body.
 
     if (((plugin.AST_last_scan_system.get() == "")
-         or (plugin.AST_last_scan_body.get() == "")
-         or (plugin.AST_last_scan_system.get() == "None")
-         or (plugin.AST_last_scan_body.get() == "None"))):
+         or (plugin.AST_last_scan_system.get() == "None"))):
         plugin.AST_last_scan_system.set(entry["StarSystem"])
-        plugin.AST_last_scan_body.set(entry["Body"])
+        # plugin.AST_last_scan_body.set(entry["Body"])
 
     if plugin.CMDR_states[cmdr][1] == "" or plugin.CMDR_states[cmdr][2] == "":
         plugin.CMDR_states[cmdr][1] = plugin.AST_last_scan_system.get()

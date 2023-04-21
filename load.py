@@ -197,6 +197,10 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
     if plugin.AST_debug.get():
         logger.debug(f"nearplanet is now: {plugin.AST_near_planet}, will rebuild UI: {flag}")
 
+    if (((plugin.AST_last_scan_body.get() == "")
+         or (plugin.AST_last_scan_body.get() == "None"))):
+        plugin.AST_last_scan_body.set(currentbody)
+
     if flag:
         if not plugin.AST_near_planet:
             plugin.AST_current_body.set("")
