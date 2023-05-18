@@ -80,9 +80,13 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
             currententrytowrite["body"] = plugin.AST_current_body.get()
             if cmdr not in plugin.notyetsolddata.keys():
                 plugin.notyetsolddata[cmdr] = []
+            logger.debug("Checking if currententrytowrite is already in notyetsolddata")
+            logger.debug(f"currententrytowrite: {currententrytowrite}")
+            logger.debug(f"notyetsolddata: {plugin.notyetsolddata[cmdr]}")
             if currententrytowrite not in plugin.notyetsolddata[cmdr]:
                 # If there is no second Sample scantype event
                 # we have to save the data here.
+                logger.debug("Saving data to notsoldbiodata.json")
                 plugin.notyetsolddata[cmdr].append(currententrytowrite)
                 file = plugin.AST_DIR + "\\notsoldbiodata.json"
                 with open(file, "r+", encoding="utf8") as f:
