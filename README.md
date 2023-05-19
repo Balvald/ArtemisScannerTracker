@@ -52,10 +52,10 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release.
     - Will lead the user to the newest release.
 - #2 Full Status display. Includes Info about species, scan progress and the body it was scanned on.
-    - Full Status display also shows the value of the unfinished sample since v0.2.2 as: `(Worth: <amount>)`
+    - Full Status display also shows the value of the unfinished sample as: `(Worth: <amount>)`
     - Can be automatically hidden after selling all exobiology or fully finishing a scan.
 - #3 Species and Scan Progress display.
-    - Species display also shows the value of the unfinished sample since v0.2.2 as: `(Worth: <amount>)`
+    - Species display also shows the value of the unfinished sample as: `(Worth: <amount>)`
     - Can be automatically hidden after selling all exobiology or fully finishing a scan.
 - #4 System/Body of last Scan display.
     - Can be automatically hidden after selling all exobiology or fully finishing a scan, if any of these options are activated they will also hide if they are the same as the current system or body.
@@ -64,13 +64,15 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - #6 Current System and Body display.
 - #7 Clonal Colonial Range display. Will only show up when near a planet.
     - Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
-    - Distance to a Scan is red while being closer thant he Clonal Colonial Range of the exobiological biology
-    - Distance to a Scan turns green once you ventured further on the planet from the scan than its Clonal Colonial Range
-    - Once both Scans are green the Current position will light up green aswell.
+    - _New_ Distance to a Scan is red while being closer thant he Clonal Colonial Range of the exobiological biology
+    - _New_ Distance to a Scan turns green once you ventured further on the planet from the scan than its Clonal Colonial Range
+    - _New_ Once both Scans are green the Current position will light up green aswell.
 - #8 Finished Scan display. Shows how many Scans are in the current system.
-    - Shows how many Scans are finished on the planet you're located on and shows how many exobiology scans are left.
-    - Lists them by Planet names assigned to their respective species. Button expands and collapses the list of finished scans. Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
-    - Names of Species that you've already scanned on a planet will be green once you're located on said planet.
+    - Lists them by Planet names assigned to their respective species.
+    - The Button expands and collapses the list of finished scans.
+    - Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
+    - _New_ Shows how many Scans are finished on the planet you're located on and shows how many exobiology scans are left.
+    - _New_ Names of Species that you've already scanned on a planet will be green once you're located on said planet.
 
 ### Settings
 ![Preferences](https://i.imgur.com/muIH1Tv.png "preferences ui")
