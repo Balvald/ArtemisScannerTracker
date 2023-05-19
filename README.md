@@ -75,6 +75,8 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 ### Settings
 ![Preferences](https://i.imgur.com/muIH1Tv.png "preferences ui")
 
+- Plugin name, version number, Author
+    - here with "dev". If you encounter a "dev" here go back and download an actual release. In this case the main ui should also show you a link to the latest release.
 - All tickbox "Hide X" options will just hide the respective information regardless of what happens in the game.
     - Note that when you are not close to a planets surface the option "Hide clonal colonial distances" may seem to not do anything. If activated the Clonal Colonial Range display will just not pop up when approaching a planets' surface.
 - "Autom. hide values after selling all": Will automatically hide the full status, species, scan progress, system/body of last scan after all unsold exobiology was sold. The mentioned information will show up upon the next exobiology scan unless they are manually hidden with a option further up in the settings.
@@ -85,6 +87,8 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - "Scan game journals for exobiology": Will update the plugins' soldbiodata.json and notsoldbiodata.json by crawling through all journals in the folder specified in the EDMC Configuration.
 - "Scan local journal folder for exobiology": Will update the plugins' soldbiodata.json and notsoldbiodata.json by crawling through all journals placed in the journals folder 
     -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly and please wait a good second or two when scanning through a lot of journal files.
+- "Reset" Clears fields that are connected to scanning exobiological plants.
+- "Debug Mode" If ticked the plugin will write nearly everything it does into the EDMarketConnector-debug.log. Keep unticked unless you are debugging yourself or asked to log what the plugin does for a bugreport.
 
 ## Motivation
 
