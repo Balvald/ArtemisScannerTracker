@@ -27,6 +27,7 @@ AST_VERSION = "v0.2.7 dev"
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
 firstdashboard = True
+firstsystemevent = True
 
 not_yet_sold_data = {}
 sold_exobiology = {}
@@ -223,7 +224,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     :param state: More info about the commander, their ship, and their cargo
     """
 
-    global plugin
+    global plugin, firstsystemevent
 
     logger.debug(entry)
     logger.debug(f"Current event is {entry['event']}")
@@ -243,18 +244,21 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     logger.debug("Handled possible CMDR change")
 
-    if (plugin.AST_current_system.get() != system
-       or plugin.AST_current_system.get() == ""
-       or plugin.AST_current_system.get() == "None"):
-        logger.debug("Detected System check")
+    if ((plugin.AST_current_system.get() != system
+         or plugin.AST_current_system.get() == ""
+         or plugin.AST_current_system.get() == "None")
+        or (plugin.AST_current_system.get() == system
+            and firstsystemevent)):
+        logger.debug("Asking Canonn for system (first system related event run of plugin or system was unknown)")
+        firstsystemevent = False
         if system not in ["None", "", None]:
             plugin.AST_current_system.set(system)
             plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(system)
             flag = True
 
-    logger.debug("Got past checkl to ask Canonn")
+    logger.debug("Got past check to ask Canonn")
 
-    # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
+    # TODO: Check if upon death in 4.0 Horizons do we lose Exoiodata.
     # Probably?
 
     # Frontline solutions does not have a Resurrect event.
