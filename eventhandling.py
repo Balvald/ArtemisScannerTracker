@@ -87,13 +87,13 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
                 # If there is no second Sample scantype event
                 # we have to save the data here.
                 logger.debug("Saving data to notsoldbiodata.json")
-                plugin.notyetsolddata[cmdr].append(currententrytowrite)
+                plugin.notyetsolddata[cmdr].append(currententrytowrite.copy())
                 file = plugin.AST_DIR + "\\notsoldbiodata.json"
                 with open(file, "r+", encoding="utf8") as f:
                     notsolddata = json.load(f)
                     if cmdr not in notsolddata.keys():
                         notsolddata[cmdr] = []
-                    notsolddata[cmdr].append(currententrytowrite)
+                    notsolddata[cmdr].append(currententrytowrite.copy())
                     f.seek(0)
                     json.dump(notsolddata, f, indent=4)
                     f.truncate()
@@ -170,6 +170,7 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:
 
     if systemchange:
         try:
+            logger.debug("Asking Canonn about the SAAsignals in current system")
             plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(entry["StarSystem"])
         except Exception as e:
             logger.warning(e)
