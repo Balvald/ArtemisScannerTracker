@@ -47,7 +47,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - For the sake of making it impossible for the exobiology data tracking to accitentially assume the wrong system as already sold please do sell your whole batch of data.
 
 ### Main UI
-![AST UI](https://i.imgur.com/nemRFxj.png "main plugin ui pic annotated")
+![AST UI](https://i.imgur.com/nYztoKF.png "main plugin ui pic annotated")
 
 - #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release.
     - Will lead the user to the newest release.
@@ -64,11 +64,16 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - #6 Current System and Body display.
 - #7 Clonal Colonial Range display. Will only show up when near a planet.
     - Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
+    - Distance to a Scan is red while being closer thant he Clonal Colonial Range of the exobiological biology
+    - Distance to a Scan turns green once you ventured further on the planet from the scan than its Clonal Colonial Range
+    - Once both Scans are green the Current position will light up green aswell.
 - #8 Finished Scan display. Shows how many Scans are in the current system.
+    - Shows how many Scans are finished on the planet you're located on and shows how many exobiology scans are left.
     - Lists them by Planet names assigned to their respective species. Button expands and collapses the list of finished scans. Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
+    - Names of Species that you've already scanned on a planet will be green once you're located on said planet.
 
 ### Settings
-![Preferences](https://i.imgur.com/bdMBvDQ.png "preferences ui")
+![Preferences](https://i.imgur.com/muIH1Tv.png "preferences ui")
 
 - All tickbox "Hide X" options will just hide the respective information regardless of what happens in the game.
     - Note that when you are not close to a planets surface the option "Hide clonal colonial distances" may seem to not do anything. If activated the Clonal Colonial Range display will just not pop up when approaching a planets' surface.
