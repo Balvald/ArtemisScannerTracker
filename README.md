@@ -64,9 +64,9 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - #6 Current System and Body display.
 - #7 Clonal Colonial Range display. Will only show up when near a planet.
     - Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
-    - _New_ Distance to a Scan is red while being closer thant he Clonal Colonial Range of the exobiological biology
-    - _New_ Distance to a Scan turns green once you ventured further on the planet from the scan than its Clonal Colonial Range
-    - _New_ Once both Scans are green the Current position will light up green aswell.
+    - Distance to a Scan is red while being closer thant he Clonal Colonial Range of the exobiological biology
+    - Distance to a Scan turns green once you ventured further on the planet from the scan than its Clonal Colonial Range
+    - Once both Scans are green the Current position will light up green aswell.
 - #8 Finished Scan display. Shows how many Scans are in the current system.
     - Lists them by Planet names assigned to their respective species.
     - The Button expands and collapses the list of finished scans.
