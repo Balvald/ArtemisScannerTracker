@@ -226,10 +226,12 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
 
     global plugin, firstsystemevent
 
-    logger.debug(entry)
-    logger.debug(f"Current event is {entry['event']}")
-    logger.debug(f"Current state Gameversion {state['GameVersion']}")
-    logger.debug(f"State of AST_in_Legacy variable: {plugin.AST_in_Legacy}")
+    if plugin.AST_debug.get():
+        logger.debug(entry)
+        logger.debug(f"Current event is {entry['event']}")
+        logger.debug(f"Current state Gameversion {state['GameVersion']}")
+        logger.debug(f"State of AST_in_Legacy variable: {plugin.AST_in_Legacy}")
+
     if ((int(state["GameVersion"][0]) < 4) and (plugin.AST_in_Legacy is False)):
         # We're in Legacy, we'll not change the state of anything through journal entries.
         plugin.AST_in_Legacy = True
@@ -237,26 +239,35 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     else:
         plugin.AST_in_Legacy = False
 
-    logger.debug("Got past Version check")
+    if plugin.AST_debug.get():
+        logger.debug("Got past Version check")
 
     # flag determines if we have to rebuild the ui at the end.
     flag = plugin.handle_possible_cmdr_change(cmdr)
-
-    logger.debug("Handled possible CMDR change")
+    if plugin.AST_debug.get():
+        logger.debug("Handled possible CMDR change")
 
     if ((plugin.AST_current_system.get() != system
          or plugin.AST_current_system.get() == ""
          or plugin.AST_current_system.get() == "None")
         or (plugin.AST_current_system.get() == system
             and firstsystemevent)):
-        logger.debug("Asking Canonn for system (first system related event run of plugin or system was unknown)")
+        if plugin.AST_debug.get():
+            logger.debug("Asking Canonn for system (first system related event run of plugin or system was unknown)")
         firstsystemevent = False
         if system not in ["None", "", None]:
             plugin.AST_current_system.set(system)
-            plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(system)
+            try:
+                logger.debug("Asking Canonn about the SAAsignals in current system")
+                plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(system)
+            except Exception as e:
+                logger.warning(e)
+                logger.warning(e.__doc__)
+                logger.warning("Couldn't get info about the SAAsignals in current system")
             flag = True
 
-    logger.debug("Got past check to ask Canonn")
+    if plugin.AST_debug.get():
+        logger.debug("Got past check to ask Canonn")
 
     # TODO: Check if upon death in 4.0 Horizons do we lose Exoiodata.
     # Probably?
@@ -269,12 +280,13 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         plugin.notyetsolddata[cmdr] = eventhandling.resurrection_event(plugin)
 
     if entry["event"] == "ScanOrganic":
-        logger.debug("checked that entry is Scan Organic Event!")
+        logger.debug("Encountered Scan Organic Event")
         flag = True
         if plugin.AST_debug.get():
             logger.debug("Calling eventhandler")
         eventhandling.bioscan_event(cmdr, is_beta, entry, plugin, currententrytowrite)
-        logger.debug("Finished handling ScanOrganic Event")
+        if plugin.AST_debug.get():
+            logger.debug("Finished handling ScanOrganic Event")
 
     if entry["event"] in ["Location", "Embark", "Disembark", "Touchdown", "Liftoff", "FSDJump"]:
         flag = True
