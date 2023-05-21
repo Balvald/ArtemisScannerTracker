@@ -44,7 +44,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - You have to do mostly _nothing_ (yay) apart from having to play Elite Dangerous while using this plugin with EDMC.
 
-- For the sake of making it impossible for the exobiology data tracking to accitentially assume the wrong system as already sold please do sell your whole batch of data.
+- For the sake of making it impossible for the exobiology data tracking to accidentially assume the wrong system as already sold please do sell your whole batch of data.
 
 ### Main UI
 ![AST UI](https://i.imgur.com/nYztoKF.png "main plugin ui pic annotated")
