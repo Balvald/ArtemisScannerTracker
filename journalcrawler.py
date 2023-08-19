@@ -6,6 +6,7 @@ It retraces all exobiology scans and sell actions.
 
 import json
 import os
+import time
 
 from organicinfo import generaltolocalised, getvistagenomicprices
 
@@ -26,6 +27,52 @@ from organicinfo import generaltolocalised, getvistagenomicprices
 
 
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
+
+
+def get_date(filename: str, logger: any) -> str:
+    """Get the date from a filename.
+
+    The filename is expected to be a journal file.
+    """
+    logger.debug("in get_date function")
+
+    f_name = filename
+
+    logger.debug(f"{f_name}")
+
+    if "CAPIJournal" in f_name:
+        # This is a journal file from journal limpet
+        year = f_name[12:14]
+        month = f_name[14:16]
+        day = f_name[16:18]
+        hour = f_name[19:21]
+        minute = f_name[21:23]
+        second = f_name[23:25]
+        logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+
+    elif "-" in f_name:
+        # This is a 4.X journal file
+        year = f_name[8:12]
+        month = f_name[13:15]
+        day = f_name[16:18]
+        hour = f_name[19:21]
+        minute = f_name[21:23]
+        second = f_name[23:25]
+        logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+
+    else:
+        # This is a 3.X journal file
+        year = "20" + f_name[8:10]
+        month = f_name[10:12]
+        day = f_name[12:14]
+        hour = f_name[14:16]
+        minute = f_name[16:18]
+        second = f_name[18:20]
+        logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+
+    logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+
+    return f"{year}-{month}-{day} {hour}:{minute}:{second}"
 
 
 def build_biodata_json(logger: any, journaldir: str) -> int:
@@ -65,12 +112,20 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
 
     edlogs = [f for f in os.listdir(journaldir) if f.endswith(".log")]
 
+    edlogs = [(get_date(f, logger), f) for f in edlogs]
+
+    edlogs = sorted(edlogs, key=lambda t: time.strptime(t[0], '%Y/%m/%d %H:%M:%S'))
+
     # Order from os.listdir might depend on filesystem.
 
-    edlogs.sort()
+    # We have to change this so it sorts the files by date properly
+    # version 3.8 files are only relevant if they are from 2021-05-18 till 2022-11-30
+    logger.debug(directory)
+
+    return 0
 
     for filename in edlogs:
-        f = os.path.join(journaldir, filename)
+        f = os.path.join(journaldir, filename[1])
         logger.debug("Current file: " + f)
         # checking if it is a file
         if os.path.isfile(f):
