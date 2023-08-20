@@ -22,7 +22,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.7"
+AST_VERSION = "v0.2.8 dev"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
