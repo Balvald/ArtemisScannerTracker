@@ -43,6 +43,7 @@ def get_date(f_name: str, logger: any) -> str:
         minute = f_name[20:22]
         second = f_name[22:24]
         # logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+        version = "Journal Limpet"
 
     elif "-" in f_name:
         # This is a 4.X journal file
@@ -53,6 +54,7 @@ def get_date(f_name: str, logger: any) -> str:
         minute = f_name[21:23]
         second = f_name[23:25]
         # logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+        version = "4.X"
 
     else:
         # This is a 3.X journal file
@@ -63,8 +65,9 @@ def get_date(f_name: str, logger: any) -> str:
         minute = f_name[16:18]
         second = f_name[18:20]
         # logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+        version = "3.X"
 
-    return f"{year}-{month}-{day} {hour}:{minute}:{second}"
+    return [f"{year}-{month}-{day}T{hour}:{minute}:{second}Z", version]
 
 
 def build_biodata_json(logger: any, journaldir: str) -> int:
@@ -109,17 +112,22 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
         if f.endswith(".log"):
             edlogs.append([get_date(f, logger), f])
 
-    # logger.debug(edlogs)
+    logger.debug(edlogs)
 
     # Sorting by date
-    edlogs.sort(key=lambda x: x[0])
+    edlogs.sort(key=lambda x: x[0][0])
 
-    # logger.debug(edlogs)
+    logger.debug(edlogs)
 
     # version 3.8 files are only relevant if they are from 2021-05-18 till 2022-11-30
     logger.debug(directory)
 
     for filename in edlogs:
+        if filename[0][1] == "3.X":
+            if filename[0][0] < "2021-05-17T23:59:59Z" or filename[0][0] > "2022-11-31T00:00:00Z":
+                logger.debug(f"Skipping 3.X file; date: {filename[0][0]} name {filename[1]}")
+                continue
+
         f = os.path.join(journaldir, filename[1])
         logger.debug("Current file: " + f)
         # checking if it is a file
@@ -127,13 +135,23 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
             file = open(f, "r", encoding="utf8")
             lines = file.readlines()
             for line in lines:
+
+                read_old_journal_limpet_event = False
                 entry = json.loads(line)
 
                 if entry["event"] in ["LoadGame", "Commander"]:
-                    # logger.debug("CMDR change event!")
                     if entry["event"] == "Commander":
                         cmdr = entry["Name"]
                     else:
+                        if filename[0][1] == "Journal Limpet":
+                            if "gameversion" not in entry.keys():
+                                read_old_journal_limpet_event = True
+                            else:
+                                if int(entry["gameversion"][0]) < 4:
+                                    read_old_journal_limpet_event = True
+                                else:
+                                    read_old_journal_limpet_event = False
+
                         cmdr = entry["Commander"]
 
                     if cmdr != "" and cmdr is not None and cmdr not in totalcmdrlist:
@@ -145,6 +163,9 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
 
                     if cmdr != "" and cmdr not in possibly_sold_data.keys():
                         possibly_sold_data[cmdr] = []
+
+                if read_old_journal_limpet_event:
+                    continue
 
                 if entry["event"] in ["Location", "Embark",
                                       "Disembark", "Touchdown",
