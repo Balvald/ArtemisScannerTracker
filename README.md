@@ -22,7 +22,7 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 
 - Bugfix for the Journal Crawling: Anyone that has died in Horizons and used the journal crawling buttons before and really values the consistency of his sold and unsold data should redo the journal crawling to retrieve plants that the plugin may have dismissed in the past.
 
-_That one death in 2021, that one really came to haunt you there_
+_That one death in Horizons from 2021 really came to haunt you here_
 
 ## Features
 
