@@ -18,6 +18,12 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 > best for biology ever.  13/10.  
 >     — CMDR SlippyCheeze
 
+## New in v0.2.8
+
+- Bugfix for the Journal Crawling: Anyone that has died in Horizons and used the journal crawling buttons before and really values the consistency of his sold and unsold data should redo the journal crawling to retrieve plants that the plugin may have dismissed in the past.
+
+_That one death in 2021, that one really came to haunt you there_
+
 ## Features
 
 - The plugin keeps track of the Exobiology Scanner through a Cmdr's journal entries.
