@@ -6,7 +6,6 @@ It retraces all exobiology scans and sell actions.
 
 import json
 import os
-import time
 
 from organicinfo import generaltolocalised, getvistagenomicprices
 
@@ -29,26 +28,21 @@ from organicinfo import generaltolocalised, getvistagenomicprices
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
-def get_date(filename: str, logger: any) -> str:
-    """Get the date from a filename.
+def get_date(f_name: str, logger: any) -> str:
+    """Get the date from a filename in form of a stanardized string.
 
-    The filename is expected to be a journal file.
+    Format is: YYYY-MM-DD HH:MM:SS
     """
-    logger.debug("in get_date function")
-
-    f_name = filename
-
-    logger.debug(f"{f_name}")
 
     if "CAPIJournal" in f_name:
         # This is a journal file from journal limpet
-        year = f_name[12:14]
+        year = "20" + f_name[12:14]
         month = f_name[14:16]
         day = f_name[16:18]
-        hour = f_name[19:21]
-        minute = f_name[21:23]
-        second = f_name[23:25]
-        logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+        hour = f_name[18:20]
+        minute = f_name[20:22]
+        second = f_name[22:24]
+        # logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
 
     elif "-" in f_name:
         # This is a 4.X journal file
@@ -58,7 +52,7 @@ def get_date(filename: str, logger: any) -> str:
         hour = f_name[19:21]
         minute = f_name[21:23]
         second = f_name[23:25]
-        logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+        # logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
 
     else:
         # This is a 3.X journal file
@@ -68,9 +62,7 @@ def get_date(filename: str, logger: any) -> str:
         hour = f_name[14:16]
         minute = f_name[16:18]
         second = f_name[18:20]
-        logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
-
-    logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
+        # logger.debug(f"{f_name}: {year}-{month}-{day} {hour}:{minute}:{second}")
 
     return f"{year}-{month}-{day} {hour}:{minute}:{second}"
 
@@ -110,19 +102,22 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
         # logger.debug(len(sold_exobiology))
         pass
 
-    edlogs = [f for f in os.listdir(journaldir) if f.endswith(".log")]
-
-    edlogs = [(get_date(f, logger), f) for f in edlogs]
-
-    edlogs = sorted(edlogs, key=lambda t: time.strptime(t[0], '%Y/%m/%d %H:%M:%S'))
+    edlogs = []
 
     # Order from os.listdir might depend on filesystem.
+    for f in os.listdir(journaldir):
+        if f.endswith(".log"):
+            edlogs.append([get_date(f, logger), f])
 
-    # We have to change this so it sorts the files by date properly
+    # logger.debug(edlogs)
+
+    # Sorting by date
+    edlogs.sort(key=lambda x: x[0])
+
+    # logger.debug(edlogs)
+
     # version 3.8 files are only relevant if they are from 2021-05-18 till 2022-11-30
     logger.debug(directory)
-
-    return 0
 
     for filename in edlogs:
         f = os.path.join(journaldir, filename[1])
@@ -164,9 +159,10 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
                                      + "for updating the current system and body.")
                         logger.debug(entry)
                 if entry["event"] == "ScanOrganic":
-                    logger.debug("Scan organic Event!")
+                    # logger.debug("Scan organic Event!")
                     if entry["ScanType"] in ["Sample", "Analyse"]:
                         if entry["ScanType"] == "Analyse":
+                            logger.debug("Scan Organic Event Type: Analyse")
                             currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
                             currententrytowrite["system"] = currentsystem
                             currententrytowrite["body"] = currentbody
