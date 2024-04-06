@@ -89,7 +89,7 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
                 # we have to save the data here.
                 logger.debug("Saving data to notsoldbiodata.json")
                 plugin.notyetsolddata[cmdr].append(currententrytowrite.copy())
-                file = plugin.AST_DIR + "\\notsoldbiodata.json"
+                file = plugin.AST_DIR + "/notsoldbiodata.json"
                 with open(file, "r+", encoding="utf8") as f:
                     notsolddata = json.load(f)
                     if cmdr not in notsolddata.keys():
@@ -326,7 +326,7 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
                     continue
             i += 1
 
-        f = open(plugin.AST_DIR + "\\notsoldbiodata.json", "r+", encoding="utf8")
+        f = open(plugin.AST_DIR + "/notsoldbiodata.json", "r+", encoding="utf8")
         scanneddata = json.load(f)
         scanneddata[cmdr] = []
         f.seek(0)
@@ -335,7 +335,7 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
         f.close()
 
         if plugin.notyetsolddata[cmdr] != []:
-            file = plugin.AST_DIR + "\\notsoldbiodata.json"
+            file = plugin.AST_DIR + "/notsoldbiodata.json"
             with open(file, "r+", encoding="utf8") as f:
                 notsolddata = json.load(f)
                 for data in plugin.notyetsolddata[cmdr]:
@@ -368,7 +368,7 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
         logger.info('Set Unsold Scan Value to 0 Cr')
         plugin.AST_value.set("0 Cr.")
         plugin.rawvalue = 0
-        f = open(plugin.AST_DIR + "\\notsoldbiodata.json", "r+", encoding="utf8")
+        f = open(plugin.AST_DIR + "/notsoldbiodata.json", "r+", encoding="utf8")
         scanneddata = json.load(f)
         scanneddata[cmdr] = []
         f.seek(0)
@@ -397,7 +397,7 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
         plugin.AST_value.set("0 Cr.")
         plugin.rawvalue = 0
     # Now write the data into the local file
-    file = plugin.AST_DIR + "\\soldbiodata.json"
+    file = plugin.AST_DIR + "/soldbiodata.json"
     with open(file, "r+", encoding="utf8") as f:
         solddata = json.load(f)
 

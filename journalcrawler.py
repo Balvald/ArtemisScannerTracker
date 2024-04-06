@@ -94,12 +94,12 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
     sold_exobiology = {}
     possibly_sold_data = {}
 
-    if not os.path.exists(directory + "\\soldbiodata.json"):
-        f = open(directory + "\\soldbiodata.json", "w", encoding="utf8")
+    if not os.path.exists(directory + "/soldbiodata.json"):
+        f = open(directory + "/soldbiodata.json", "w", encoding="utf8")
         f.write(r"{}")
         f.close()
 
-    with open(directory + "\\soldbiodata.json", "r", encoding="utf8") as f:
+    with open(directory + "/soldbiodata.json", "r", encoding="utf8") as f:
         sold_exobiology = json.load(f)
         # logger.debug(sold_exobiology)
         # logger.debug(len(sold_exobiology))
@@ -347,7 +347,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
 
     solddata = None
 
-    with open(directory + "\\soldbiodata.json", "r+", encoding="utf8") as f:
+    with open(directory + "/soldbiodata.json", "r+", encoding="utf8") as f:
         solddata = json.load(f)
 
         for currentcmdr in totalcmdrlist:
@@ -374,7 +374,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
 
     notsolddata = None
 
-    with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
+    with open(directory + "/notsoldbiodata.json", "r+", encoding="utf8") as f:
         notsolddata = json.load(f)
         for currentcmdr in totalcmdrlist:
             if currentcmdr not in notsolddata.keys():
@@ -426,7 +426,7 @@ class loggingthing:
 if __name__ == "__main__":
     logger = loggingthing()
     directory, sourcename = os.path.split(os.path.realpath(__file__))
-    journaldir = directory + "\\journals\\"
+    journaldir = directory + "/journals/"
     build_biodata_json(logger, journaldir)
     journaldir = "<Path>"
     build_biodata_json(logger, journaldir)
