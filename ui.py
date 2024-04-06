@@ -168,11 +168,11 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
     soldbiodata = {}
     notsoldbiodata = {}
 
-    file = plugin.AST_DIR + "\\soldbiodata.json"
+    file = plugin.AST_DIR + "/soldbiodata.json"
     with open(file, "r+", encoding="utf8") as f:
         soldbiodata = json.load(f)
 
-    file = plugin.AST_DIR + "\\notsoldbiodata.json"
+    file = plugin.AST_DIR + "/notsoldbiodata.json"
     with open(file, "r+", encoding="utf8") as f:
         notsoldbiodata = json.load(f)
 

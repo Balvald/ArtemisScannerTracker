@@ -40,7 +40,7 @@ plugin = None
 # tracking of all the biological things that the CMDR scans.
 directory, filename = os.path.split(os.path.realpath(__file__))
 
-filenames = ["\\soldbiodata.json", "\\notsoldbiodata.json",  "\\cmdrstates.json"]
+filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
 
 
 for file in filenames:
@@ -48,7 +48,7 @@ for file in filenames:
         f = open(directory + file, "w", encoding="utf8")
         f.write(r"{}")
         f.close()
-    elif file == "\\soldbiodata.json" or file == "\\notsoldbiodata.json":
+    elif file == "/soldbiodata.json" or file == "/notsoldbiodata.json":
         # (not)soldbiodata file already exists
         with open(directory + file, "r+", encoding="utf8") as f:
             test = json.load(f)
@@ -64,10 +64,10 @@ for file in filenames:
 
 # load notyetsolddata and cmdrstates
 
-with open(directory + "\\notsoldbiodata.json", "r+", encoding="utf8") as f:
+with open(directory + "/notsoldbiodata.json", "r+", encoding="utf8") as f:
     not_yet_sold_data = json.load(f)
 
-with open(directory + "\\cmdrstates.json", "r+", encoding="utf8") as f:
+with open(directory + "/cmdrstates.json", "r+", encoding="utf8") as f:
     cmdrstates = json.load(f)
 
 

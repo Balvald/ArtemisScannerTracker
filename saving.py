@@ -16,7 +16,7 @@ def save_cmdr(cmdr, plugin) -> None:
     for i in range(len(plugin.CMDR_states[cmdr])):
         plugin.CMDR_states[cmdr][i] = valuelist[i]
 
-    file = plugin.AST_DIR + "\\cmdrstates.json"
+    file = plugin.AST_DIR + "/cmdrstates.json"
 
     open(file, "r+", encoding="utf8").close()
     with open(file, "r+", encoding="utf8") as f:
@@ -28,7 +28,7 @@ def save_cmdr(cmdr, plugin) -> None:
 def load_cmdr(cmdr, plugin) -> None:
     """Load information about a cmdr from cmdrstates.json."""
 
-    file = plugin.AST_DIR + "\\cmdrstates.json"
+    file = plugin.AST_DIR + "/cmdrstates.json"
 
     with open(file, "r+", encoding="utf8") as f:
         plugin.CMDR_states = json.load(f)
