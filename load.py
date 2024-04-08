@@ -1,4 +1,4 @@
-"""Artemis Scanner Tracker v0.2.8 by Balvald."""
+"""Artemis Scanner Tracker v0.2.9 by Balvald."""
 
 import json
 import logging
@@ -22,7 +22,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.8"
+AST_VERSION = "v0.2.9"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -52,7 +52,7 @@ for file in filenames:
         # (not)soldbiodata file already exists
         with open(directory + file, "r+", encoding="utf8") as f:
             test = json.load(f)
-            if type([]) == type(test):
+            if type([]) == type(test):  # noqa E721
                 # we have an old version of the (not)soldbiodata.json
                 # clear it, have the user do the journal crawling again.
                 logger.warning(f"Found old {file} format")
@@ -269,10 +269,11 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     if plugin.AST_debug.get():
         logger.debug("Got past check to ask Canonn")
 
-    # TODO: Check if upon death in 4.0 Horizons do we lose Exoiodata.
+    # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # Probably?
 
-    # Frontline solutions does not have a Resurrect event.
+    # Dying while in Frontline solutions CZ does not have a Resurrect event.
+    # Also doesn't lose the Exobiology data.
 
     if entry["event"] == "Resurrect":
         # Reset - player was unable to sell before death

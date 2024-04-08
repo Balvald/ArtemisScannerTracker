@@ -1,4 +1,4 @@
-# ArtemisScannerTracker v0.2.8
+# ArtemisScannerTracker v0.2.9
  An [EDMC](https://github.com/EDCD/EDMarketConnector) plugin that keeps track of the exobiology scanner of a CMDRs Artemis suit in ED:Odyssey
 
 
@@ -18,19 +18,17 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 > best for biology ever.  13/10.  
 >     — CMDR SlippyCheeze
 
-## New in v0.2.8
+## New in v0.2.9
 
-- Bugfix for the Journal Crawling: Anyone that has died in Horizons and used the journal crawling buttons before and really values the consistency of his sold and unsold data should redo the journal crawling to retrieve plants that the plugin may have dismissed in the past.
-
-_That one death in Horizons from 2021 really came to haunt you here_
+- Bugfix: Plugin now uses cross-platform compatible paths.
 
 ## Features
 
 - The plugin keeps track of the Exobiology Scanner through a Cmdr's journal entries.
 It tracks which species (Tussock, Fungoida, ...), and on which body the last exobiology scan occurred (Futes A 2, Moriosong A 1 a, ...) and also the state of the progress of the last exobiological scan. (1/3 found, 2/3 found...)
 
-- It keeps track of unsold profits. Vista genomics prices in this plugin are at the state of U14.01
-    - the credit amounts shown can be shortened (e.g. 1,000 KCr. ...) with another setting
+- It keeps track of unsold profits. Vista genomics prices in this plugin are at the state after the last price change from U14.01
+    - the credit amounts shown can be shortened (e.g. 1,000 KCr. ...) with another setting.
  
 - It also keeps track of your sold and scanned but unsold exobiology once it is installed and running, and show it when you're in the corresponding system.
 

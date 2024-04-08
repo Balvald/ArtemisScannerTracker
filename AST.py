@@ -442,7 +442,7 @@ class ArtemisScannerTracker:
         fullstring = f"{number:,}"
         prefixindex = fullstring.count(",")
         if prefixindex <= 0:
-            # no unit prefix just -> write a shorter number
+            # no unit prefix -> write the already short number
             return fullstring + " Cr."
         if prefixindex >= len(prefix):
             # Game probably won't be able to handle it if someone sold this at once.
