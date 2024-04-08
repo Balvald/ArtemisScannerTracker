@@ -105,4 +105,4 @@ The only thing that it can tell us even despite not telling us _what_ or on whic
 
 Anyway with this plugin those kind of problems are hopefully becoming a thing of the past for our all most favourite recreational activity of scanning space grass while binging Star Trek TNG I guess.
 
-Thats the current extent of this little project. Maybe it'll be extended with more exobiology related features.
+Thats the current extent of this little project.
