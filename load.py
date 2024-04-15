@@ -22,7 +22,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "v0.2.9"
+AST_VERSION = "v0.3.0 dev"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -206,7 +206,7 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
         if not plugin.AST_near_planet:
             plugin.AST_current_body.set("")
         plugin.on_preferences_closed(cmdr, is_beta)
-        # ui.rebuild_ui(plugin, cmdr)
+        # ui.rebuild_ui(plugin, cmdr) is already done in on_preferences_closed
 
 
 def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state) -> None:

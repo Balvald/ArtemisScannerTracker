@@ -434,7 +434,7 @@ class ArtemisScannerTracker:
             pass
         return dict_of_biological_counts
 
-    def shortcreditstring(self, number):
+    def shortcreditstring(self, number) -> str:
         """Create string given given number of credits with SI symbol prefix and money unit e.g. KCr. MCr. GCr. TCr."""
         if number is None:
             return "N/A"
@@ -456,7 +456,7 @@ class ArtemisScannerTracker:
             unit = " " + prefix[prefixindex-1] + "Cr."
         return fullstring + unit
 
-    def update_last_scan_plant(self, entry):
+    def update_last_scan_plant(self, entry) -> tuple[str, int]:
         """."""
         plantname = str(self.AST_last_scan_plant.get().split(" (Worth: ")[0])
         if entry is not None:
@@ -472,7 +472,7 @@ class ArtemisScannerTracker:
         self.AST_last_scan_plant.set(plantname + " (Worth: " + worthstring + ")")
         return plantname, plantworth
 
-    def handle_possible_cmdr_change(self, cmdr: str):
+    def handle_possible_cmdr_change(self, cmdr: str) -> bool:
         if self.AST_current_CMDR != cmdr and self.AST_current_CMDR != "" and self.AST_current_CMDR is not None:
             # Check if new and old Commander are in the cmdrstates file.
             saving.save_cmdr(self.AST_current_CMDR, self)
@@ -490,3 +490,7 @@ class ArtemisScannerTracker:
             return True
 
         return False
+
+    def show_codex_window(self) -> None:
+        ui.show_codex_window(self, self.AST_current_CMDR)
+        ui.rebuild_ui(self, self.AST_current_CMDR)
