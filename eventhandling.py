@@ -61,7 +61,7 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
             plugin.rawvalue += int(plantworth)
 
             if plugin.AST_shorten_value.get():
-                plugin.AST_value.set(plugin.shortcreditstring(plugin.rawvalue))
+                plugin.AST_value.set(ui.shortcreditstring(plugin.rawvalue))
             else:
                 plugin.AST_value.set(f"{plugin.rawvalue:,} Cr.")
             # Found some cases where the analyse happened
@@ -384,7 +384,7 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
     plugin.rawvalue -= soldvalue
     # newvalue = int(plugin.AST_value.get().replace(",", "").split(" ")[0]) - soldvalue
     if plugin.AST_shorten_value.get():
-        plugin.AST_value.set(plugin.shortcreditstring(plugin.rawvalue))
+        plugin.AST_value.set(ui.shortcreditstring(plugin.rawvalue))
     else:
         plugin.AST_value.set(f"{plugin.rawvalue:,} Cr.")
 
