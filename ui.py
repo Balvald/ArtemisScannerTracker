@@ -63,6 +63,36 @@ def button(frame, text, command, row: int, col: int, sticky) -> None:
 # endregion
 
 
+def show_codex_window(plugin, cmdr: str):
+    """Show the codex window."""
+    logger.debug("Creating Codex window ...")
+
+    new_window = tk.Tk("Codex")
+
+    logger.debug("Showing Codex window ...")
+
+    # Create a frame for the window
+    frame = tk.Frame(new_window)
+    frame.pack(fill=tk.BOTH, expand=True)
+
+    # Create a text widget to display the codex
+    text = tk.Text(frame, wrap=tk.WORD, font=("Courier", 10))
+    text.pack(fill=tk.BOTH, expand=True)
+
+    # Load the codex data
+    data = {}
+    file = plugin.AST_DIR + "/soldbiodata.json"
+    with open(file, "r+", encoding="utf8") as f:
+        data = json.load(f)
+
+    # Display the codex
+    text.insert(tk.END, json.dumps(data, indent=4))
+
+    # doesn't do anything
+    theme.update(frame)
+    # need to check if I can get the colours of the theme somehow.
+
+
 def clear_ui(frame) -> None:
     """Remove all labels from this plugin."""
     # remove all labels from the frame
@@ -157,6 +187,9 @@ def rebuild_ui(plugin, cmdr: str) -> None:
     if plugin.AST_debug.get():
         logger.debug("Building AST sold/scanned exobio ...")
 
+    button(plugin.frame, " Open Codex ", plugin.show_codex_window, current_row, 2, tk.W)
+    current_row += 1
+
     # Tracked sold bio scans as the last thing to add to the UI
     if plugin.AST_hide_sold_bio.get() != 1:
         build_sold_bio_ui(plugin, cmdr, current_row)
@@ -183,7 +216,7 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
 
     # Check if we even got a cmdr yet!
     if plugin.AST_debug.get():
-        logger.info(f"Commander: {cmdr}. attempting to access")
+        logger.info(f"In build_sold_bio_ui: Commander: {cmdr}. attempting to access")
         # logger.info(f"data: {soldbiodata[cmdr]}.")
         # logger.info(f"data: {notsoldbiodata}.")
 
