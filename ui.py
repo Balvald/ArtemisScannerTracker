@@ -115,7 +115,7 @@ for cmdr in notsoldbiodata.keys():
         continue
     for item in notsoldbiodata[cmdr]:
         data[cmdr].append([item["system"], item["body"], item["species"],
-                           shortcreditstring(vistagenomicprices[item["species"]]), "No"])
+                           vistagenomicprices[item["species"]], "No"])
 
 logger.warning("Finished transcribing not sold data.")
 
@@ -126,12 +126,12 @@ for cmdr in soldbiodata.keys():
         for system in soldbiodata[cmdr][letter].keys():
             for item in soldbiodata[cmdr][letter][system]:
                 data[cmdr].append([system, item["body"], item["species"],
-                                   shortcreditstring(vistagenomicprices[item["species"]]), "Yes"])
+                                   vistagenomicprices[item["species"]], "Yes"])
 
 logger.warning("Finished transcribing sold data.")
 
 
-def treeview_sort_column(tree, col, reverse):
+def tree_sort_column(tree, col, reverse):
     table = [(tree.set(k, col), k) for k in tree.get_children("")]
     table.sort(reverse=reverse)
 
@@ -142,12 +142,32 @@ def treeview_sort_column(tree, col, reverse):
 
     # reverse sort next time
     tree.heading(col, text=col, command=lambda _col=col:
-                 treeview_sort_column(tree, _col, not reverse))
+                 tree_sort_column(tree, _col, not reverse))
+
+
+def tree_search(tree, search_entry):
+    logger.warning("Searching ...")
+    query = search_entry.get()
+    logger.warning(f"Query: {query}")
+    selections = []
+    children = tree.get_children()
+    logger.warning(f"Children: {children}")
+    for child in children:
+        logger.warning(f"Child: {child}")
+        logger.warning(f"Values: {tree.item(child)['values']}")
+        for value in tree.item(child)['values']:
+            if query.lower() in str(value).lower():
+                logger.warning(f"Found: {tree.item(child)['values']}")
+                selections.append(child)
+                break
+    logger.warning(f"Selections: {selections}")
+    logger.warning("Search complete")
+    tree.selection_set(selections)
 
 
 def show_codex_window(plugin, cmdr: str):
 
-    global data, vistagenomicprices
+    global data
 
     new_window = tk.Tk()
     new_window.title("Codex")
@@ -157,16 +177,21 @@ def show_codex_window(plugin, cmdr: str):
     tree = tk.ttk.Treeview(new_window, columns=columns, show="headings")
     for col in columns:
         tree.heading(col, text=col, command=lambda _col=col:
-                     treeview_sort_column(tree, _col, False))
+                     tree_sort_column(tree, _col, False))
 
     for item in data[cmdr]:
         tree.insert("", tk.END, values=item)
 
-    tree.grid(row=0, column=0, sticky="nsew")
+    tree.grid(row=0, column=3, sticky="nsew")
+
+    label(new_window, "Search:", 0, 0, tk.NW)
+    search_entry = tk.Entry(new_window, width=30)
+    search_entry.grid(row=0, column=1, padx=10, pady=10, sticky=tk.NE, rowspan=1)
+    button(new_window, "search", lambda _search_entry=search_entry: tree_search(tree, _search_entry), 0, 2, tk.NW)
 
     scrollbar = tk.Scrollbar(new_window, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=scrollbar.set)
-    scrollbar.grid(row=0, column=1, sticky="nsew")
+    scrollbar.grid(row=0, column=4, sticky="nsew")
 
     new_window.mainloop()
 
