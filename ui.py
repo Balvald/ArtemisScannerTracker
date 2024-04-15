@@ -5,16 +5,21 @@ import logging
 import os
 import tkinter as tk
 
+from organicinfo import getvistagenomicprices
+
 import myNotebook as nb  # type: ignore
 from config import appname  # type: ignore
 from theme import theme  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 
+directory, filename = os.path.split(os.path.realpath(__file__))
+
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
 
 # region ui shorthand definitions
+
 
 def prefs_label(frame, text, row: int, col: int, sticky) -> None:
     """Create label for the preferences of the plugin."""
@@ -63,34 +68,95 @@ def button(frame, text, command, row: int, col: int, sticky) -> None:
 # endregion
 
 
+def shortcreditstring(number) -> str:
+    """Create string given given number of credits with SI symbol prefix and money unit e.g. KCr. MCr. GCr. TCr."""
+    if number is None:
+        return "N/A"
+    prefix = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
+    fullstring = f"{number:,}"
+    prefixindex = fullstring.count(",")
+    if prefixindex <= 0:
+        # no unit prefix -> write the already short number
+        return fullstring + " Cr."
+    if prefixindex >= len(prefix):
+        # Game probably won't be able to handle it if someone sold this at once.
+        return "SELL ALREADY! WE RAN OUT OF SI PREFIXES (╯°□°）╯︵ ┻━┻"
+    unit = " " + prefix[prefixindex] + "Cr."
+    index = fullstring.find(",") + 1
+    fullstring = fullstring[:index].replace(",", ".")+fullstring[index:].replace(",", "")
+    fullstring = f"{round(float(fullstring), (4-index+1)):.6f}"[:5]
+    if fullstring[1] == ".":
+        fullstring = fullstring[0] + "," + fullstring[2:]
+        unit = " " + prefix[prefixindex-1] + "Cr."
+    return fullstring + unit
+
+
+data = {}
+soldbiodata_file = directory + "/soldbiodata.json"
+notsoldbiodata_file = directory + "/notsoldbiodata.json"
+
+vistagenomicprices = getvistagenomicprices()
+# region ui shorthand definitions
+
+with open(soldbiodata_file, "r+", encoding="utf8") as f:
+    soldbiodata = json.load(f)
+
+with open(notsoldbiodata_file, "r+", encoding="utf8") as f:
+    notsoldbiodata = json.load(f)
+
+# logger.warning(f"Sold Bio Data: {soldbiodata}")
+# logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
+
+logger.warning("transcribing into data ...")
+
+for cmdr in notsoldbiodata.keys():
+    data[cmdr] = []
+    if cmdr != cmdr:
+        continue
+    for item in notsoldbiodata[cmdr]:
+        data[cmdr].append([item["system"], item["body"], item["species"],
+                           shortcreditstring(vistagenomicprices[item["species"]]), "No"])
+
+logger.warning("Finished transcribing not sold data.")
+
+for cmdr in soldbiodata.keys():
+    data[cmdr] = []
+    for letter in soldbiodata[cmdr].keys():
+        logger.warning(f"Letter: {letter}")
+        for system in soldbiodata[cmdr][letter].keys():
+            for item in soldbiodata[cmdr][letter][system]:
+                data[cmdr].append([system, item["body"], item["species"],
+                                   shortcreditstring(vistagenomicprices[item["species"]]), "Yes"])
+
+logger.warning("Finished transcribing sold data.")
+
+
 def show_codex_window(plugin, cmdr: str):
-    """Show the codex window."""
-    logger.debug("Creating Codex window ...")
 
-    new_window = tk.Tk("Codex")
+    global data, vistagenomicprices
 
-    logger.debug("Showing Codex window ...")
+    new_window = tk.Tk()
+    new_window.title("Codex")
 
-    # Create a frame for the window
-    frame = tk.Frame(new_window)
-    frame.pack(fill=tk.BOTH, expand=True)
+    columns = ["System", "Body", "Species", "Value", "Sold"]
 
-    # Create a text widget to display the codex
-    text = tk.Text(frame, wrap=tk.WORD, font=("Courier", 10))
-    text.pack(fill=tk.BOTH, expand=True)
+    tree = tk.ttk.Treeview(new_window, columns=columns, show="headings")
+    tree.heading("System", text="System")
+    tree.heading("Body", text="Body")
+    tree.heading("Species", text="Species")
+    tree.heading("Value", text="Value")
+    tree.heading("Sold", text="Sold")
 
-    # Load the codex data
-    data = {}
-    file = plugin.AST_DIR + "/soldbiodata.json"
-    with open(file, "r+", encoding="utf8") as f:
-        data = json.load(f)
+    for item in data[cmdr]:
+        tree.insert("", tk.END, values=item)
 
-    # Display the codex
-    text.insert(tk.END, json.dumps(data, indent=4))
+    tree.grid(row=0, column=0, sticky="nsew")
 
-    # doesn't do anything
-    theme.update(frame)
-    # need to check if I can get the colours of the theme somehow.
+    scrollbar = tk.Scrollbar(new_window, orient="vertical", command=tree.yview)
+    tree.configure(yscrollcommand=scrollbar.set)
+    scrollbar.grid(row=0, column=1, sticky="nsew")
+
+    new_window.mainloop()
 
 
 def clear_ui(frame) -> None:
@@ -187,7 +253,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:
     if plugin.AST_debug.get():
         logger.debug("Building AST sold/scanned exobio ...")
 
-    button(plugin.frame, " Open Codex ", plugin.show_codex_window, current_row, 2, tk.W)
+    button(plugin.frame, " Open Codex ", plugin.show_codex_window, current_row, 0, tk.W)
     current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI

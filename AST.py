@@ -111,7 +111,7 @@ class ArtemisScannerTracker:
 
         self.updateavailable = False
 
-        response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest")
+        response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
 
         if response.ok:
             data = response.json()
@@ -296,7 +296,7 @@ class ArtemisScannerTracker:
         self.update_last_scan_plant(None)
 
         if self.AST_shorten_value.get():
-            self.AST_value.set(self.shortcreditstring(self.rawvalue))
+            self.AST_value.set(ui.shortcreditstring(self.rawvalue))
         else:
             self.AST_value.set(f"{self.rawvalue:,} Cr.")
 
@@ -419,7 +419,8 @@ class ArtemisScannerTracker:
         if self.AST_debug.get():
             logger.debug(f"Asking Canonn for Info about: {system}")
         response = requests.get(
-            f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}")
+            f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}",
+            timeout=20)
         data = response.json()
         if self.AST_debug.get():
             logger.debug(f"Retrieved data: {data}")
@@ -434,28 +435,6 @@ class ArtemisScannerTracker:
             pass
         return dict_of_biological_counts
 
-    def shortcreditstring(self, number) -> str:
-        """Create string given given number of credits with SI symbol prefix and money unit e.g. KCr. MCr. GCr. TCr."""
-        if number is None:
-            return "N/A"
-        prefix = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
-        fullstring = f"{number:,}"
-        prefixindex = fullstring.count(",")
-        if prefixindex <= 0:
-            # no unit prefix -> write the already short number
-            return fullstring + " Cr."
-        if prefixindex >= len(prefix):
-            # Game probably won't be able to handle it if someone sold this at once.
-            return "SELL ALREADY! WE RAN OUT OF SI PREFIXES (╯°□°）╯︵ ┻━┻"
-        unit = " " + prefix[prefixindex] + "Cr."
-        index = fullstring.find(",") + 1
-        fullstring = fullstring[:index].replace(",", ".")+fullstring[index:].replace(",", "")
-        fullstring = f"{round(float(fullstring), (4-index+1)):.6f}"[:5]
-        if fullstring[1] == ".":
-            fullstring = fullstring[0] + "," + fullstring[2:]
-            unit = " " + prefix[prefixindex-1] + "Cr."
-        return fullstring + unit
-
     def update_last_scan_plant(self, entry) -> tuple[str, int]:
         """."""
         plantname = str(self.AST_last_scan_plant.get().split(" (Worth: ")[0])
@@ -468,7 +447,7 @@ class ArtemisScannerTracker:
             plantworth = None
             worthstring = "N/A"
         if self.AST_shorten_value.get():
-            worthstring = self.shortcreditstring(plantworth)
+            worthstring = ui.shortcreditstring(plantworth)
         self.AST_last_scan_plant.set(plantname + " (Worth: " + worthstring + ")")
         return plantname, plantworth
 
