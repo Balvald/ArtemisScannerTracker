@@ -131,6 +131,20 @@ for cmdr in soldbiodata.keys():
 logger.warning("Finished transcribing sold data.")
 
 
+def treeview_sort_column(tree, col, reverse):
+    table = [(tree.set(k, col), k) for k in tree.get_children("")]
+    table.sort(reverse=reverse)
+
+    # rearrange items in sorted positions
+    for index, (val, k) in enumerate(table):
+        tree.move(k, "", index)
+        val = val
+
+    # reverse sort next time
+    tree.heading(col, text=col, command=lambda _col=col:
+                 treeview_sort_column(tree, _col, not reverse))
+
+
 def show_codex_window(plugin, cmdr: str):
 
     global data, vistagenomicprices
@@ -141,11 +155,9 @@ def show_codex_window(plugin, cmdr: str):
     columns = ["System", "Body", "Species", "Value", "Sold"]
 
     tree = tk.ttk.Treeview(new_window, columns=columns, show="headings")
-    tree.heading("System", text="System")
-    tree.heading("Body", text="Body")
-    tree.heading("Species", text="Species")
-    tree.heading("Value", text="Value")
-    tree.heading("Sold", text="Sold")
+    for col in columns:
+        tree.heading(col, text=col, command=lambda _col=col:
+                     treeview_sort_column(tree, _col, False))
 
     for item in data[cmdr]:
         tree.insert("", tk.END, values=item)
