@@ -3,6 +3,7 @@
 import logging
 import os
 import requests
+import threading
 import tkinter as tk
 from typing import Optional
 
@@ -110,6 +111,8 @@ class ArtemisScannerTracker:
         self.AST_value: Optional[tk.StringVar] = tk.StringVar(value=((f"{self.rawvalue:,} Cr.")))
 
         self.updateavailable = False
+
+        self.thread = None
 
         response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
 
@@ -242,9 +245,9 @@ class ArtemisScannerTracker:
         current_row += 1
 
         text = "Scan game journals for exobiology"
-        ui.prefs_button(frame, text, self.buildsoldbiodatajson, current_row, 0, tk.W)
+        ui.prefs_button(frame, text, self.buildsoldbiodatajsonworker, current_row, 0, tk.W)
         text = "Scan local journal folder for exobiology"
-        ui.prefs_button(frame, text, self.buildsoldbiodatajsonlocal, current_row, 1, tk.W)
+        ui.prefs_button(frame, text, self.buildsoldbiodatajsonlocalworker, current_row, 1, tk.W)
 
         current_row += 1
 
@@ -392,12 +395,26 @@ class ArtemisScannerTracker:
         self.AST_hide_scans_in_system.set(int(not (state)))
         ui.rebuild_ui(self, self.AST_current_CMDR)
 
+    def buildsoldbiodatajsonlocalworker(self) -> None:
+        self.thread = threading.Thread(target=self.buildsoldbiodatajsonlocal, name="buildsoldbiodatajsonlocal")
+        self.thread.start()
+        # self.thread.join()
+        # self.thread = None
+        pass
+
     def buildsoldbiodatajsonlocal(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 
         self.rawvalue = build_biodata_json(logger, os.path.join(directory, "journals"))[self.AST_current_CMDR]
+
+    def buildsoldbiodatajsonworker(self) -> None:
+        self.thread = threading.Thread(target=self.buildsoldbiodatajson, name="buildsoldbiodatajson")
+        self.thread.start()
+        # self.thread.join()
+        # self.thread = None
+        pass
 
     def buildsoldbiodatajson(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py."""
