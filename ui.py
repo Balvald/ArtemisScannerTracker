@@ -91,6 +91,29 @@ def shortcreditstring(number) -> str:
     return fullstring + unit
 
 
+directory, filename = os.path.split(os.path.realpath(__file__))
+
+filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
+
+
+for file in filenames:
+    if not os.path.exists(directory + file):
+        f = open(directory + file, "w", encoding="utf8")
+        f.write(r"{}")
+        f.close()
+    elif file == "/soldbiodata.json" or file == "/notsoldbiodata.json":
+        # (not)soldbiodata file already exists
+        with open(directory + file, "r+", encoding="utf8") as f:
+            test = json.load(f)
+            if type([]) == type(test):  # noqa E721
+                # we have an old version of the (not)soldbiodata.json
+                # clear it, have the user do the journal crawling again.
+                logger.warning(f"Found old {file} format")
+                logger.warning("Clearing file...")
+                f.seek(0)
+                f.write(r"{}")
+                f.truncate()
+
 data = {}
 soldbiodata_file = directory + "/soldbiodata.json"
 notsoldbiodata_file = directory + "/notsoldbiodata.json"
