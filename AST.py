@@ -113,6 +113,8 @@ class ArtemisScannerTracker:
         self.updateavailable = False
 
         self.thread = None
+        self.codexthread = None
+        self.searchthread = None
 
         response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
 
@@ -487,6 +489,12 @@ class ArtemisScannerTracker:
 
         return False
 
-    def show_codex_window(self) -> None:
+    def show_codex_window_worker(self) -> None:
+        self.codexthread = threading.Thread(target=self.show_codex_window_thread, name="show_codex_window")
+        self.codexthread.start()
+        # ui.show_codex_window(self, self.AST_current_CMDR)
+        # ui.rebuild_ui(self, self.AST_current_CMDR)
+
+    def show_codex_window_thread(self) -> None:
         ui.show_codex_window(self, self.AST_current_CMDR)
         ui.rebuild_ui(self, self.AST_current_CMDR)

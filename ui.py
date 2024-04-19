@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import threading
 import tkinter as tk
 
 from organicinfo import getvistagenomicprices
@@ -119,7 +120,6 @@ soldbiodata_file = directory + "/soldbiodata.json"
 notsoldbiodata_file = directory + "/notsoldbiodata.json"
 
 vistagenomicprices = getvistagenomicprices()
-# region ui shorthand definitions
 
 with open(soldbiodata_file, "r+", encoding="utf8") as f:
     soldbiodata = json.load(f)
@@ -154,7 +154,7 @@ for cmdr in soldbiodata.keys():
 logger.warning("Finished transcribing sold data.")
 
 
-def tree_sort_column(tree, col, reverse):
+def tree_sort_column(tree, col, reverse) -> None:
     table = [(tree.set(k, col), k) for k in tree.get_children("")]
     table.sort(reverse=reverse)
 
@@ -168,19 +168,19 @@ def tree_sort_column(tree, col, reverse):
                  tree_sort_column(tree, _col, not reverse))
 
 
-def tree_search(tree, search_entry):
+def tree_search(tree, search_entry) -> None:
     logger.warning("Searching ...")
     query = search_entry.get()
     logger.warning(f"Query: {query}")
     selections = []
     children = tree.get_children()
-    logger.warning(f"Children: {children}")
+    # logger.warning(f"Children: {children}")
     for child in children:
-        logger.warning(f"Child: {child}")
-        logger.warning(f"Values: {tree.item(child)['values']}")
+        # logger.warning(f"Child: {child}")
+        # logger.warning(f"Values: {tree.item(child)['values']}")
         for value in tree.item(child)['values']:
             if query.lower() in str(value).lower():
-                logger.warning(f"Found: {tree.item(child)['values']}")
+                # logger.warning(f"Found: {tree.item(child)['values']}")
                 selections.append(child)
                 break
     logger.warning(f"Selections: {selections}")
@@ -188,7 +188,12 @@ def tree_search(tree, search_entry):
     tree.selection_set(selections)
 
 
-def show_codex_window(plugin, cmdr: str):
+def tree_search_worker(plugin, tree, search_entry) -> None:
+    plugin.searchthread = threading.Thread(target=tree_search, args=(tree, search_entry))
+    plugin.searchthread.start()
+
+
+def show_codex_window(plugin, cmdr: str) -> None:
 
     global data
 
@@ -210,7 +215,9 @@ def show_codex_window(plugin, cmdr: str):
     label(new_window, "Search:", 0, 0, tk.NW)
     search_entry = tk.Entry(new_window, width=30)
     search_entry.grid(row=0, column=1, padx=10, pady=10, sticky=tk.NE, rowspan=1)
-    button(new_window, "search", lambda _search_entry=search_entry: tree_search(tree, _search_entry), 0, 2, tk.NW)
+    button(new_window, "search",
+           lambda _search_entry=search_entry: tree_search_worker(plugin, tree, _search_entry),
+           0, 2, tk.NW)
 
     scrollbar = tk.Scrollbar(new_window, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=scrollbar.set)
@@ -313,7 +320,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:
     if plugin.AST_debug.get():
         logger.debug("Building AST sold/scanned exobio ...")
 
-    button(plugin.frame, " Open Codex ", plugin.show_codex_window, current_row, 0, tk.W)
+    button(plugin.frame, " Open Codex ", plugin.show_codex_window_worker, current_row, 0, tk.W)
     current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI
