@@ -17,6 +17,81 @@ from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 directory, filename = os.path.split(os.path.realpath(__file__))
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
+directory, filename = os.path.split(os.path.realpath(__file__))
+
+filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
+
+
+for file in filenames:
+    if not os.path.exists(directory + file):
+        f = open(directory + file, "w", encoding="utf8")
+        f.write(r"{}")
+        f.close()
+    elif file == "/soldbiodata.json" or file == "/notsoldbiodata.json":
+        # (not)soldbiodata file already exists
+        with open(directory + file, "r+", encoding="utf8") as f:
+            test = json.load(f)
+            if type([]) == type(test):  # noqa E721
+                # we have an old version of the (not)soldbiodata.json
+                # clear it, have the user do the journal crawling again.
+                logger.warning(f"Found old {file} format")
+                logger.warning("Clearing file...")
+                f.seek(0)
+                f.write(r"{}")
+                f.truncate()
+
+data = {}
+data_initialised = False
+
+soldbiodata_file = directory + "/soldbiodata.json"
+notsoldbiodata_file = directory + "/notsoldbiodata.json"
+
+
+def init_data() -> None:
+    global data
+    global soldbiodata_file
+    global notsoldbiodata_file
+    global data_initialised
+
+    vistagenomicprices = getvistagenomicprices()
+
+    with open(soldbiodata_file, "r+", encoding="utf8") as f:
+        soldbiodata = json.load(f)
+
+    with open(notsoldbiodata_file, "r+", encoding="utf8") as f:
+        notsoldbiodata = json.load(f)
+
+    # logger.warning(f"Sold Bio Data: {soldbiodata}")
+    # logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
+
+    logger.warning("transcribing into data ...")
+
+    for cmdr in notsoldbiodata.keys():
+        data[cmdr] = []
+        if cmdr != cmdr:
+            continue
+        for item in notsoldbiodata[cmdr]:
+            data[cmdr].append([item["system"], item["body"], item["species"],
+                               vistagenomicprices[item["species"]], "No"])
+
+    logger.warning("Finished transcribing not sold data.")
+
+    for cmdr in soldbiodata.keys():
+        data[cmdr] = []
+        for letter in soldbiodata[cmdr].keys():
+            # logger.warning(f"Letter: {letter}")
+            for system in soldbiodata[cmdr][letter].keys():
+                for item in soldbiodata[cmdr][letter][system]:
+                    data[cmdr].append([system, item["body"], item["species"],
+                                       vistagenomicprices[item["species"]], "Yes"])
+
+    logger.warning("Finished transcribing sold data.")
+
+    data_initialised = True
+
+
+init_thread = threading.Thread(target=init_data)
+init_thread.start()
 
 
 # region ui shorthand definitions
@@ -92,68 +167,6 @@ def shortcreditstring(number) -> str:
     return fullstring + unit
 
 
-directory, filename = os.path.split(os.path.realpath(__file__))
-
-filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
-
-
-for file in filenames:
-    if not os.path.exists(directory + file):
-        f = open(directory + file, "w", encoding="utf8")
-        f.write(r"{}")
-        f.close()
-    elif file == "/soldbiodata.json" or file == "/notsoldbiodata.json":
-        # (not)soldbiodata file already exists
-        with open(directory + file, "r+", encoding="utf8") as f:
-            test = json.load(f)
-            if type([]) == type(test):  # noqa E721
-                # we have an old version of the (not)soldbiodata.json
-                # clear it, have the user do the journal crawling again.
-                logger.warning(f"Found old {file} format")
-                logger.warning("Clearing file...")
-                f.seek(0)
-                f.write(r"{}")
-                f.truncate()
-
-data = {}
-soldbiodata_file = directory + "/soldbiodata.json"
-notsoldbiodata_file = directory + "/notsoldbiodata.json"
-
-vistagenomicprices = getvistagenomicprices()
-
-with open(soldbiodata_file, "r+", encoding="utf8") as f:
-    soldbiodata = json.load(f)
-
-with open(notsoldbiodata_file, "r+", encoding="utf8") as f:
-    notsoldbiodata = json.load(f)
-
-# logger.warning(f"Sold Bio Data: {soldbiodata}")
-# logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
-
-logger.warning("transcribing into data ...")
-
-for cmdr in notsoldbiodata.keys():
-    data[cmdr] = []
-    if cmdr != cmdr:
-        continue
-    for item in notsoldbiodata[cmdr]:
-        data[cmdr].append([item["system"], item["body"], item["species"],
-                           vistagenomicprices[item["species"]], "No"])
-
-logger.warning("Finished transcribing not sold data.")
-
-for cmdr in soldbiodata.keys():
-    data[cmdr] = []
-    for letter in soldbiodata[cmdr].keys():
-        logger.warning(f"Letter: {letter}")
-        for system in soldbiodata[cmdr][letter].keys():
-            for item in soldbiodata[cmdr][letter][system]:
-                data[cmdr].append([system, item["body"], item["species"],
-                                   vistagenomicprices[item["species"]], "Yes"])
-
-logger.warning("Finished transcribing sold data.")
-
-
 def tree_sort_column(tree, col, reverse) -> None:
     table = [(tree.set(k, col), k) for k in tree.get_children("")]
     table.sort(reverse=reverse)
@@ -174,13 +187,13 @@ def tree_search(tree, search_entry) -> None:
     logger.warning(f"Query: {query}")
     selections = []
     children = tree.get_children()
-    # logger.warning(f"Children: {children}")
+    logger.warning(f"Children: {children}")
     for child in children:
-        # logger.warning(f"Child: {child}")
-        # logger.warning(f"Values: {tree.item(child)['values']}")
+        logger.warning(f"Child: {child}")
+        logger.warning(f"Values: {tree.item(child)['values']}")
         for value in tree.item(child)['values']:
             if query.lower() in str(value).lower():
-                # logger.warning(f"Found: {tree.item(child)['values']}")
+                logger.warning(f"Found: {tree.item(child)['values']}")
                 selections.append(child)
                 break
     logger.warning(f"Selections: {selections}")
@@ -189,13 +202,19 @@ def tree_search(tree, search_entry) -> None:
 
 
 def tree_search_worker(plugin, tree, search_entry) -> None:
-    plugin.searchthread = threading.Thread(target=tree_search, args=(tree, search_entry))
+    plugin.searchthread = threading.Thread(target=tree_search(tree, search_entry))
     plugin.searchthread.start()
 
 
 def show_codex_window(plugin, cmdr: str) -> None:
 
     global data
+    global data_initialised
+
+    while True:
+        if data_initialised:
+            # init_thread.join()
+            break
 
     new_window = tk.Tk()
     new_window.title("Codex")
@@ -223,7 +242,15 @@ def show_codex_window(plugin, cmdr: str) -> None:
     tree.configure(yscrollcommand=scrollbar.set)
     scrollbar.grid(row=0, column=4, sticky="nsew")
 
-    new_window.mainloop()
+    while True:
+        if plugin.newwindowrequested:
+            plugin.newwindow.destroy()
+            plugin.newwindowrequested = False
+            break
+
+        new_window.update_idletasks()
+        new_window.update()
+    # new_window.mainloop()
 
 
 def clear_ui(frame) -> None:

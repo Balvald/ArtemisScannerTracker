@@ -114,6 +114,7 @@ class ArtemisScannerTracker:
 
         self.thread = None
         self.codexthread = None
+        self.newwindowrequested = False
         self.searchthread = None
 
         response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
@@ -147,6 +148,7 @@ class ArtemisScannerTracker:
         It is the last thing called before EDMC shuts down.
         Note that blocking code here will hold the shutdown process.
         """
+        self.newwindowrequested = True
         self.on_preferences_closed("", False)  # Save our prefs
 
     def setup_preferences(self, parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
@@ -490,6 +492,16 @@ class ArtemisScannerTracker:
         return False
 
     def show_codex_window_worker(self) -> None:
+        logger.warning("show_codex_window_worker")
+        # check if the thread is already running
+        if self.codexthread is not None:
+            if self.codexthread.is_alive():
+                # logger.warning("show_codex_window_worker: thread is already running")
+                # force close the thread
+                self.newwindowrequested = True
+                self.codexthread.join()
+                self.newwindowrequested = False
+                # logger.warning("show_codex_window_worker: thread is already running: joined")
         self.codexthread = threading.Thread(target=self.show_codex_window_thread, name="show_codex_window")
         self.codexthread.start()
         # ui.show_codex_window(self, self.AST_current_CMDR)
@@ -497,4 +509,4 @@ class ArtemisScannerTracker:
 
     def show_codex_window_thread(self) -> None:
         ui.show_codex_window(self, self.AST_current_CMDR)
-        ui.rebuild_ui(self, self.AST_current_CMDR)
+        # ui.rebuild_ui(self, self.AST_current_CMDR)
