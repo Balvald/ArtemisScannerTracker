@@ -187,6 +187,9 @@ def tree_search(tree, search_entry) -> None:
     logger.warning(f"Query: {query}")
     selections = []
     children = tree.get_children()
+    if search_entry.get() == "":
+        tree.selection_set(children)
+        return
     logger.warning(f"Children: {children}")
     for child in children:
         logger.warning(f"Child: {child}")
@@ -226,21 +229,31 @@ def show_codex_window(plugin, cmdr: str) -> None:
         tree.heading(col, text=col, command=lambda _col=col:
                      tree_sort_column(tree, _col, False))
 
+    for col in columns:
+        tree.column(col, width=75, stretch=True)
+
     for item in data[cmdr]:
         tree.insert("", tk.END, values=item)
 
-    tree.grid(row=0, column=3, sticky="nsew")
+    tree.grid(row=1, column=0, sticky="nsew")
 
-    label(new_window, "Search:", 0, 0, tk.NW)
+    search_label = tk.Label(new_window, text="Search:")
+    search_label.grid(row=0, column=0, sticky=tk.W)
     search_entry = tk.Entry(new_window, width=30)
-    search_entry.grid(row=0, column=1, padx=10, pady=10, sticky=tk.NE, rowspan=1)
-    button(new_window, "search",
-           lambda _search_entry=search_entry: tree_search_worker(plugin, tree, _search_entry),
-           0, 2, tk.NW)
+    search_entry.grid(row=0, column=0, padx=45, sticky=tk.W)
+    search_button = tk.Button(new_window, text="🔍",
+                              command=lambda _search_entry=search_entry:
+                              tree_search_worker(plugin, tree, _search_entry))
+    search_button.grid(row=0, column=0, sticky=tk.W, padx=240)
 
     scrollbar = tk.Scrollbar(new_window, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=scrollbar.set)
-    scrollbar.grid(row=0, column=4, sticky="nsew")
+    scrollbar.grid(row=1, column=1, sticky="nsew")
+
+    new_window.columnconfigure(0, weight=10)
+    new_window.columnconfigure(1, weight=0)
+    new_window.rowconfigure(0, weight=0)
+    new_window.rowconfigure(1, weight=10)
 
     while True:
         if plugin.newwindowrequested:
