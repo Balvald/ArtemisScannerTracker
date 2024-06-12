@@ -20,7 +20,7 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 
 ## New in v0.3.0
 
-- Bugfix:
+- Bugfix: Plugin now ignores a certain API which is now presumed to be dead and an EX-API
 - New Feature: AST Codex window to look at biodata you've scanned without having to fly into its' system.
 
 ## Features
