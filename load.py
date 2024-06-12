@@ -125,7 +125,7 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
             key = currentbody.replace(plugin.AST_current_system.get(), '')[1:]
             try:
                 plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[key]
-            except KeyError:
+            except (KeyError, TypeError):
                 # Nothing found at currently closest planet
                 if plugin.AST_debug.get():
                     logger.warning(f"No amount of bio signals found for body; {currentbody} with key: {key}")

@@ -438,7 +438,8 @@ class ArtemisScannerTracker:
     def ask_canonn_nicely(self, system: str):
         """Ask Canonn how many biological signals are on any planets"""
         if self.AST_debug.get():
-            logger.debug(f"Asking Canonn for Info about: {system}")
+            logger.debug(f"Asking Canonn for Info about: {system}. This is currently deprecated")
+        return
         response = requests.get(
             f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}",
             timeout=20)
@@ -501,6 +502,8 @@ class ArtemisScannerTracker:
                 self.newwindowrequested = True
                 self.codexthread.join()
                 self.newwindowrequested = False
+                ui.set_data_init(False)
+
                 # logger.warning("show_codex_window_worker: thread is already running: joined")
         self.codexthread = threading.Thread(target=self.show_codex_window_thread, name="show_codex_window")
         self.codexthread.start()
