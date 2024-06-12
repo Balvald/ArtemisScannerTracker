@@ -57,6 +57,7 @@ class ArtemisScannerTracker:
         self.AST_hide_after_selling: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_after_selling"))
         self.AST_hide_after_full_scan: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_after_full_scan"))
         self.AST_hide_value_when_zero: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_value_when_zero"))
+        self.AST_hide_CODEX_button: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_CODEX_button"))
 
         # option for shorterned numbers
         self.AST_shorten_value: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_shorten_value"))
@@ -184,38 +185,41 @@ class ArtemisScannerTracker:
 
         checkboxlistleft = ["Hide full status", "Hide species",
                             "Hide system of last Scan", "Hide current system",
-                            "Hide scanned/sold species in system", line,
+                            "Hide scanned/sold species in system", "Hide AST Codex Button", line,
                             "Autom. hide values after selling all", "Autom. hide unsold value when 0 Cr."]
         checkboxlistright = ["Hide value of unsold Scans", "Hide scan progress",
                              "Hide body of last Scan", "Hide current Body",
-                             "Hide clonal colonial distances", line,
+                             "Hide clonal colonial distances", "Empty", line,
                              "Autom. hide values after finished scan", "Force hide/show autom. hidden"]
 
         variablelistleft = [self.AST_hide_fullscan, self.AST_hide_species,
                             self.AST_hide_last_system, self.AST_hide_system,
-                            self.AST_hide_sold_bio, line, self.AST_hide_after_selling,
+                            self.AST_hide_sold_bio, self.AST_hide_CODEX_button, line, self.AST_hide_after_selling,
                             self.AST_hide_value_when_zero]
         variablelistright = [self.AST_hide_value, self.AST_hide_progress,
                              self.AST_hide_last_body, self.AST_hide_body,
-                             self.AST_hide_CCR, line,
+                             self.AST_hide_CCR, line, line,
                              self.AST_hide_after_full_scan]
 
         for i in range(max(len(checkboxlistleft), len(checkboxlistright))):
             if i < len(checkboxlistleft):
                 if checkboxlistleft[i] == line:
                     ui.prefs_label(frame, line, current_row, 0, tk.W)
+                elif checkboxlistleft[i] == "Empty":
+                    pass
                 else:
                     ui.prefs_tickbutton(frame, checkboxlistleft[i], variablelistleft[i], current_row, 0, tk.W)
             if i < len(checkboxlistright):
                 if checkboxlistright[i] == line:
                     ui.prefs_label(frame, line, current_row, 1, tk.W)
                     current_row += 1
-                    continue
-                if checkboxlistright[i] == "Force hide/show autom. hidden":
+                elif checkboxlistright[i] == "Empty":
+                    pass
+                elif checkboxlistright[i] == "Force hide/show autom. hidden":
                     ui.prefs_button(frame, checkboxlistright[i], self.forcehideshow, current_row, 1, tk.W)
                     current_row += 1
-                    continue
-                ui.prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
+                else:
+                    ui.prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
             current_row += 1
 
         """        if self.AST_debug.get():
@@ -329,6 +333,7 @@ class ArtemisScannerTracker:
         config.set("AST_hide_after_selling", int(self.AST_hide_after_selling.get()))
         config.set("AST_hide_after_full_scan", int(self.AST_hide_after_full_scan.get()))
         config.set("AST_hide_value_when_zero", int(self.AST_hide_value_when_zero.get()))
+        config.set("AST_hide_CODEX_button", int(self.AST_hide_CODEX_button.get()))
 
         config.set("AST_shorten_value", int(self.AST_shorten_value.get()))
 

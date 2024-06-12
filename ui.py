@@ -296,7 +296,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:
     current_row = 0
 
     if plugin.updateavailable:
-        latest = f"github.com/{plugin.AST_REPO}/releases/latest"
+        latest = f"https://github.com/{plugin.AST_REPO}/releases/latest"
         HyperlinkLabel(plugin.frame, text="Update available!",
                        url=latest, underline=True).grid(row=current_row, sticky=tk.W)
         current_row += 1
@@ -371,8 +371,9 @@ def rebuild_ui(plugin, cmdr: str) -> None:
     if plugin.AST_debug.get():
         logger.debug("Building AST sold/scanned exobio ...")
 
-    button(plugin.frame, " Open Codex ", plugin.show_codex_window_worker, current_row, 0, tk.W)
-    current_row += 1
+    if plugin.AST_hide_CODEX_button.get() != 1:
+        button(plugin.frame, " Open AST Codex ", plugin.show_codex_window_worker, current_row, 0, tk.W)
+        current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI
     if plugin.AST_hide_sold_bio.get() != 1:
