@@ -6,12 +6,12 @@ import os
 import threading
 import tkinter as tk
 
-from organicinfo import getvistagenomicprices
-
 import myNotebook as nb  # type: ignore
 from config import appname  # type: ignore
 from theme import theme  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
+
+from organicinfo import getvistagenomicprices
 
 
 directory, filename = os.path.split(os.path.realpath(__file__))
@@ -68,16 +68,21 @@ def init_data() -> None:
 
     for cmdr in notsoldbiodata.keys():
         data[cmdr] = []
+    for cmdr in soldbiodata.keys():
+        data[cmdr] = []
+
+    for cmdr in notsoldbiodata.keys():
         if cmdr != cmdr:
             continue
         for item in notsoldbiodata[cmdr]:
+            logger.warning(f"{item}")
             data[cmdr].append([item["system"], item["body"], item["species"],
                                vistagenomicprices[item["species"]], "No"])
 
     logger.warning("Finished transcribing not sold data.")
+    # logger.warning(f"{data}")
 
     for cmdr in soldbiodata.keys():
-        data[cmdr] = []
         for letter in soldbiodata[cmdr].keys():
             # logger.warning(f"Letter: {letter}")
             for system in soldbiodata[cmdr][letter].keys():
@@ -86,6 +91,7 @@ def init_data() -> None:
                                        vistagenomicprices[item["species"]], "Yes"])
 
     logger.warning("Finished transcribing sold data.")
+    # logger.warning(f"{data}")
 
     data_initialised = True
 
@@ -213,14 +219,18 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     global data
     global data_initialised
+    global init_thread
 
     while True:
         if data_initialised:
             # init_thread.join()
             break
+        elif not init_thread.is_alive():
+            init_thread = threading.Thread(target=init_data)
+            init_thread.start()
 
     new_window = tk.Tk()
-    new_window.title("Codex")
+    new_window.title("AST Codex")
 
     columns = ["System", "Body", "Species", "Value", "Sold"]
 
@@ -233,6 +243,7 @@ def show_codex_window(plugin, cmdr: str) -> None:
         tree.column(col, width=75, stretch=True)
 
     for item in data[cmdr]:
+        # logger.warning(f"{item}")
         tree.insert("", tk.END, values=item)
 
     tree.grid(row=1, column=0, sticky="nsew")
@@ -520,3 +531,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
 
             colourlabel(plugin.frame, species, current_row, 0, colour, tk.W)
             label(plugin.frame, bodies, current_row, 1, tk.W)
+
+
+def set_data_init(bool) -> None:
+    global data_initialised
+    data_initialised = bool
