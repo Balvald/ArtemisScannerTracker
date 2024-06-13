@@ -187,14 +187,51 @@ def tree_sort_column(tree, col, reverse) -> None:
                  tree_sort_column(tree, _col, not reverse))
 
 
-def tree_search(tree, search_entry) -> None:
+def tree_rebuild(tree, cmdr: str) -> None:
+    global data
+    tree.delete(*tree.get_children())
+    for item in data[cmdr]:
+        tree.insert("", tk.END, values=item)
+
+
+def ex_tree_rebuild(tree, cmdr: str) -> None:
+    global data
+    tree.delete(*tree.get_children())
+    tree.insert("", tk.END, text="System", iid=0, open=False)
+    iid = 1
+    for item in data[cmdr]:
+        for child in range(len(data[cmdr])+1):
+            # logger.warning(f"pot. parent with iid: {child} : {tree.item(child)} {len(data[cmdr])+1}")
+            try:
+                if str(item[0]) == tree.item(child)['text']:
+                    logger.warning(f"parent: {tree.item(child)}")
+                    parent_iid = child
+                    tree.insert("", tk.END, text=str(item), iid=iid, open=False)
+                    tree.move(iid, parent_iid, "end")
+                    iid += 1
+                    logger.warning(f"Added {item} to {item[0]}")
+                    break
+            except Exception as e:
+                tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
+                tree.move(iid, 0, "end")
+                parent_iid = iid
+                iid += 1
+                tree.insert(child, tk.END, text=str(item), iid=iid, open=False)
+                tree.move(iid, parent_iid, "end")
+                iid += 1
+                logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
+                break
+
+
+def tree_search(tree, search_entry, cmdr: str) -> None:
     logger.warning("Searching ...")
     query = search_entry.get()
     logger.warning(f"Query: {query}")
     selections = []
+    tree_rebuild(tree, cmdr)
     children = tree.get_children()
     if search_entry.get() == "":
-        tree.selection_set(children)
+        tree.selection_set([])
         return
     logger.warning(f"Children: {children}")
     for child in children:
@@ -205,13 +242,16 @@ def tree_search(tree, search_entry) -> None:
                 logger.warning(f"Found: {tree.item(child)['values']}")
                 selections.append(child)
                 break
+            elif str(value).lower() == "no" or str(value).lower() == "yes":
+                tree.delete(child)
+                break
     logger.warning(f"Selections: {selections}")
     logger.warning("Search complete")
     tree.selection_set(selections)
 
 
-def tree_search_worker(plugin, tree, search_entry) -> None:
-    plugin.searchthread = threading.Thread(target=tree_search(tree, search_entry))
+def tree_search_worker(plugin, tree, search_entry, cmdr: str) -> None:
+    plugin.searchthread = threading.Thread(target=tree_search(tree, search_entry, cmdr))
     plugin.searchthread.start()
 
 
@@ -242,9 +282,7 @@ def show_codex_window(plugin, cmdr: str) -> None:
     for col in columns:
         tree.column(col, width=75, stretch=True)
 
-    for item in data[cmdr]:
-        # logger.warning(f"{item}")
-        tree.insert("", tk.END, values=item)
+    tree_rebuild(tree, cmdr)
 
     tree.grid(row=1, column=0, sticky="nsew")
 
@@ -254,12 +292,40 @@ def show_codex_window(plugin, cmdr: str) -> None:
     search_entry.grid(row=0, column=0, padx=45, sticky=tk.W)
     search_button = tk.Button(new_window, text="🔍",
                               command=lambda _search_entry=search_entry:
-                              tree_search_worker(plugin, tree, _search_entry))
+                              tree_search_worker(plugin, tree, _search_entry, cmdr))
     search_button.grid(row=0, column=0, sticky=tk.W, padx=240)
 
     scrollbar = tk.Scrollbar(new_window, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=scrollbar.set)
     scrollbar.grid(row=1, column=1, sticky="nsew")
+
+    ex_tree = tk.ttk.Treeview(new_window)
+
+    # for col in columns:
+    #    ex_tree.heading(col, text=col, command=lambda _col=col:
+    #                    tree_sort_column(ex_tree, _col, False))
+
+    # for col in columns:
+    #    ex_tree.column(col, width=75, stretch=True)
+
+    ex_tree.heading("#0", text="System", anchor=tk.W)
+
+    ex_tree_rebuild(ex_tree, cmdr)
+
+    ex_tree.grid(row=3, column=0, sticky="nsew")
+
+    search_label = tk.Label(new_window, text="Search:")
+    search_label.grid(row=2, column=0, sticky=tk.W)
+    search_entry = tk.Entry(new_window, width=30)
+    search_entry.grid(row=2, column=0, padx=45, sticky=tk.W)
+    search_button = tk.Button(new_window, text="🔍",
+                              command=lambda _search_entry=search_entry:
+                              tree_search_worker(plugin, ex_tree, _search_entry, cmdr))
+    search_button.grid(row=2, column=0, sticky=tk.W, padx=240)
+
+    scrollbar = tk.Scrollbar(new_window, orient="vertical", command=ex_tree.yview)
+    ex_tree.configure(yscrollcommand=scrollbar.set)
+    scrollbar.grid(row=3, column=1, sticky="nsew")
 
     new_window.columnconfigure(0, weight=10)
     new_window.columnconfigure(1, weight=0)
