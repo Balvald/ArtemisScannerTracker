@@ -46,11 +46,18 @@ data_initialised = False
 soldbiodata_file = directory + "/soldbiodata.json"
 notsoldbiodata_file = directory + "/notsoldbiodata.json"
 
+soldbiodata_file_mtime = os.path.getmtime(soldbiodata_file)
+notsoldbiodata_file_mtime = os.path.getmtime(notsoldbiodata_file)
+
+full_ex_tree = None
+
 
 def init_data() -> None:
     global data
     global soldbiodata_file
     global notsoldbiodata_file
+    global soldbiodata_file_mtime
+    global notsoldbiodata_file_mtime
     global data_initialised
 
     vistagenomicprices = getvistagenomicprices()
@@ -58,8 +65,12 @@ def init_data() -> None:
     with open(soldbiodata_file, "r+", encoding="utf8") as f:
         soldbiodata = json.load(f)
 
+    soldbiodata_file_mtime = os.path.getmtime(soldbiodata_file)
+
     with open(notsoldbiodata_file, "r+", encoding="utf8") as f:
         notsoldbiodata = json.load(f)
+
+    notsoldbiodata_file_mtime = os.path.getmtime(notsoldbiodata_file)
 
     # logger.warning(f"Sold Bio Data: {soldbiodata}")
     # logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
@@ -75,7 +86,7 @@ def init_data() -> None:
         if cmdr != cmdr:
             continue
         for item in notsoldbiodata[cmdr]:
-            logger.warning(f"{item}")
+            # logger.warning(f"{item}")
             data[cmdr].append([item["system"], item["body"], item["species"],
                                vistagenomicprices[item["species"]], "No"])
 
@@ -194,22 +205,54 @@ def tree_rebuild(tree, cmdr: str) -> None:
         tree.insert("", tk.END, values=item)
 
 
-def ex_tree_rebuild(tree, cmdr: str) -> None:
+def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
     global data
+    # global full_ex_tree
+    # global soldbiodata_file_mtime
+    # global notsoldbiodata_file_mtime
+    # global soldbiodata_file
+    # global notsoldbiodata_file
+
     tree.delete(*tree.get_children())
     tree.insert("", tk.END, text="System", iid=0, open=False)
     iid = 1
+    query_found = False
+
+    """new_data_exists = ((os.path.getmtime(soldbiodata_file)
+                        > soldbiodata_file_mtime) or
+                       (os.path.getmtime(notsoldbiodata_file)
+                        > notsoldbiodata_file_mtime))
+
+    if full_ex_tree is not None and query == "" and not new_data_exists:
+        # replace tree with full_ex_tree
+        for child in full_ex_tree.get_children():
+            tree.insert("", tk.END, text=full_ex_tree.item(child)['text'], iid=child, open=False)
+            for subchild in full_ex_tree.get_children(child):
+                tree.insert(child, tk.END, text=full_ex_tree.item(subchild)['text'], iid=subchild, open=False)
+        return"""
+
     for item in data[cmdr]:
+        for value in item:
+            if query == "":
+                query_found = True
+                break
+            elif query.lower() in str(value).lower():
+                query_found = True
+                break
+            else:
+                query_found = False
+        if not query_found:
+            continue
         for child in range(len(data[cmdr])+1):
             # logger.warning(f"pot. parent with iid: {child} : {tree.item(child)} {len(data[cmdr])+1}")
             try:
                 if str(item[0]) == tree.item(child)['text']:
-                    logger.warning(f"parent: {tree.item(child)}")
+                    # logger.warning(f"parent: {tree.item(child)}")
                     parent_iid = child
                     tree.insert("", tk.END, text=str(item), iid=iid, open=False)
                     tree.move(iid, parent_iid, "end")
                     iid += 1
-                    logger.warning(f"Added {item} to {item[0]}")
+                    # logger.warning(f"Added {item} to {item[0]}")
                     break
             except Exception as e:
                 tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
@@ -219,8 +262,11 @@ def ex_tree_rebuild(tree, cmdr: str) -> None:
                 tree.insert(child, tk.END, text=str(item), iid=iid, open=False)
                 tree.move(iid, parent_iid, "end")
                 iid += 1
-                logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
+                # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
                 break
+
+    """if query == "" and full_ex_tree is None:
+        full_ex_tree = tree"""
 
 
 def tree_search(tree, search_entry, cmdr: str) -> None:
@@ -250,8 +296,40 @@ def tree_search(tree, search_entry, cmdr: str) -> None:
     tree.selection_set(selections)
 
 
+def tree_search_ex(tree, search_entry, cmdr: str) -> None:
+    logger.warning("Searching ...")
+    query = search_entry.get()
+    logger.warning(f"Query: {query}")
+    selections = []
+    ex_tree_rebuild(tree, cmdr, query)
+    children = tree.get_children()
+    if search_entry.get() == "":
+        tree.selection_set([])
+        return
+    logger.warning(f"Children: {children}")
+    for child in children:
+        logger.warning(f"Child: {child}")
+        logger.warning(f"Values: {tree.item(child)['values']}")
+        for value in tree.item(child)['values']:
+            if query.lower() in str(value).lower():
+                logger.warning(f"Found: {tree.item(child)['values']}")
+                selections.append(child)
+                break
+            elif str(value).lower() == "no" or str(value).lower() == "yes":
+                tree.delete(child)
+                break
+    logger.warning(f"Selections: {selections}")
+    logger.warning("Search complete")
+    tree.selection_set(selections)
+
+
 def tree_search_worker(plugin, tree, search_entry, cmdr: str) -> None:
     plugin.searchthread = threading.Thread(target=tree_search(tree, search_entry, cmdr))
+    plugin.searchthread.start()
+
+
+def tree_search_worker_ex(plugin, tree, search_entry, cmdr: str) -> None:
+    plugin.searchthread = threading.Thread(target=tree_search_ex(tree, search_entry, cmdr))
     plugin.searchthread.start()
 
 
@@ -263,9 +341,19 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     while True:
         if data_initialised:
-            # init_thread.join()
-            break
+            # check if file was changed since last initialisation
+            if ((os.path.getmtime(soldbiodata_file)
+                 > soldbiodata_file_mtime) or
+                (os.path.getmtime(notsoldbiodata_file)
+                 > notsoldbiodata_file_mtime)):
+                logger.warning("soldbiodata.json was changed, reinitialising data")
+                data_initialised = False
+                init_thread = threading.Thread(target=init_data)
+                init_thread.start()
+            else:
+                break
         elif not init_thread.is_alive():
+            data_initialised = False
             init_thread = threading.Thread(target=init_data)
             init_thread.start()
 
@@ -308,9 +396,9 @@ def show_codex_window(plugin, cmdr: str) -> None:
     # for col in columns:
     #    ex_tree.column(col, width=75, stretch=True)
 
-    ex_tree.heading("#0", text="System", anchor=tk.W)
+    # ex_tree.heading("#0", text="", anchor=tk.W)
 
-    ex_tree_rebuild(ex_tree, cmdr)
+    ex_tree_rebuild(ex_tree, cmdr, "")
 
     ex_tree.grid(row=3, column=0, sticky="nsew")
 
@@ -320,7 +408,7 @@ def show_codex_window(plugin, cmdr: str) -> None:
     search_entry.grid(row=2, column=0, padx=45, sticky=tk.W)
     search_button = tk.Button(new_window, text="🔍",
                               command=lambda _search_entry=search_entry:
-                              tree_search_worker(plugin, ex_tree, _search_entry, cmdr))
+                              tree_search_worker_ex(plugin, ex_tree, _search_entry, cmdr))
     search_button.grid(row=2, column=0, sticky=tk.W, padx=240)
 
     scrollbar = tk.Scrollbar(new_window, orient="vertical", command=ex_tree.yview)
