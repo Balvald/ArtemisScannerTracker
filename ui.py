@@ -60,6 +60,8 @@ def init_data() -> None:
     global notsoldbiodata_file_mtime
     global data_initialised
 
+    logger.debug("Initialising data ...")
+
     vistagenomicprices = getvistagenomicprices()
 
     with open(soldbiodata_file, "r+", encoding="utf8") as f:
@@ -72,8 +74,8 @@ def init_data() -> None:
 
     notsoldbiodata_file_mtime = os.path.getmtime(notsoldbiodata_file)
 
-    # logger.warning(f"Sold Bio Data: {soldbiodata}")
-    # logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
+    logger.warning(f"Sold Bio Data: {soldbiodata}")
+    logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
 
     logger.warning("transcribing into data ...")
 
@@ -201,8 +203,11 @@ def tree_sort_column(tree, col, reverse) -> None:
 def tree_rebuild(tree, cmdr: str) -> None:
     global data
     tree.delete(*tree.get_children())
-    for item in data[cmdr]:
-        tree.insert("", tk.END, values=item)
+    try:
+        for item in data[cmdr]:
+            tree.insert("", tk.END, values=item)
+    except KeyError:
+        pass
 
 
 def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
@@ -231,39 +236,42 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                 tree.insert(child, tk.END, text=full_ex_tree.item(subchild)['text'], iid=subchild, open=False)
         return"""
 
-    for item in data[cmdr]:
-        for value in item:
-            if query == "":
-                query_found = True
-                break
-            elif query.lower() in str(value).lower():
-                query_found = True
-                break
-            else:
-                query_found = False
-        if not query_found:
-            continue
-        for child in range(len(data[cmdr])+1):
-            # logger.warning(f"pot. parent with iid: {child} : {tree.item(child)} {len(data[cmdr])+1}")
-            try:
-                if str(item[0]) == tree.item(child)['text']:
-                    # logger.warning(f"parent: {tree.item(child)}")
-                    parent_iid = child
-                    tree.insert("", tk.END, text=str(item), iid=iid, open=False)
+    try:
+        for item in data[cmdr]:
+            for value in item:
+                if query == "":
+                    query_found = True
+                    break
+                elif query.lower() in str(value).lower():
+                    query_found = True
+                    break
+                else:
+                    query_found = False
+            if not query_found:
+                continue
+            for child in range(len(data[cmdr])+1):
+                # logger.warning(f"pot. parent with iid: {child} : {tree.item(child)} {len(data[cmdr])+1}")
+                try:
+                    if str(item[0]) == tree.item(child)['text']:
+                        # logger.warning(f"parent: {tree.item(child)}")
+                        parent_iid = child
+                        tree.insert("", tk.END, text=str(item), iid=iid, open=False)
+                        tree.move(iid, parent_iid, "end")
+                        iid += 1
+                        # logger.warning(f"Added {item} to {item[0]}")
+                        break
+                except Exception as e:
+                    tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
+                    tree.move(iid, 0, "end")
+                    parent_iid = iid
+                    iid += 1
+                    tree.insert(child, tk.END, text=str(item), iid=iid, open=False)
                     tree.move(iid, parent_iid, "end")
                     iid += 1
-                    # logger.warning(f"Added {item} to {item[0]}")
+                    # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
                     break
-            except Exception as e:
-                tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
-                tree.move(iid, 0, "end")
-                parent_iid = iid
-                iid += 1
-                tree.insert(child, tk.END, text=str(item), iid=iid, open=False)
-                tree.move(iid, parent_iid, "end")
-                iid += 1
-                # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
-                break
+    except KeyError:
+        pass
 
     """if query == "" and full_ex_tree is None:
         full_ex_tree = tree"""
@@ -339,9 +347,19 @@ def show_codex_window(plugin, cmdr: str) -> None:
     global data_initialised
     global init_thread
 
+    logger.debug("Opening AST Codex ...")
+
     while True:
+        logger.debug("Checking if data is initialised ...")
         if data_initialised:
             # check if file was changed since last initialisation
+
+            # logger.debug(soldbiodata_file_mtime)
+            # logger.debug(notsoldbiodata_file_mtime)
+
+            # logger.debug(os.path.getmtime(soldbiodata_file))
+            # logger.debug(os.path.getmtime(notsoldbiodata_file))
+
             if ((os.path.getmtime(soldbiodata_file)
                  > soldbiodata_file_mtime) or
                 (os.path.getmtime(notsoldbiodata_file)
@@ -349,13 +367,18 @@ def show_codex_window(plugin, cmdr: str) -> None:
                 logger.warning("soldbiodata.json was changed, reinitialising data")
                 data_initialised = False
                 init_thread = threading.Thread(target=init_data)
+                logger.debug("Starting new initialisation thread ...")
                 init_thread.start()
             else:
+                logger.debug("Doing Nothing ...")
                 break
         elif not init_thread.is_alive():
             data_initialised = False
             init_thread = threading.Thread(target=init_data)
+            logger.debug("Starting new initialisation thread ...")
             init_thread.start()
+
+    logger.debug("Opening AST Codex  2 ...")
 
     new_window = tk.Tk()
     new_window.title("AST Codex")

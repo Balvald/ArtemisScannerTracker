@@ -159,7 +159,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
 
                     if cmdr != "" and cmdr is not None and cmdr not in sold_exobiology.keys():
                         sold_exobiology[cmdr] = {alphabet[i]: {} for i in range(len(alphabet))}
-                        logger.debug(sold_exobiology)
+                        # logger.debug(sold_exobiology)
 
                     if cmdr != "" and cmdr not in possibly_sold_data.keys():
                         possibly_sold_data[cmdr] = []
@@ -287,7 +287,7 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
                             # in one system that at this point
                             # is saved in the variable "thesystem"
                             logger.debug("possibly sold data")
-                            logger.debug(possibly_sold_data[cmdr])
+                            # logger.debug(possibly_sold_data[cmdr])
                             logger.debug("current batch")
                             logger.debug(currentbatch)
 
