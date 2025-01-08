@@ -33,12 +33,23 @@ def load_cmdr(cmdr, plugin) -> None:
     with open(file, "r+", encoding="utf8") as f:
         plugin.CMDR_states = json.load(f)
 
-    plugin.AST_last_scan_plant.set(plugin.CMDR_states[cmdr][0])
-    plugin.AST_last_scan_system.set(plugin.CMDR_states[cmdr][1])
-    plugin.AST_last_scan_body.set(plugin.CMDR_states[cmdr][2])
-    plugin.AST_current_scan_progress.set(plugin.CMDR_states[cmdr][3])
-    plugin.AST_state.set(plugin.CMDR_states[cmdr][4])
-    plugin.rawvalue = int(str(plugin.CMDR_states[cmdr][5]).split(" ")[0].replace(",", ""))
-    plugin.AST_CCR.set(plugin.CMDR_states[cmdr][6])
-    plugin.AST_scan_1_pos_vector = plugin.CMDR_states[cmdr][7]
-    plugin.AST_scan_2_pos_vector = plugin.CMDR_states[cmdr][8]
+    try:
+        plugin.AST_last_scan_plant.set(plugin.CMDR_states[cmdr][0])
+        plugin.AST_last_scan_system.set(plugin.CMDR_states[cmdr][1])
+        plugin.AST_last_scan_body.set(plugin.CMDR_states[cmdr][2])
+        plugin.AST_current_scan_progress.set(plugin.CMDR_states[cmdr][3])
+        plugin.AST_state.set(plugin.CMDR_states[cmdr][4])
+        plugin.rawvalue = int(str(plugin.CMDR_states[cmdr][5]).split(" ")[0].replace(",", ""))
+        plugin.AST_CCR.set(plugin.CMDR_states[cmdr][6])
+        plugin.AST_scan_1_pos_vector = plugin.CMDR_states[cmdr][7]
+        plugin.AST_scan_2_pos_vector = plugin.CMDR_states[cmdr][8]
+    except KeyError:
+        plugin.AST_last_scan_plant.set("None")
+        plugin.AST_last_scan_system.set("None")
+        plugin.AST_last_scan_body.set("None")
+        plugin.AST_current_scan_progress.set("0/3")
+        plugin.AST_state.set("None")
+        plugin.rawvalue = 0
+        plugin.AST_CCR.set("None")
+        plugin.AST_scan_1_pos_vector = "None"
+        plugin.AST_scan_2_pos_vector = "None"
