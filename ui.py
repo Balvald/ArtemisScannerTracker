@@ -188,7 +188,11 @@ def shortcreditstring(number) -> str:
 
 def tree_sort_column(tree, col, reverse) -> None:
     table = [(tree.set(k, col), k) for k in tree.get_children("")]
-    table.sort(reverse=reverse)
+
+    if col == "Value":
+        table.sort(key=lambda x: int(x[0]), reverse=reverse)
+    else:
+        table.sort(reverse=reverse)
 
     # rearrange items in sorted positions
     for index, (val, k) in enumerate(table):
@@ -260,7 +264,7 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                         iid += 1
                         # logger.warning(f"Added {item} to {item[0]}")
                         break
-                except Exception as e:
+                except Exception:  # as e:
                     tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
                     tree.move(iid, 0, "end")
                     parent_iid = iid
