@@ -179,18 +179,24 @@ def build_biodata_json(logger: any, journaldir: str) -> int:
                         logger.debug("We've encountered a KeyError in the code "
                                      + "for updating the current system and body.")
                         logger.debug(entry)
+
                 if entry["event"] == "ScanOrganic":
                     # logger.debug("Scan organic Event!")
                     if entry["ScanType"] in ["Sample", "Analyse"]:
                         if entry["ScanType"] == "Analyse":
                             logger.debug("Scan Organic Event Type: Analyse")
-                            currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
-                            currententrytowrite["system"] = currentsystem
-                            currententrytowrite["body"] = currentbody
-                            if currententrytowrite not in possibly_sold_data[cmdr]:
-                                possibly_sold_data[cmdr].append(currententrytowrite)
-                            currententrytowrite = {}
-                            continue
+                            try:
+                                currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
+                                currententrytowrite["system"] = currentsystem
+                                currententrytowrite["body"] = currentbody
+                                if currententrytowrite not in possibly_sold_data[cmdr]:
+                                    possibly_sold_data[cmdr].append(currententrytowrite)
+                                currententrytowrite = {}
+                                continue
+                            except KeyError as e:
+                                logger.error("Coulnd't find Species in Analyse event, Skipping")
+                                logger.error(e)
+                                logger.error(entry)
 
                 if entry["event"] == "Resurrect":
                     # Reset - player was unable to sell before death
