@@ -223,7 +223,7 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
     # global notsoldbiodata_file
 
     tree.delete(*tree.get_children())
-    tree.insert("", tk.END, text="System", iid=0, open=False)
+    tree.insert("", tk.END, text="System", iid=0, open=True)
     iid = 1
     query_found = False
 
@@ -345,6 +345,36 @@ def tree_search_worker_ex(plugin, tree, search_entry, cmdr: str) -> None:
     plugin.searchthread.start()
 
 
+"""def switch_table_to_tree(plugin, cmdr, t1, t2, t3, t4, t5, tr1, tr2, tr3, tr4, tr5) -> None:
+    # enable all trx elements and disable all tx elements
+    t1.grid_forget()
+    t2.grid_forget()
+    t3.grid_forget()
+    t4.grid_forget()
+    t5.grid_forget()
+    tr1.grid(row=2, column=0, sticky="nsew")
+    tr2.grid(row=1, column=0, sticky=tk.W)
+    tr3.grid(row=1, column=0, padx=45, sticky=tk.W)
+    tr4.grid(row=1, column=0, sticky=tk.W, padx=240)
+    tr5.grid(row=1, column=1, sticky="nsew")
+    rebuild_ui(plugin, cmdr)
+
+
+def switch_tree_to_table(plugin, cmdr, t1, t2, t3, t4, t5, tr1, tr2, tr3, tr4, tr5) -> None:
+    # enable all tx elements and disable all trx elements
+    tr1.grid_forget()
+    tr2.grid_forget()
+    tr3.grid_forget()
+    tr4.grid_forget()
+    tr5.grid_forget()
+    t1.grid(row=2, column=0, sticky="nsew")
+    t2.grid(row=1, column=0, sticky=tk.W)
+    t3.grid(row=1, column=0, padx=45, sticky=tk.W)
+    t4.grid(row=1, column=0, sticky=tk.W, padx=240)
+    t5.grid(row=1, column=1, sticky="nsew")
+    rebuild_ui(plugin, cmdr)"""
+
+
 def show_codex_window(plugin, cmdr: str) -> None:
 
     global data
@@ -399,53 +429,81 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     tree_rebuild(tree, cmdr)
 
-    tree.grid(row=1, column=0, sticky="nsew")
-
+    tree.grid(row=2, column=0, sticky="nsew")
     search_label = tk.Label(new_window, text="Search:")
-    search_label.grid(row=0, column=0, sticky=tk.W)
+    search_label.grid(row=1, column=0, sticky=tk.W)
     search_entry = tk.Entry(new_window, width=30)
-    search_entry.grid(row=0, column=0, padx=45, sticky=tk.W)
+    search_entry.grid(row=1, column=0, padx=45, sticky=tk.W)
     search_button = tk.Button(new_window, text="🔍",
                               command=lambda _search_entry=search_entry:
                               tree_search_worker(plugin, tree, _search_entry, cmdr))
-    search_button.grid(row=0, column=0, sticky=tk.W, padx=240)
+    search_button.grid(row=1, column=0, sticky=tk.W, padx=240)
 
     scrollbar = tk.Scrollbar(new_window, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=scrollbar.set)
-    scrollbar.grid(row=1, column=1, sticky="nsew")
+    scrollbar.grid(row=2, column=1, sticky="nsew")
 
     ex_tree = tk.ttk.Treeview(new_window)
 
-    # for col in columns:
-    #    ex_tree.heading(col, text=col, command=lambda _col=col:
-    #                    tree_sort_column(ex_tree, _col, False))
-
-    # for col in columns:
-    #    ex_tree.column(col, width=75, stretch=True)
-
-    # ex_tree.heading("#0", text="", anchor=tk.W)
-
     ex_tree_rebuild(ex_tree, cmdr, "")
 
-    ex_tree.grid(row=3, column=0, sticky="nsew")
+    ex_tree.grid(row=4, column=0, sticky="nsew")
 
-    search_label = tk.Label(new_window, text="Search:")
-    search_label.grid(row=2, column=0, sticky=tk.W)
-    search_entry = tk.Entry(new_window, width=30)
-    search_entry.grid(row=2, column=0, padx=45, sticky=tk.W)
-    search_button = tk.Button(new_window, text="🔍",
-                              command=lambda _search_entry=search_entry:
-                              tree_search_worker_ex(plugin, ex_tree, _search_entry, cmdr))
-    search_button.grid(row=2, column=0, sticky=tk.W, padx=240)
+    search_label2 = tk.Label(new_window, text="Search:")
+    search_label2.grid(row=3, column=0, sticky=tk.W)
+    search_entry2 = tk.Entry(new_window, width=30)
+    search_entry2.grid(row=3, column=0, padx=45, sticky=tk.W)
+    search_button2 = tk.Button(new_window, text="🔍",
+                               command=lambda _search_entry=search_entry:
+                               tree_search_worker_ex(plugin, ex_tree, _search_entry, cmdr))
+    search_button2.grid(row=3, column=0, sticky=tk.W, padx=240)
 
-    scrollbar = tk.Scrollbar(new_window, orient="vertical", command=ex_tree.yview)
-    ex_tree.configure(yscrollcommand=scrollbar.set)
-    scrollbar.grid(row=3, column=1, sticky="nsew")
+    scrollbar2 = tk.Scrollbar(new_window, orient="vertical", command=ex_tree.yview)
+    ex_tree.configure(yscrollcommand=scrollbar2.set)
+    scrollbar2.grid(row=4, column=1, sticky="nsew")
+
+    """radio_button1 = tk.Radiobutton(new_window, text="Table view",
+                                   value=1, variable=plugin.AST_CODEX_table,
+                                   command=switch_tree_to_table(plugin, cmdr,
+                                                                tree,
+                                                                search_label,
+                                                                search_button,
+                                                                search_entry,
+                                                                scrollbar,
+                                                                ex_tree,
+                                                                search_label2,
+                                                                search_button2,
+                                                                search_entry2,
+                                                                scrollbar2))
+    radio_button1.grid(row=0, column=0, sticky=tk.W)
+    radio_button2 = tk.Radiobutton(new_window, text="Tree view",
+                                   value=0, variable=plugin.AST_CODEX_table,
+                                   command=switch_table_to_tree(plugin, cmdr,
+                                                                tree,
+                                                                search_label,
+                                                                search_button,
+                                                                search_entry,
+                                                                scrollbar,
+                                                                ex_tree,
+                                                                search_label2,
+                                                                search_button2,
+                                                                search_entry2,
+                                                                scrollbar2))
+    radio_button2.grid(row=0, column=0, sticky=tk.W, padx=100)"""
+
+    """if plugin.AST_CODEX_table.get() == 1:
+        switch_tree_to_table(tree, search_label, search_button, search_entry, scrollbar,
+                             ex_tree, search_label2, search_button2, search_entry2, scrollbar2)
+    else:
+        switch_table_to_tree(tree, search_label, search_button, search_entry, scrollbar,
+                             ex_tree, search_label2, search_button2, search_entry2, scrollbar2)"""
 
     new_window.columnconfigure(0, weight=10)
     new_window.columnconfigure(1, weight=0)
-    new_window.rowconfigure(0, weight=0)
-    new_window.rowconfigure(1, weight=10)
+    new_window.rowconfigure(1, weight=0)
+    new_window.rowconfigure(2, weight=10)
+    new_window.rowconfigure(3, weight=0)
+    new_window.rowconfigure(4, weight=10)
 
     while True:
         if plugin.newwindowrequested:
