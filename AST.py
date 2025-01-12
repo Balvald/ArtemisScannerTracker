@@ -59,6 +59,9 @@ class ArtemisScannerTracker:
         self.AST_hide_value_when_zero: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_value_when_zero"))
         self.AST_hide_CODEX_button: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_hide_CODEX_button"))
 
+        # self.AST_CODEX_table: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_CODEX_table"))
+        # self.AST_CODEX_tree: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_CODEX_tree"))
+
         # option for shorterned numbers
         self.AST_shorten_value: Optional[tk.IntVar] = tk.IntVar(value=config.get_int("AST_shorten_value"))
 
@@ -340,6 +343,9 @@ class ArtemisScannerTracker:
         config.set("AST_after_selling", int(self.AST_after_selling.get()))
 
         config.set("AST_hide_scans_in_system", int(self.AST_hide_scans_in_system.get()))
+
+        # config.set("AST_CODEX_table", int(self.AST_CODEX_table.get()))
+        # config.set("AST_CODEX_tree", int(self.AST_CODEX_tree.get()))
 
         if self.AST_debug.get():
             logger.debug(f"Currently last Commander is: {cmdr}")
