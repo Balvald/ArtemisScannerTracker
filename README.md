@@ -25,7 +25,7 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 - Bugfix: The AST Codex now properly sorts the entries by value if the CMDR wishes so.
     - _Someone sorted numbers alphabetically and didn't notice._ :eyes:
 - Bugfix: The AST Codex now opens properly even when there is no data so show.
-    - _The AST Codex window finally overcame its anxiety to turn up empty handed._ 
+    - _The AST Codex window finally overcame its anxiety to turn up empty-handed._
 - New Feature: AST Codex window now has tabs with a table and a hierarchical tree view (which will undergo some changes)
 
 ## Features
@@ -43,7 +43,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - Multi Commander Support. The plugin can handle you playing with many different CMDRs on the same machine with the same EDMC installation.
 
 - Shows the Clonal Colony Range of the last scanned exobiology scan, and your current distance to up to two previous scan locations with corresponding bearing.
-    - will show in _c o l o u r_ if you've driven far enough for the next exobiolgy scan
+    - Will show in _c o l o u r_ if you've driven far enough for the next exobiology scan
 
 - A button that copies the value of your currently unsold scans to your clipboard
 
@@ -54,10 +54,10 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - You have to do mostly _nothing_ (yay) apart from having to play Elite Dangerous while using this plugin with EDMC.
 
-- For the sake of making it impossible for the exobiology data tracking to accidentially assume the wrong system as already sold please do sell your whole batch of data.
+- For the sake of making it impossible for the exobiology data tracking to accidentally assume the wrong system as already sold please do sell your whole batch of data.
 
 ### Main UI
-![AST UI](https://i.imgur.com/nYztoKF.png "main plugin ui pic annotated")
+![AST UI](./pictures/ASTmainUI.png "main plugin ui pic annotated")
 
 - #1 Update link, only appears if the currently installed version of the plugin is not the same as the newest release.
     - Will lead the user to the newest release.
@@ -74,9 +74,9 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - #6 Current System and Body display.
 - #7 Clonal Colonial Range display. Will only show up when near a planet.
     - Shows the Current position on a planet (lat, long, heading) and the distance, colonial range and bearing to the scan location to any of the last 2 scans of the currently conducted sampling.
-    - Distance to a Scan is red while being closer thant he Clonal Colonial Range of the exobiological biology
+    - Distance to a Scan is red while being closer than the Clonal Colonial Range of the exobiological biology
     - Distance to a Scan turns green once you ventured further on the planet from the scan than its Clonal Colonial Range
-    - Once both Scans are green the Current position will light up green aswell.
+    - Once both Scans are green the Current position will light up green as well.
 - #8 Finished Scan display. Shows how many Scans are in the current system.
     - Lists them by Planet names assigned to their respective species.
     - The Button expands and collapses the list of finished scans.
@@ -85,36 +85,36 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
     - _New_ Names of Species that you've already scanned on a planet will be green once you're located on said planet.
 
 ### Settings
-![Preferences](https://i.imgur.com/muIH1Tv.png "preferences ui")
+![Preferences](./pictures/ASTsettingsV031dev.png "settings page/preferences ui")
 
 - Plugin name, version number, Author
-    - here with "dev". If you encounter a "dev" here go back and download an actual release. In this case the main ui should also show you a link to the latest release.
-- All tickbox "Hide X" options will just hide the respective information regardless of what happens in the game.
-    - Note that when you are not close to a planets surface the option "Hide clonal colonial distances" may seem to not do anything. If activated the Clonal Colonial Range display will just not pop up when approaching a planets' surface.
+    - here with "dev". If you encounter a "dev" here go back and download an actual release. In this case the main UI should also show you a link to the latest release.
+- All checkbox "Hide X" options will just hide the respective information regardless of what happens in the game.
+    - Note that when you are not close to a planets' surface the option "Hide clonal colonial distances" may seem to not do anything. If activated the Clonal Colonial Range display will just not pop up when approaching a planets' surface.
 - "Autom. hide values after selling all": Will automatically hide the full status, species, scan progress, system/body of last scan after all unsold exobiology was sold. The mentioned information will show up upon the next exobiology scan unless they are manually hidden with a option further up in the settings.
 - "Autom. hide values after finished scan": Will automatically hide the full status, species, scan progress, system/body of last scan after a Scan is completely finished after scanning the third. The mentioned information will show up upon the next exobiology scan unless they are manually hidden with a option further up in the settings.
 - "Autom. hide unsold value when 0 Cr.": Will hide the unsold value together with the button to copy the value to clipboard when the unsold value reaches 0 Cr.
-- "Force hide/show autom. hidden": Will force to hide or show the full status, species, scan progress, system/body of last scan unless a display is manually hidden by an option further up in the settings.
+- "Force hide/show autom. hidden": Will force it to hide or show the full status, species, scan progress, system/body of last scan unless a display is manually hidden by an option further up in the settings.
 - "Shorten credit values": Will shorten the credit values displayed. e.g. "134,534,909 Cr." will become "134.5 MCr." etc.
-- "Scan game journals for exobiology": Will update the plugins' soldbiodata.json and notsoldbiodata.json by crawling through all journals in the folder specified in the EDMC Configuration.
-- "Scan local journal folder for exobiology": Will update the plugins' soldbiodata.json and notsoldbiodata.json by crawling through all journals placed in the journals folder 
-    -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly and please wait a good second or two when scanning through a lot of journal files.
+- "Scan game journals for exobiology": Will update the plugins' "soldbiodata.json" and "notsoldbiodata.json" by crawling through all journals in the folder specified in the EDMC Configuration.
+- "Scan local journal folder for exobiology": Will update the plugins' "soldbiodata.json" and "notsoldbiodata.json" by crawling through all journals placed in the journal folder.
+    -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly, and please wait a good second or two when scanning through a lot of journal files.
 - "Reset" Clears fields that are connected to scanning exobiological plants.
-- "Debug Mode" If ticked the plugin will write nearly everything it does into the EDMarketConnector-debug.log. Keep unticked unless you are debugging yourself or asked to log what the plugin does for a bugreport.
+- "Debug Mode" If ticked the plugin will write nearly everything it does into the EDMarketConnector-debug.log. Keep it unchecked unless you are debugging yourself or asked to log what the plugin does for a bug report.
 
 ### AST Codex Window
-
--- insert picture here --
+![Table_View](./pictures/ASTCodexTableView.png "AST Codex Window in Table view")
+![Tree_View](./pictures/ASTCodexTreeView.png "AST Codex Window in Tree/Hierarchical view")
 
 - Tabs: Table View, Tree View (experimental)
     - Enables switching between the two views to look at the data. The Tree view is due to undergo some changes in the near future.
 - Search
-    - Search for a System, Planet, Species.
+    - Write your search term for any System, Planet, Species into the text field and press the button with the "" to search for that term in the data you have collected.
 - Table View
     - Only visible when the Table view tab is selected.
-    - Can sort all data Alphabetically for Systems, Bodies (Planets), Species with their respective columns.
+    - Can sort all data alphabetically for systems, bodies (planets) or species by clicking their respective columns.
     - Can sort for sold or unsold data with the "Sold" column.
-    - Can sort for the base value of a exobiology scan via the "Value" column.
+    - Sort for the base value of an exobiology scan by clicking the "Value" column.
 - Tree View (experimental)
     - Only visible when the Tree view tab is selected.
     - Due to undergo some changes
@@ -123,11 +123,11 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 ## Motivation
 
-Finally not having to look at the Scanner LEDs in game after returning to a session and wonder "Which goddamn plant was I scanning again?"
-while being several thousand lightyears away from Sol. And you'll know which plants you've scanned too!
+Finally, not having to look at the Scanner LEDs in game after returning to a session and wonder "Which goddamn plant was I scanning again?"
+while being several thousand light-years away from Sol. And you'll know which plants you've scanned too!
 Sadly that type of information is impossible to get from the Exobiology scanner itself. 
-The only thing that it can tell us even despite not telling us _what_ or on which _body_ we last scanned is that the last scan is _incomplete_. The horror. Damn you Supratech! You damn Scoudrels!
+The only thing that it can tell us even despite not telling us _what_ or on which _body_ we last scanned is that the last scan is _incomplete_. The horror. Damn you Supratech! You damn Scoundrels!
 
-Anyway with this plugin those kind of problems are hopefully becoming a thing of the past for our all most favourite recreational activity of scanning space grass while binging Star Trek TNG I guess.
+Anyway with this plugin these kinds of problems are hopefully becoming a thing of the past for our all most favourite recreational activity of scanning space grass while binging Star Trek TNG I guess.
 
-Thats the current extent of this little project.
+That's the current extent of this little project.
