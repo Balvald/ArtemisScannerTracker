@@ -74,8 +74,8 @@ def init_data() -> None:
 
     notsoldbiodata_file_mtime = os.path.getmtime(notsoldbiodata_file)
 
-    logger.warning(f"Sold Bio Data: {soldbiodata}")
-    logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
+    # logger.warning(f"Sold Bio Data: {soldbiodata}")
+    # logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
 
     logger.warning("transcribing into data ...")
 
@@ -449,7 +449,7 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     while True:
         if plugin.newwindowrequested:
-            plugin.newwindow.destroy()
+            # plugin.newwindow.destroy()
             plugin.newwindowrequested = False
             break
 
