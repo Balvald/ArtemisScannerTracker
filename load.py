@@ -22,7 +22,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 
 PLUGIN_NAME = "AST"
 
-AST_VERSION = "dev-v0.3.1"
+AST_VERSION = "v0.3.1"
 
 AST_REPO = "Balvald/ArtemisScannerTracker"
 
@@ -247,7 +247,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     if plugin.AST_debug.get():
         logger.debug("Handled possible CMDR change")
 
-    if ((plugin.AST_current_system.get() != system
+    """if ((plugin.AST_current_system.get() != system
          or plugin.AST_current_system.get() == ""
          or plugin.AST_current_system.get() == "None")
         or (plugin.AST_current_system.get() == system
@@ -267,7 +267,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
             flag = True
 
     if plugin.AST_debug.get():
-        logger.debug("Got past check to ask Canonn")
+        logger.debug("Got past check to ask Canonn")"""
 
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # Probably?
