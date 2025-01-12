@@ -18,10 +18,15 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 > best for biology ever.  13/10.  
 >     — CMDR SlippyCheeze
 
-## New in v0.3.0
+## New in v0.3.1
 
-- Bugfix: Plugin now ignores a certain API which is now presumed to be dead and an EX-API
-- New Feature: AST Codex window to look at biodata you've scanned without having to fly into its' system.
+- Bugfix: Analyse Events that do not have any Species get ignored while scanning journals for historic data.
+    - _Was probably because of some plant from Null Island._
+- Bugfix: The AST Codex now properly sorts the entries by value if the CMDR wishes so.
+    - _Someone sorted numbers alphabetically and didn't notice._ :eyes:
+- Bugfix: The AST Codex now opens properly even when there is no data so show.
+    - _The AST Codex window finally overcame its anxiety to turn up empty handed._ 
+- New Feature: AST Codex window now has tabs with a table and a hierarchical tree view (which will undergo some changes)
 
 ## Features
 
@@ -96,6 +101,25 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
     -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly and please wait a good second or two when scanning through a lot of journal files.
 - "Reset" Clears fields that are connected to scanning exobiological plants.
 - "Debug Mode" If ticked the plugin will write nearly everything it does into the EDMarketConnector-debug.log. Keep unticked unless you are debugging yourself or asked to log what the plugin does for a bugreport.
+
+### AST Codex Window
+
+-- insert picture here --
+
+- Tabs: Table View, Tree View (experimental)
+    - Enables switching between the two views to look at the data. The Tree view is due to undergo some changes in the near future.
+- Search
+    - Search for a System, Planet, Species.
+- Table View
+    - Only visible when the Table view tab is selected.
+    - Can sort all data Alphabetically for Systems, Bodies (Planets), Species with their respective columns.
+    - Can sort for sold or unsold data with the "Sold" column.
+    - Can sort for the base value of a exobiology scan via the "Value" column.
+- Tree View (experimental)
+    - Only visible when the Tree view tab is selected.
+    - Due to undergo some changes
+    - Currently has a single root node "Systems" where each system is found.
+    - Individual entries are found under their respective system node.
 
 ## Motivation
 
