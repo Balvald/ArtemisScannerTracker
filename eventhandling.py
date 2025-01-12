@@ -170,13 +170,13 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:
         pass
 
     if systemchange:
-        try:
+        """try:
             logger.debug("Asking Canonn about the SAAsignals in current system")
             plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(entry["StarSystem"])
         except Exception as e:
             logger.warning(e)
             logger.warning(e.__doc__)
-            logger.warning("Couldn't get info about the SAAsignals in current system")
+            logger.warning("Couldn't get info about the SAAsignals in current system")"""
         ui.rebuild_ui(plugin, cmdr)
 
     # To fix the aforementioned eventuality where the systems end up
