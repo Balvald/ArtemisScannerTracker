@@ -60,7 +60,7 @@ def init_data() -> None:
     global notsoldbiodata_file_mtime
     global data_initialised
 
-    logger.debug("Initialising data ...")
+    logger.info("Initialising data ...")
 
     vistagenomicprices = getvistagenomicprices()
 
@@ -351,18 +351,19 @@ def show_codex_window(plugin, cmdr: str) -> None:
     global data_initialised
     global init_thread
 
-    logger.debug("Opening AST Codex ...")
+    logger.info("Opening AST Codex ...")
 
     while True:
-        logger.debug("Checking if data is initialised ...")
+        if plugin.AST_debug.get():
+            logger.debug("Checking if data is initialised ...")
         if data_initialised:
             # check if file was changed since last initialisation
+            if plugin.AST_debug.get():
+                logger.debug(soldbiodata_file_mtime)
+                logger.debug(notsoldbiodata_file_mtime)
 
-            # logger.debug(soldbiodata_file_mtime)
-            # logger.debug(notsoldbiodata_file_mtime)
-
-            # logger.debug(os.path.getmtime(soldbiodata_file))
-            # logger.debug(os.path.getmtime(notsoldbiodata_file))
+                logger.debug(os.path.getmtime(soldbiodata_file))
+                logger.debug(os.path.getmtime(notsoldbiodata_file))
 
             if ((os.path.getmtime(soldbiodata_file)
                  > soldbiodata_file_mtime) or
@@ -371,18 +372,22 @@ def show_codex_window(plugin, cmdr: str) -> None:
                 logger.warning("soldbiodata.json was changed, reinitialising data")
                 data_initialised = False
                 init_thread = threading.Thread(target=init_data)
-                logger.debug("Starting new initialisation thread ...")
+                if plugin.AST_debug.get():
+                    logger.debug("Starting new initialisation thread ...")
                 init_thread.start()
             else:
-                logger.debug("Doing Nothing ...")
+                if plugin.AST_debug.get():
+                    logger.debug("Doing Nothing ...")
                 break
         elif not init_thread.is_alive():
             data_initialised = False
             init_thread = threading.Thread(target=init_data)
-            logger.debug("Starting new initialisation thread ...")
+            if plugin.AST_debug.get():
+                logger.debug("Starting new initialisation thread ...")
             init_thread.start()
 
-    logger.debug("Opening AST Codex  2 ...")
+    if plugin.AST_debug.get():
+        logger.debug("Opening AST Codex  2 ...")
 
     new_window = tk.Tk()
     new_window.title("AST Codex")

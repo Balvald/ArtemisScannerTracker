@@ -27,7 +27,8 @@ def resurrection_event(plugin) -> None:
 def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> None:
     """Handle the ScanOrganic event."""
 
-    logger.debug("Handling ScanOrganic event.")
+    if plugin.AST_debug.get():
+        logger.debug("Handling ScanOrganic event.")
 
     # In the eventuality that the user started EMDC after
     # the "Location" event happens and directly scans a plant
@@ -42,7 +43,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
     plantname, plantworth = plugin.update_last_scan_plant(entry)
 
     if entry["ScanType"] == "Log":
-        logger.debug("Found Log")
+        if plugin.AST_debug.get():
+            logger.debug("Found Log")
 
         plugin.AST_current_scan_progress.set("1/3")
         plugin.AST_CCR.set(orgi.getclonalcolonialranges(orgi.genusgeneraltolocalised(entry["Genus"])))
@@ -56,7 +58,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
         # plugin.on_preferences_closed(cmdr, is_beta)
     elif entry["ScanType"] in ["Sample", "Analyse"]:
         if (entry["ScanType"] == "Analyse"):
-            logger.debug("Analyse Event!")
+            if plugin.AST_debug.get():
+                logger.debug("Analyse Event!")
 
             plugin.rawvalue += int(plantworth)
 
@@ -87,7 +90,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
             if currententrytowrite not in plugin.notyetsolddata[cmdr]:
                 # If there is no second Sample scantype event
                 # we have to save the data here.
-                logger.debug("Saving data to notsoldbiodata.json")
+                if plugin.AST_debug.get():
+                    logger.debug("Saving data to notsoldbiodata.json")
                 plugin.notyetsolddata[cmdr].append(currententrytowrite.copy())
                 file = plugin.AST_DIR + "/notsoldbiodata.json"
                 with open(file, "r+", encoding="utf8") as f:
@@ -100,7 +104,8 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
                     f.truncate()
                 currententrytowrite = {}
         else:
-            logger.debug("Found Sample event")
+            if plugin.AST_debug.get():
+                logger.debug("Found Sample event")
             notthesame = (not (old_AST_last_scan_system == plugin.AST_last_scan_system.get()
                           and old_AST_last_scan_body == plugin.AST_last_scan_body.get()
                           and old_AST_last_scan_plant == str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])))
@@ -170,13 +175,6 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:
         pass
 
     if systemchange:
-        """try:
-            logger.debug("Asking Canonn about the SAAsignals in current system")
-            plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(entry["StarSystem"])
-        except Exception as e:
-            logger.warning(e)
-            logger.warning(e.__doc__)
-            logger.warning("Couldn't get info about the SAAsignals in current system")"""
         ui.rebuild_ui(plugin, cmdr)
 
     # To fix the aforementioned eventuality where the systems end up
@@ -428,11 +426,13 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
 
 
 def SAASignalsFound_event(entry, plugin) -> None:
+    if plugin.AST_debug.get():
+        logger.debug(f"iterating over entry {entry}")
     for i in range(len(entry["Signals"])):
         if plugin.AST_debug.get():
-            logger.debug(f"{entry['Signals'][i]['Type']}")
-        if entry["Signals"][i]["Type"] != "$SAA_SignalType_Biological;":
-            continue
-        if entry["BodyName"] in plugin.AST_bios_on_planet.keys():
-            continue
-        plugin.AST_bios_on_planet[entry["BodyName"]] = entry["Signals"][i]["Count"]
+            logger.debug(f"iterating over {entry['Signals'][i]}")
+            logger.debug(f"Type: {entry['Signals'][i]['Type']}")
+        if entry["Signals"][i]["Type"] == "$SAA_SignalType_Biological;":
+            if plugin.AST_debug.get():
+                logger.debug(f"bio signal on {entry['BodyName']} - increasing count to {entry['Signals'][i]['Count']}")
+            plugin.AST_bios_on_planet[entry["BodyName"]] = entry["Signals"][i]["Count"]

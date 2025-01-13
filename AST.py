@@ -101,7 +101,7 @@ class ArtemisScannerTracker:
         self.AST_current_body: Optional[tk.StringVar] = tk.StringVar(value=str())
         self.AST_state: Optional[tk.StringVar] = tk.StringVar(value=str())
 
-        self.AST_bios_on_planet = None
+        self.AST_bios_on_planet = {}
         self.AST_num_bios_on_planet = 0
 
         self.rawvalue = int(config.get_int("AST_value"))
@@ -439,28 +439,6 @@ class ArtemisScannerTracker:
             journaldir = config.default_journal_dir
 
         self.rawvalue = build_biodata_json(logger, journaldir)[self.AST_current_CMDR]
-
-    """def ask_canonn_nicely(self, system: str):
-        # Ask Canonn how many biological signals are on any planets
-        if self.AST_debug.get():
-            logger.debug(f"Asking Canonn for Info about: {system}. This is currently deprecated")
-        return
-        response = requests.get(
-            f"https://us-central1-canonn-api-236217.cloudfunctions.net/query/getSystemPoi?system={system}",
-            timeout=20)
-        data = response.json()
-        if self.AST_debug.get():
-            logger.debug(f"Retrieved data: {data}")
-        dict_of_biological_counts = {}
-        try:
-            for body in data["SAAsignals"]:
-                if body["hud_category"] != "Biology":
-                    continue
-                dict_of_biological_counts[body["body"]] = body["count"]
-        except KeyError:
-            # If there are no SAAsignals to search through
-            pass
-        return dict_of_biological_counts"""
 
     def update_last_scan_plant(self, entry) -> tuple[str, int]:
         """."""
