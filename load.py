@@ -121,14 +121,12 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
         if currentbody not in ["", None, "None"]:
             if plugin.AST_debug.get():
                 logger.debug(plugin.AST_bios_on_planet)
-
-            key = currentbody.replace(plugin.AST_current_system.get(), '')[1:]
             try:
-                plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[key]
+                plugin.AST_num_bios_on_planet = plugin.AST_bios_on_planet[currentbody]
             except (KeyError, TypeError):
                 # Nothing found at currently closest planet
                 if plugin.AST_debug.get():
-                    logger.warning(f"No amount of bio signals found for body; {currentbody} with key: {key}")
+                    logger.warning(f"No amount of bio signals found for body; {currentbody} with key: {currentbody}")
 
         plugin.AST_near_planet = True
         plugin.AST_current_radius = entry["PlanetRadius"]
@@ -247,28 +245,6 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     if plugin.AST_debug.get():
         logger.debug("Handled possible CMDR change")
 
-    """if ((plugin.AST_current_system.get() != system
-         or plugin.AST_current_system.get() == ""
-         or plugin.AST_current_system.get() == "None")
-        or (plugin.AST_current_system.get() == system
-            and firstsystemevent)):
-        if plugin.AST_debug.get():
-            logger.debug("Asking Canonn for system (first system related event run of plugin or system was unknown)")
-        firstsystemevent = False
-        if system not in ["None", "", None]:
-            plugin.AST_current_system.set(system)
-            try:
-                logger.debug("Asking Canonn about the SAAsignals in current system")
-                plugin.AST_bios_on_planet = plugin.ask_canonn_nicely(system)
-            except Exception as e:
-                logger.warning(e)
-                logger.warning(e.__doc__)
-                logger.warning("Couldn't get info about the SAAsignals in current system")
-            flag = True
-
-    if plugin.AST_debug.get():
-        logger.debug("Got past check to ask Canonn")"""
-
     # TODO: Check if upon death in 4.0 Horizons do we lose Exobiodata.
     # Probably?
 
@@ -281,7 +257,8 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         plugin.notyetsolddata[cmdr] = eventhandling.resurrection_event(plugin)
 
     if entry["event"] == "ScanOrganic":
-        logger.debug("Encountered Scan Organic Event")
+        if plugin.AST_debug.get():
+            logger.debug("Encountered Scan Organic Event")
         flag = True
         if plugin.AST_debug.get():
             logger.debug("Calling eventhandler")
@@ -298,6 +275,8 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         eventhandling.biosell_event(cmdr, entry, plugin)
 
     if entry["event"] == "SAASignalsFound":
+        if plugin.AST_debug.get():
+            logger.debug(entry)
         eventhandling.SAASignalsFound_event(entry, plugin)
         flag = True
 
