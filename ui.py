@@ -6,17 +6,25 @@ import os
 import threading
 import tkinter as tk
 
-import myNotebook as nb  # type: ignore
-from config import appname  # type: ignore
-from theme import theme  # type: ignore
-from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
+try:
+    import myNotebook as nb  # type: ignore
+    from config import appname  # type: ignore
+    from theme import theme  # type: ignore
+    from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
+except ImportError:
+    import tkinter.ttk as nb  # type: ignore
+    testmode = True
 
 from organicinfo import getvistagenomicprices
 
 
 directory, filename = os.path.split(os.path.realpath(__file__))
 
-logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
+try:
+    logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
+except NameError:
+    logger = logging.getLogger(f"{os.path.basename(os.path.dirname(__file__))}")
+
 directory, filename = os.path.split(os.path.realpath(__file__))
 
 filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]

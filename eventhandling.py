@@ -3,13 +3,15 @@
 import json
 import logging
 import os
-
-from config import appname  # type: ignore
-
+# Own modules
 import saving
 import ui
 import organicinfo as orgi
 
+try:
+    from config import appname  # type: ignore
+except ImportError:
+    appname = "AST"
 
 logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 
