@@ -6,17 +6,57 @@ import requests
 import threading
 import tkinter as tk
 from typing import Optional
-
-import myNotebook as nb  # type: ignore
-from config import appname, config  # type: ignore
-
+# Own modules
 import saving
 import ui
 import organicinfo as orgi
 from journalcrawler import build_biodata_json
 
+# try to import config and notebook, if it fails we are in testmode
+try:
+    testmode = False
+    import myNotebook as nb  # type: ignore
+    from config import appname, config  # type: ignore
+except ImportError:
+    import tkinter.ttk as nb  # type: ignore
 
-logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
+    class config_replacement():
+        def __init__(self) -> None:
+            self.storage = {"AST_debug": "0",
+                            "AST_hide_fullscan": "0",
+                            "AST_hide_species": "0",
+                            "AST_hide_progress": "0",
+                            "AST_hide_last_system": "0",
+                            "AST_hide_last_body": "0",
+                            "AST_hide_system": "0",
+                            "AST_hide_body": "0",
+                            "AST_hide_value": "0",
+                            "AST_hide_sold_bio": "0",
+                            "AST_hide_CCR": "0",
+                            "AST_hide_after_selling": "0",
+                            "AST_hide_after_full_scan": "0",
+                            "AST_hide_value_when_zero": "0",
+                            "AST_hide_CODEX_button": "0",
+                            "AST_shorten_value": "0",
+                            "AST_after_selling": "0",
+                            "AST_hide_scans_in_system": "0",
+                            "AST_last_CMDR": "Jameson",
+                            "AST_value": "0"}
+
+        def get_int(self, key: str) -> int:
+            return int(self.storage[key])
+
+        def get_str(self, key: str) -> str:
+            return str(self.storage[key])
+
+    config = config_replacement()
+
+    testmode = True
+
+if not testmode:
+    logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
+else:
+    logger = logging.getLogger(f"{os.path.basename(os.path.dirname(__file__))}")
 
 
 class ArtemisScannerTracker:
@@ -221,22 +261,6 @@ class ArtemisScannerTracker:
                 else:
                     ui.prefs_tickbutton(frame, checkboxlistright[i], variablelistright[i], current_row, 1, tk.W)
             current_row += 1
-
-        """        if self.AST_debug.get():
-
-            debuglistleft = ["species", "System of last Scan",
-                             "Body of last Scan", "Scan progress",
-                             "Scanned Value"]
-            debuglistright = [self.AST_last_scan_plant, self.AST_last_scan_system,
-                              self.AST_last_scan_body, self.AST_current_scan_progress,
-                              self.AST_value]
-
-            for i in range(max(len(debuglistleft), len(debuglistright))):
-                if i < len(debuglistleft):
-                    ui.prefs_label(frame, debuglistleft[i], current_row, 0, tk.W)
-                if i < len(debuglistright):
-                    ui.prefs_entry(frame, debuglistright[i], current_row, 1, tk.W)
-                current_row += 1"""
 
         ui.prefs_label(frame, line, current_row, 0, tk.W)
         ui.prefs_label(frame, line, current_row, 1, tk.W)
