@@ -604,6 +604,8 @@ def rebuild_ui(plugin, cmdr: str) -> None:
         build_sold_bio_ui(plugin, cmdr, current_row)
 
     if not testmode:
+        logger.error(theme)
+        logger.error(theme)
         theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
 
 
