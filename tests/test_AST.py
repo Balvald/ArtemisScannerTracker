@@ -186,13 +186,11 @@ if __name__ == '__main__':
 
     # setup_main_ui
     test_AST_setup_main_ui()
-    # Unclear if I might hit a roadblock with this one.
+    # check that setup_main_ui() finishes without error
 
     # handle_possible_cmdr_change
     test_handle_possible_cmdr_change()
-
-
-
+    # check that handle_possible_cmdr_change() does indeed change the cmdr
 
     # on_preferences_closed
     test_on_preferences_closed()
