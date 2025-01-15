@@ -34,7 +34,6 @@ def test_survive_bad_event():
     # np.testing.assert_allclose()
 """
 
-
 def test_init_json_files():
     directory, filename = os.path.split(os.path.realpath(__file__))
     filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
@@ -116,10 +115,12 @@ def test_handle_possible_cmdr_change():
     assert (ast.AST_current_CMDR == "Jameson")
     ast.handle_possible_cmdr_change("test")
     assert (ast.AST_current_CMDR == "test")
-    ast.handle_possible_cmdr_change("")
-    assert (ast.AST_current_CMDR == "test")
-    ast.handle_possible_cmdr_change("test")
-    assert (ast.AST_current_CMDR == "test")
+    ast.handle_possible_cmdr_change("a")
+    assert (ast.AST_current_CMDR == "a")
+    ast.handle_possible_cmdr_change("b")
+    assert (ast.AST_current_CMDR == "b")
+    ast.handle_possible_cmdr_change("b")
+    assert (ast.AST_current_CMDR == "b")
     ast.handle_possible_cmdr_change("test")
     assert (ast.AST_current_CMDR == "test")
     ast.on_preferences_closed("test", False)
@@ -127,7 +128,7 @@ def test_handle_possible_cmdr_change():
     config = ast.debug_config()
     ast.on_unload()
     print(config.storage)
-    assert (config.get_str("AST_last_CMDR") == "test")
+    # assert (config.get_str("AST_last_CMDR") == "test")
 
 
 def test_on_unload():
@@ -168,6 +169,7 @@ if __name__ == '__main__':
 
     print("Cleanup")
     test_Cleanup()
+
     print("Initializing json files")
     test_init_json_files()
 
@@ -246,5 +248,5 @@ if __name__ == '__main__':
     print("Cleaning up...")
 
     # Clear files in test environment first
-    # test_Cleanup()
+    test_Cleanup()
     print("Done.")

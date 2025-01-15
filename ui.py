@@ -215,6 +215,21 @@ def tree_sort_column(tree, col, reverse) -> None:
                  tree_sort_column(tree, _col, not reverse))
 
 
+def ex_tree_sort_column(tree, col, reverse) -> None:
+    # in this tree there is only the #0 column
+    table = [(tree.item(k)['text'], k) for k in tree.get_children("")]
+    table.sort(key=lambda x: str(x[0]), reverse=reverse)
+
+    # rearrange items in sorted positions
+    for index, (val, k) in enumerate(table):
+        tree.move(k, "", index)
+        val = val
+    
+    # reverse sort next time
+    tree.heading(col, text="System", command=lambda _col=col:
+                 ex_tree_sort_column(tree, _col, not reverse))
+
+
 def tree_rebuild(tree, cmdr: str) -> None:
     global data
     tree.delete(*tree.get_children())
@@ -234,8 +249,8 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
     # global notsoldbiodata_file
 
     tree.delete(*tree.get_children())
-    tree.insert("", tk.END, text="System", iid=0, open=True)
-    iid = 1
+    # tree.insert("", tk.END, text="System", iid=0, open=True)
+    iid = 0
     query_found = False
 
     """new_data_exists = ((os.path.getmtime(soldbiodata_file)
@@ -277,7 +292,9 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                         break
                 except Exception:  # as e:
                     tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
-                    tree.move(iid, 0, "end")
+                    if iid != 0:
+                        # tree.move(iid, 0, "end")
+                        pass
                     parent_iid = iid
                     iid += 1
                     tree.insert(child, tk.END, text=str(item), iid=iid, open=False)
@@ -445,6 +462,8 @@ def show_codex_window(plugin, cmdr: str) -> None:
     scrollbar.grid(row=1, column=1, sticky="nsew")
 
     ex_tree = tk.ttk.Treeview(tab2)
+
+    ex_tree.heading("#0", text="System", command=lambda: ex_tree_sort_column(ex_tree, "#0", False))
 
     ex_tree_rebuild(ex_tree, cmdr, "")
 
