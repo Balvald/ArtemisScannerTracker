@@ -49,6 +49,9 @@ except ImportError:
         def get_str(self, key: str) -> str:
             return str(self.storage[key])
 
+        def set(self, key: str, value: any) -> None:
+            self.storage[key] = value
+
     config = config_replacement()
 
     testmode = True
@@ -158,15 +161,16 @@ class ArtemisScannerTracker:
         self.newwindowrequested = False
         self.searchthread = None
 
-        response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
+        if not testmode:
+            response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
 
-        if response.ok:
-            data = response.json()
+            if response.ok:
+                data = response.json()
 
-            if AST_VERSION != data['tag_name']:
-                self.updateavailable = True
-        else:
-            logger.error("Check for update failed!")
+                if AST_VERSION != data['tag_name']:
+                    self.updateavailable = True
+            else:
+                logger.error("Check for update failed!")
 
         logger.info("ArtemisScannerTracker instantiated")
 
@@ -481,7 +485,8 @@ class ArtemisScannerTracker:
         return plantname, plantworth
 
     def handle_possible_cmdr_change(self, cmdr: str) -> bool:
-        if self.AST_current_CMDR != cmdr and self.AST_current_CMDR != "" and self.AST_current_CMDR is not None:
+        print(self.AST_current_CMDR)
+        if self.AST_current_CMDR != cmdr and cmdr != "" and self.AST_current_CMDR is not None:  # self.AST_current_CMDR != ""
             # Check if new and old Commander are in the cmdrstates file.
             saving.save_cmdr(self.AST_current_CMDR, self)
             # New Commander not in cmdr states file.
@@ -520,3 +525,7 @@ class ArtemisScannerTracker:
     def show_codex_window_thread(self) -> None:
         ui.show_codex_window(self, self.AST_current_CMDR)
         # ui.rebuild_ui(self, self.AST_current_CMDR)
+
+    def debug_config(self) -> any:
+        """Return the current configuration only used for testing purposes where we return an instance of config_replacement."""
+        return config

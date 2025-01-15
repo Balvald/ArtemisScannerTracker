@@ -11,8 +11,11 @@ try:
     from config import appname  # type: ignore
     from theme import theme  # type: ignore
     from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
+    testmode = False
 except ImportError:
     import tkinter.ttk as nb  # type: ignore
+    # from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
+    appname = "AST"
     testmode = True
 
 from organicinfo import getvistagenomicprices
@@ -581,7 +584,8 @@ def rebuild_ui(plugin, cmdr: str) -> None:
     if plugin.AST_hide_sold_bio.get() != 1:
         build_sold_bio_ui(plugin, cmdr, current_row)
 
-    theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
+    if not testmode:
+        theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
 
 
 def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:

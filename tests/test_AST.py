@@ -8,6 +8,7 @@ import tkinter.ttk as nb
 directory, filename = os.path.split(os.path.realpath(__file__))
 sys.path.append(directory[:-5])
 from AST import ArtemisScannerTracker as AST  # noqa: E402
+import eventhandling
 
 root = tk.Tk()
 root.withdraw()  # <== this prevented garbage window.
@@ -33,9 +34,10 @@ def test_survive_bad_event():
     # np.testing.assert_allclose()
 """
 
+
 def test_init_json_files():
-    # directory, filename = os.path.split(os.path.realpath(__file__))
-    # filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
+    directory, filename = os.path.split(os.path.realpath(__file__))
+    filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
     # Create anew.
     for file in filenames:
         if not os.path.exists(directory + file):
@@ -58,7 +60,7 @@ def test_init_json_files():
 
 def test_AST_on_load():
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
-    ast = AST("test", "Balvald/ArtemisScannerTracker", "AST",
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
               directory, cmdrstates, notsold, sold)
     assert (ast.on_load() == "AST")
 
@@ -66,10 +68,92 @@ def test_AST_on_load():
 def test_AST_setup_preferences():
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     notebook = nb.Notebook(root)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.setup_preferences(notebook, "Jameson", False)
+    assert (True)
+
+
+def test_AST_setup_main_ui():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.frame = tk.Frame(parent)
+    ast.setup_preferences(notebook, "Jameson", False)
+    ast.setup_main_ui(parent)
+    assert (True)
+
+
+def test_on_preferences_closed():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.frame = tk.Frame(parent)
+    ast.setup_preferences(notebook, "Jameson", False)
+    ast.AST_CCR.set(100)
+    ast.AST_scan_1_pos_vector = [0, 0]
+    ast.AST_scan_2_pos_vector = [0, 0]
+    ast.on_preferences_closed("Jameson", False)
+    assert (True)
+
+
+def test_handle_possible_cmdr_change():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
     ast = AST("test", "Balvald/ArtemisScannerTracker", "AST",
               directory, cmdrstates, notsold, sold)
-    ast.setup_preferences(notebook, "Balvald", False)
-    assert (True is True)
+    ast.frame = tk.Frame(parent)
+    ast.setup_preferences(notebook, "test", False)
+    ast.AST_CCR.set(100)
+    ast.AST_scan_1_pos_vector = [0, 0]
+    ast.AST_scan_2_pos_vector = [0, 0]
+    ast.AST_current_CMDR = "Jameson"
+    assert (ast.AST_current_CMDR == "Jameson")
+    ast.handle_possible_cmdr_change("test")
+    assert (ast.AST_current_CMDR == "test")
+    ast.handle_possible_cmdr_change("")
+    assert (ast.AST_current_CMDR == "test")
+    ast.handle_possible_cmdr_change("test")
+    assert (ast.AST_current_CMDR == "test")
+    ast.handle_possible_cmdr_change("test")
+    assert (ast.AST_current_CMDR == "test")
+    ast.on_preferences_closed("test", False)
+    ast.on_unload()
+    config = ast.debug_config()
+    ast.on_unload()
+    print(config.storage)
+    assert (config.get_str("AST_last_CMDR") == "test")
+
+
+def test_on_unload():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.frame = tk.Frame(parent)
+    config = ast.debug_config()
+    print(config.storage)
+    ast.setup_preferences(notebook, "Jameson", False)
+    ast.AST_CCR.set(100)
+    ast.AST_scan_1_pos_vector = [0, 0]
+    ast.AST_scan_2_pos_vector = [0, 0]
+    # ast.AST_current_CMDR = "test"
+    # ast.AST_last_CMDR = "test"
+    config = ast.debug_config()
+    print(config.storage)
+    ast.handle_possible_cmdr_change("Jameson")
+    # ast.on_preferences_closed("test", False)
+    config = ast.debug_config()
+    print(config.storage)
+    ast.on_unload()
+    print(config.storage)
+    # assert (config.get_str("AST_last_CMDR") == "Jameson")
 
 
 def test_Cleanup():
@@ -98,11 +182,18 @@ if __name__ == '__main__':
     test_AST_setup_preferences()
     # check that setup_preferences() finishes without error
 
-    # on_unload
+    # setup_main_ui
+    test_AST_setup_main_ui()
+    # Unclear if I might hit a roadblock with this one.
+
+    # handle_possible_cmdr_change
+    test_handle_possible_cmdr_change()
+
 
 
 
     # on_preferences_closed
+    test_on_preferences_closed()
 
 
 
@@ -127,9 +218,10 @@ if __name__ == '__main__':
 
 
 
-    # handle_possible_cmdr_change
 
 
+    # on_unload
+    test_on_unload()
 
     # clipboard()
 
@@ -148,9 +240,11 @@ if __name__ == '__main__':
     # show_codex_window_thread
 
 
+
     print("Tests complete.")
 
     print("Cleaning up...")
+
     # Clear files in test environment first
-    test_Cleanup()
+    # test_Cleanup()
     print("Done.")
