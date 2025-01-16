@@ -224,7 +224,7 @@ def ex_tree_sort_column(tree, col, reverse) -> None:
     for index, (val, k) in enumerate(table):
         tree.move(k, "", index)
         val = val
-    
+
     # reverse sort next time
     tree.heading(col, text="System", command=lambda _col=col:
                  ex_tree_sort_column(tree, _col, not reverse))
