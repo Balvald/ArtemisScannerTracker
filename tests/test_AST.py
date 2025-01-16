@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import pytest
 import tkinter as tk
 import tkinter.ttk as nb
 # import numpy as np
@@ -8,7 +9,7 @@ import tkinter.ttk as nb
 directory, filename = os.path.split(os.path.realpath(__file__))
 sys.path.append(directory[:-5])
 from AST import ArtemisScannerTracker as AST  # noqa: E402
-import eventhandling
+# import eventhandling
 
 root = tk.Tk()
 root.withdraw()  # <== this prevented garbage window.
@@ -19,20 +20,22 @@ sold = {}
 
 filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
 
-"""bad_event = {"timestamp": "2022-10-24T00:00:00Z",
+bad_event = {"timestamp": "2022-10-24T00:00:00Z",
              "event": "ScanOrganic",
              "ScanType": "Analyse",
              "SystemAddress": 0,
              "Body": 0}
 
+good_event = {"timestamp": "2022-10-24T00:00:00Z",
+              "event": "ScanOrganic",
+              "ScanType": "Analyse",
+              "SystemAddress": 0,
+              "Body": 0,
+              "Genus": "$Codex_Ent_Osseus_Genus_Name;",
+              "Species": "$codex_ent_osseus_05_name;",
+              "Genus_Localised": "Osseus",
+              "Species_Localised": "Osseus Cornibus"}
 
-def test_survive_bad_event():
-    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
-
-    assert (True is True)
-
-    # np.testing.assert_allclose()
-"""
 
 def test_init_json_files():
     directory, filename = os.path.split(os.path.realpath(__file__))
@@ -85,7 +88,7 @@ def test_AST_setup_main_ui():
     assert (True)
 
 
-def test_on_preferences_closed():
+def test_AST_on_preferences_closed():
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
     notebook = nb.Notebook(parent)
@@ -100,7 +103,7 @@ def test_on_preferences_closed():
     assert (True)
 
 
-def test_handle_possible_cmdr_change():
+def test_AST_handle_possible_cmdr_change():
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
     notebook = nb.Notebook(parent)
@@ -125,13 +128,81 @@ def test_handle_possible_cmdr_change():
     assert (ast.AST_current_CMDR == "test")
     ast.on_preferences_closed("test", False)
     ast.on_unload()
-    config = ast.debug_config()
-    ast.on_unload()
-    print(config.storage)
-    # assert (config.get_str("AST_last_CMDR") == "test")
 
 
-def test_on_unload():
+def test_AST_forcehideshow():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.frame = tk.Frame(parent)
+    ast.setup_preferences(notebook, "Jameson", False)
+    ast.AST_CCR.set(100)
+    ast.AST_scan_1_pos_vector = [0, 0]
+    ast.AST_scan_2_pos_vector = [0, 0]
+    ast.AST_after_selling.set(False)
+    ast.forcehideshow()
+    assert (ast.AST_after_selling.get() == True)
+    ast.forcehideshow()
+    assert (ast.AST_after_selling.get() == False)
+
+
+def test_AST_switchhidesoldexobio():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.frame = tk.Frame(parent)
+    ast.setup_preferences(notebook, "Jameson", False)
+    ast.AST_CCR.set(100)
+    ast.AST_scan_1_pos_vector = [0, 0]
+    ast.AST_scan_2_pos_vector = [0, 0]
+    ast.AST_hide_scans_in_system.set(False)
+    ast.switchhidesoldexobio()
+    assert (ast.AST_hide_scans_in_system.get() == True)
+    ast.switchhidesoldexobio()
+    assert (ast.AST_hide_scans_in_system.get() == False)
+
+
+def test_AST_update_scan_plant():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.frame = tk.Frame(parent)
+    ast.setup_preferences(notebook, "Jameson", False)
+    ast.AST_CCR.set(100)
+    ast.AST_scan_1_pos_vector = [0, 0]
+    ast.AST_scan_2_pos_vector = [0, 0]
+    ast.AST_hide_scans_in_system.set(False)
+    with pytest.raises(Exception) as e_info:
+        ast.update_last_scan_plant(bad_event)
+    ast.update_last_scan_plant(good_event)
+    assert (good_event["Species_Localised"] in ast.AST_last_scan_plant.get())
+
+
+def test_AST_reset():
+    print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
+    parent = tk.Tk()
+    notebook = nb.Notebook(parent)
+    ast = AST("Jameson", "Balvald/ArtemisScannerTracker", "AST",
+              directory, cmdrstates, notsold, sold)
+    ast.frame = tk.Frame(parent)
+    ast.setup_preferences(notebook, "Jameson", False)
+    ast.AST_CCR.set(100)
+    ast.AST_scan_1_pos_vector = [0, 0]
+    ast.AST_scan_2_pos_vector = [0, 0]
+    ast.AST_hide_scans_in_system.set(False)
+    ast.reset()
+    assert (ast.rawvalue == 0)
+    assert (ast.AST_scan_1_pos_vector == [None, None])
+    assert (ast.AST_scan_2_pos_vector == [None, None])
+
+
+def test_AST_on_unload():
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
     notebook = nb.Notebook(parent)
@@ -189,45 +260,30 @@ if __name__ == '__main__':
     # check that setup_main_ui() finishes without error
 
     # handle_possible_cmdr_change
-    test_handle_possible_cmdr_change()
+    test_AST_handle_possible_cmdr_change()
     # check that handle_possible_cmdr_change() does indeed change the cmdr
 
     # on_preferences_closed
-    test_on_preferences_closed()
-
-
-
-
-    # setup_main_ui
-    
-
-
-    # reset
-
-
+    test_AST_on_preferences_closed()
 
     # forcehideshow
-
-
+    test_AST_forcehideshow()
 
     # switchhidesoldexobio
-
-
+    test_AST_switchhidesoldexobio()
 
     # update_last_scan_plant
+    test_AST_update_scan_plant()
 
-
-
-
+    # reset
+    test_AST_reset()
 
     # on_unload
-    test_on_unload()
+    test_AST_on_unload()
 
     # clipboard()
-
     # clipboard() cannot be properly tested for functionality
     # instead it is just tested for running without error
-
 
     # journal crawling methods:
     # buildsoldbiodatajsonlocalworker
@@ -238,8 +294,6 @@ if __name__ == '__main__':
     # Codex window methods:
     # show_codex_window_worker
     # show_codex_window_thread
-
-
 
     print("Tests complete.")
 
