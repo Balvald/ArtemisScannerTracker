@@ -486,7 +486,8 @@ class ArtemisScannerTracker:
 
     def handle_possible_cmdr_change(self, cmdr: str) -> bool:
         print(self.AST_current_CMDR)
-        if self.AST_current_CMDR != cmdr and self.AST_current_CMDR != "" and self.AST_current_CMDR is not None:  # cmdr != ""
+        if self.AST_current_CMDR != cmdr and self.AST_current_CMDR != "" and self.AST_current_CMDR is not None:
+            # cmdr != ""
             # Check if new and old Commander are in the cmdrstates file.
             saving.save_cmdr(self.AST_current_CMDR, self)
             # New Commander not in cmdr states file.
@@ -527,5 +528,6 @@ class ArtemisScannerTracker:
         # ui.rebuild_ui(self, self.AST_current_CMDR)
 
     def debug_config(self) -> any:
-        """Return the current configuration only used for testing purposes where we return an instance of config_replacement."""
+        """Return the current configuration only used for testing purposes
+        where we return an instance of config_replacement."""
         return config

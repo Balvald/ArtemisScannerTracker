@@ -143,9 +143,9 @@ def test_AST_forcehideshow():
     ast.AST_scan_2_pos_vector = [0, 0]
     ast.AST_after_selling.set(False)
     ast.forcehideshow()
-    assert (ast.AST_after_selling.get() == True)
+    assert (ast.AST_after_selling.get() == 1)
     ast.forcehideshow()
-    assert (ast.AST_after_selling.get() == False)
+    assert (ast.AST_after_selling.get() == 0)
 
 
 def test_AST_switchhidesoldexobio():
@@ -161,9 +161,9 @@ def test_AST_switchhidesoldexobio():
     ast.AST_scan_2_pos_vector = [0, 0]
     ast.AST_hide_scans_in_system.set(False)
     ast.switchhidesoldexobio()
-    assert (ast.AST_hide_scans_in_system.get() == True)
+    assert (ast.AST_hide_scans_in_system.get() == 1)
     ast.switchhidesoldexobio()
-    assert (ast.AST_hide_scans_in_system.get() == False)
+    assert (ast.AST_hide_scans_in_system.get() == 0)
 
 
 def test_AST_update_scan_plant():
@@ -178,7 +178,7 @@ def test_AST_update_scan_plant():
     ast.AST_scan_1_pos_vector = [0, 0]
     ast.AST_scan_2_pos_vector = [0, 0]
     ast.AST_hide_scans_in_system.set(False)
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(Exception) as e_info:  # noqa: F841
         ast.update_last_scan_plant(bad_event)
     ast.update_last_scan_plant(good_event)
     assert (good_event["Species_Localised"] in ast.AST_last_scan_plant.get())
