@@ -485,7 +485,14 @@ class ArtemisScannerTracker:
         return plantname, plantworth
 
     def handle_possible_cmdr_change(self, cmdr: str) -> bool:
-        print(self.AST_current_CMDR)
+        if self.AST_debug:
+            logger.debug(f"Current CMDR: {self.AST_current_CMDR}, New CMDR: {cmdr}")
+        if self.CMDR_states == {}:
+            self.CMDR_states = {cmdr: ["None", "None", "None", "0/3", "None", 0, 0, [None, None], [None, None]]}
+            #                   , "Jameson": ["None", "None", "None", "0/3", "None", 0, 0, [None, None], [None, None]]}
+            # saving.save_cmdr("Jameson", self)
+            saving.save_cmdr(cmdr, self)
+            self.on_preferences_closed(cmdr, False)
         if self.AST_current_CMDR != cmdr and self.AST_current_CMDR != "" and self.AST_current_CMDR is not None:
             # cmdr != ""
             # Check if new and old Commander are in the cmdrstates file.
@@ -493,7 +500,8 @@ class ArtemisScannerTracker:
             # New Commander not in cmdr states file.
             if cmdr not in self.CMDR_states.keys():
                 # completely new cmdr theres nothing to load
-                self.CMDR_states[cmdr] = ["None", "None", "None", "0/3", "None", 0, "None", "None", "None"]
+                self.CMDR_states[cmdr] = ["None", "None", "None", "0/3", "None", 0, 0, [None, None], [None, None]]
+                saving.save_cmdr(cmdr, self)
             else:
                 # Load cmdr from cmdr states.
                 if cmdr is not None and cmdr != "":
