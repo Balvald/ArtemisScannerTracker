@@ -20,7 +20,7 @@ def save_cmdr(cmdr, plugin) -> None:
     """Save information specific to the cmdr in the cmdrstates.json."""
 
     if cmdr not in plugin.CMDR_states.keys():
-        plugin.CMDR_states[cmdr] = ["None", "None", "None", "0/3", "None", 0, "None", [None, None], [None, None]]
+        plugin.CMDR_states[cmdr] = ["None", "None", "None", "0/3", "None", 0, 0, [None, None], [None, None]]
 
     try:
         AST_last_scan_plant = plugin.AST_last_scan_plant.get()
@@ -55,7 +55,7 @@ def save_cmdr(cmdr, plugin) -> None:
     try:
         AST_CCR = plugin.AST_CCR.get()
     except AttributeError:
-        AST_CCR = "None"
+        AST_CCR = 0
 
     try:
         AST_scan_1_pos_vector = plugin.AST_scan_1_pos_vector
