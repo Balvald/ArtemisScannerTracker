@@ -268,6 +268,7 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
 
     try:
         for item in data[cmdr]:
+            # logger.warning(f"Checking {item}")
             for value in item:
                 if query == "":
                     query_found = True
@@ -279,33 +280,42 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                     query_found = False
             if not query_found:
                 continue
-            for child in range(len(data[cmdr])+1):
+            child = 0
+            while True:
+            # for child in range(len(data[cmdr])*3+1):
                 # logger.warning(f"pot. parent with iid: {child} : {tree.item(child)} {len(data[cmdr])+1}")
                 try:
                     if str(item[0]) == tree.item(child)['text']:
                         try:
-                            for subchild in range(len(data[cmdr])+1):
+                            # for subchild in range(len(data[cmdr])*3+1):
+                            subchild = 0
+                            while True:
                                 if str(item[1]) == tree.item(subchild)['text']:
                                     body_iid = subchild
                                     tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
                                     tree.move(iid, body_iid, "end")
+                                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]} with iid {iid} and moved it to {body_iid}")
                                     iid += 1
                                     break
+                                subchild += 1
                             break
                         except Exception:
                             # logger.warning(f"parent: {tree.item(child)}")
                             parent_iid = child
                             tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
                             tree.move(iid, parent_iid, "end")
+                            # logger.debug(f"created body {item[1]} in system {item[0]} with iid {iid} and moved it to {parent_iid}")
                             body_iid = iid
                             iid += 1
                             tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
                             tree.move(iid, body_iid, "end")
+                            # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]} with iid {iid} and moved it to {body_iid}")
                             iid += 1
                             # logger.warning(f"Added {item} to {item[0]}")
                             break
                 except Exception:  # as e:
                     tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
+                    logger.debug(f"created system {item[0]} with iid {iid}")
                     if iid != 0:
                         # tree.move(iid, 0, "end")
                         pass
@@ -313,14 +323,19 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                     iid += 1
                     tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
                     tree.move(iid, parent_iid, "end")
+                    # logger.debug(f"created body {item[1]} in system {item[0]} with iid {iid} and moved it to {parent_iid}")
                     body_iid = iid
                     iid += 1
                     tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
                     tree.move(iid, body_iid, "end")
+                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]} with iid {iid} and moved it to {body_iid}")
                     iid += 1
                     # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
                     break
-    except KeyError:
+                child += 1
+
+    except KeyError as e:
+        logger.error(f"KeyError: {e}")
         pass
 
     """if query == "" and full_ex_tree is None:
