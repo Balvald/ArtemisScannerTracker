@@ -283,13 +283,27 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                 # logger.warning(f"pot. parent with iid: {child} : {tree.item(child)} {len(data[cmdr])+1}")
                 try:
                     if str(item[0]) == tree.item(child)['text']:
-                        # logger.warning(f"parent: {tree.item(child)}")
-                        parent_iid = child
-                        tree.insert("", tk.END, text=str(item), iid=iid, open=False)
-                        tree.move(iid, parent_iid, "end")
-                        iid += 1
-                        # logger.warning(f"Added {item} to {item[0]}")
-                        break
+                        try:
+                            for subchild in range(len(data[cmdr])+1):
+                                if str(item[1]) == tree.item(subchild)['text']:
+                                    body_iid = subchild
+                                    tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
+                                    tree.move(iid, body_iid, "end")
+                                    iid += 1
+                                    break
+                            break
+                        except Exception:
+                            # logger.warning(f"parent: {tree.item(child)}")
+                            parent_iid = child
+                            tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
+                            tree.move(iid, parent_iid, "end")
+                            body_iid = iid
+                            iid += 1
+                            tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
+                            tree.move(iid, body_iid, "end")
+                            iid += 1
+                            # logger.warning(f"Added {item} to {item[0]}")
+                            break
                 except Exception:  # as e:
                     tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
                     if iid != 0:
@@ -297,8 +311,12 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                         pass
                     parent_iid = iid
                     iid += 1
-                    tree.insert(child, tk.END, text=str(item), iid=iid, open=False)
+                    tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
                     tree.move(iid, parent_iid, "end")
+                    body_iid = iid
+                    iid += 1
+                    tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
+                    tree.move(iid, body_iid, "end")
                     iid += 1
                     # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
                     break
