@@ -240,31 +240,76 @@ def tree_rebuild(tree, cmdr: str) -> None:
         pass
 
 
+def save_treeview_state(tree) -> None:
+    nodes = {}
+    parent_of_child = {}
+
+    try:
+        for node in tree.get_children():
+            # logger.error("system level nodes found.")
+            # logger.error(f"Node: {node}")
+            nodes[node] = tree.item(node)
+            parent_of_child[node] = None
+            try:
+                for subnode in tree.get_children(node):
+                    # logger.error("body level nodes found.")
+                    # logger.error(f"Subnode: {subnode}")
+                    nodes[subnode] = tree.item(subnode)
+                    parent_of_child[subnode] = node
+                    try:
+                        for subsubnode in tree.get_children(subnode):
+                            # logger.error("signal level nodes found.")
+                            # logger.error(f"Subsubnode: {subsubnode}")
+                            nodes[subsubnode] = tree.item(subsubnode)
+                            parent_of_child[subsubnode] = subnode
+                    except Exception as e:
+                        logger.error(f"Error: {e}: No signal level nodes found.")
+                        pass
+            except Exception as e:
+                logger.error(f"Error: {e}: No body level nodes found.")
+                pass
+    except Exception as e:
+        logger.error(f"Error: {e}: No more signal level nodes found.")
+        pass
+
+    return [nodes, parent_of_child]
+
+
+def load_treeview_state(treevar, tree) -> None:
+    nodes = treevar[0]
+
+    # logger.error(f"Levels: {nodes}")
+
+    parent_of_child = treevar[1]
+
+    # rebuild tree.
+
+    for node in nodes.keys():
+        if parent_of_child[node] is None:
+            tree.insert("", tk.END, node, **nodes[node])
+        else:
+            tree.insert(parent_of_child[node], tk.END, node, **nodes[node])
+
+
 def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
     global data
-    # global full_ex_tree
-    # global soldbiodata_file_mtime
-    # global notsoldbiodata_file_mtime
-    # global soldbiodata_file
-    # global notsoldbiodata_file
+    global full_ex_tree
 
     tree.delete(*tree.get_children())
     # tree.insert("", tk.END, text="System", iid=0, open=True)
     iid = 0
     query_found = False
 
-    """new_data_exists = ((os.path.getmtime(soldbiodata_file)
+    new_data_exists = ((os.path.getmtime(soldbiodata_file)
                         > soldbiodata_file_mtime) or
                        (os.path.getmtime(notsoldbiodata_file)
                         > notsoldbiodata_file_mtime))
 
     if full_ex_tree is not None and query == "" and not new_data_exists:
-        # replace tree with full_ex_tree
-        for child in full_ex_tree.get_children():
-            tree.insert("", tk.END, text=full_ex_tree.item(child)['text'], iid=child, open=False)
-            for subchild in full_ex_tree.get_children(child):
-                tree.insert(child, tk.END, text=full_ex_tree.item(subchild)['text'], iid=subchild, open=False)
-        return"""
+        logger.info("Loading tree from saved state ...")
+        load_treeview_state(full_ex_tree, tree)
+        logger.info("Tree loaded from saved state.")
+        return
 
     try:
         for item in data[cmdr]:
@@ -280,14 +325,12 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                     query_found = False
             if not query_found:
                 continue
-            child = 0
+            child = 0 
             while True:
-            # for child in range(len(data[cmdr])*3+1):
-                # logger.warning(f"pot. parent with iid: {child} : {tree.item(child)} {len(data[cmdr])+1}")
+            # check until we find the right child. As it might exist already.
                 try:
                     if str(item[0]) == tree.item(child)['text']:
                         try:
-                            # for subchild in range(len(data[cmdr])*3+1):
                             subchild = 0
                             while True:
                                 if str(item[1]) == tree.item(subchild)['text']:
@@ -315,10 +358,7 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                             break
                 except Exception:  # as e:
                     tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
-                    logger.debug(f"created system {item[0]} with iid {iid}")
-                    if iid != 0:
-                        # tree.move(iid, 0, "end")
-                        pass
+                    # logger.debug(f"created system {item[0]} with iid {iid}")
                     parent_iid = iid
                     iid += 1
                     tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
@@ -338,8 +378,8 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
         logger.error(f"KeyError: {e}")
         pass
 
-    """if query == "" and full_ex_tree is None:
-        full_ex_tree = tree"""
+    if query == "" and full_ex_tree is None:
+        full_ex_tree = save_treeview_state(tree)
 
 
 def tree_search(tree, search_entry, cmdr: str) -> None:
@@ -507,8 +547,8 @@ def show_codex_window(plugin, cmdr: str) -> None:
     search_entry2 = tk.Entry(tab2, width=30)
     search_entry2.grid(row=0, column=0, padx=45, sticky=tk.W)
     search_button2 = tk.Button(tab2, text="🔍",
-                               command=lambda _search_entry=search_entry:
-                               tree_search_worker_ex(plugin, ex_tree, _search_entry, cmdr))
+                               command=lambda _search_entry2=search_entry2:
+                               tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr))
     search_button2.grid(row=0, column=0, sticky=tk.W, padx=240)
 
     scrollbar2 = tk.Scrollbar(tab2, orient="vertical", command=ex_tree.yview)
