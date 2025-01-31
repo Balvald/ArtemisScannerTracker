@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import gc
 import threading
 import tkinter as tk
 
@@ -118,10 +119,6 @@ def init_data() -> None:
     # logger.warning(f"{data}")
 
     data_initialised = True
-
-
-init_thread = threading.Thread(target=init_data)
-init_thread.start()
 
 
 # region ui shorthand definitions
@@ -325,9 +322,9 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                     query_found = False
             if not query_found:
                 continue
-            child = 0 
+            child = 0
             while True:
-            # check until we find the right child. As it might exist already.
+                # check until we find the right child. As it might exist already.
                 try:
                     if str(item[0]) == tree.item(child)['text']:
                         try:
@@ -337,7 +334,8 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                                     body_iid = subchild
                                     tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
                                     tree.move(iid, body_iid, "end")
-                                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]} with iid {iid} and moved it to {body_iid}")
+                                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
+                                    #  with iid {iid} and moved it to {body_iid}")
                                     iid += 1
                                     break
                                 subchild += 1
@@ -347,12 +345,14 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                             parent_iid = child
                             tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
                             tree.move(iid, parent_iid, "end")
-                            # logger.debug(f"created body {item[1]} in system {item[0]} with iid {iid} and moved it to {parent_iid}")
+                            # logger.debug(f"created body {item[1]} in system {item[0]}
+                            #  with iid {iid} and moved it to {parent_iid}")
                             body_iid = iid
                             iid += 1
                             tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
                             tree.move(iid, body_iid, "end")
-                            # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]} with iid {iid} and moved it to {body_iid}")
+                            # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
+                            #  with iid {iid} and moved it to {body_iid}")
                             iid += 1
                             # logger.warning(f"Added {item} to {item[0]}")
                             break
@@ -363,12 +363,14 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
                     iid += 1
                     tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
                     tree.move(iid, parent_iid, "end")
-                    # logger.debug(f"created body {item[1]} in system {item[0]} with iid {iid} and moved it to {parent_iid}")
+                    # logger.debug(f"created body {item[1]} in system {item[0]}
+                    #  with iid {iid} and moved it to {parent_iid}")
                     body_iid = iid
                     iid += 1
                     tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
                     tree.move(iid, body_iid, "end")
-                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]} with iid {iid} and moved it to {body_iid}")
+                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
+                    #  with iid {iid} and moved it to {body_iid}")
                     iid += 1
                     # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
                     break
@@ -450,56 +452,83 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     global data
     global data_initialised
-    global init_thread
 
     logger.info("Opening AST Codex ...")
 
-    while True:
-        if plugin.AST_debug.get():
-            logger.debug("Checking if data is initialised ...")
-        if data_initialised:
-            # check if file was changed since last initialisation
-            if plugin.AST_debug.get():
-                logger.debug(soldbiodata_file_mtime)
-                logger.debug(notsoldbiodata_file_mtime)
+    new_data_exists = ((os.path.getmtime(soldbiodata_file)
+                       > soldbiodata_file_mtime) or
+                       (os.path.getmtime(notsoldbiodata_file)
+                       > notsoldbiodata_file_mtime))
 
-                logger.debug(os.path.getmtime(soldbiodata_file))
-                logger.debug(os.path.getmtime(notsoldbiodata_file))
+    # while True:
+    if plugin.AST_debug.get():
+        logger.debug("Checking if data is initialised ...")
+        logger.debug(data_initialised)
 
-            if ((os.path.getmtime(soldbiodata_file)
-                 > soldbiodata_file_mtime) or
-                (os.path.getmtime(notsoldbiodata_file)
-                 > notsoldbiodata_file_mtime)):
-                logger.warning("soldbiodata.json was changed, reinitialising data")
-                data_initialised = False
-                init_thread = threading.Thread(target=init_data)
-                if plugin.AST_debug.get():
-                    logger.debug("Starting new initialisation thread ...")
-                init_thread.start()
-            else:
-                if plugin.AST_debug.get():
-                    logger.debug("Doing Nothing ...")
-                break
-        elif not init_thread.is_alive():
+        logger.debug(soldbiodata_file_mtime)
+        logger.debug(notsoldbiodata_file_mtime)
+
+        logger.debug(os.path.getmtime(soldbiodata_file))
+        logger.debug(os.path.getmtime(notsoldbiodata_file))
+
+    if new_data_exists:
+        data_initialised = False
+
+    if data_initialised:
+        # check if file was changed since last initialisation
+        try:
+            plugin.init_thread.join()
+            plugin.init_thread = None
+        except Exception as e:
+            logger.error(f"Error: {e}")
+
+        if not new_data_exists:
+            # data is still initialised. The old data is still the same
+            pass
+        else:
             data_initialised = False
-            init_thread = threading.Thread(target=init_data)
             if plugin.AST_debug.get():
                 logger.debug("Starting new initialisation thread ...")
-            init_thread.start()
+
+            plugin.init_thread = threading.Thread(target=init_data)
+            plugin.init_thread.start()
+            plugin.init_thread.join()
+            data_initialised = True
+            plugin.init_thread = None
+    else:
+        if plugin.init_thread is not None:
+            return
+
+        if plugin.AST_debug.get():
+            logger.debug("Starting new initialisation thread ...")
+
+        plugin.init_thread = threading.Thread(target=init_data)
+        plugin.init_thread.start()
+        plugin.init_thread.join()
+        data_initialised = True
+        plugin.init_thread = None
 
     if plugin.AST_debug.get():
-        logger.debug("Opening AST Codex  2 ...")
+        logger.debug("After Init thread concluded")
 
-    new_window = tk.Tk()
-    new_window.title("AST Codex")
+    if plugin.newwindowrequested:
+        if plugin.AST_debug.get():
+            logger.debug("New window is requested")
+        return
 
-    tabControl = tk.ttk.Notebook(new_window)
+    if plugin.AST_debug.get():
+        logger.debug("Creating Window")
+
+    plugin.AST_Codex_window = tk.Tk()
+    plugin.AST_Codex_window.title("AST Codex")
+
+    tabControl = tk.ttk.Notebook(plugin.AST_Codex_window)
 
     tab1 = tk.ttk.Frame(tabControl)
     tab2 = tk.ttk.Frame(tabControl)
 
-    tk.Grid.rowconfigure(new_window, 0, weight=1)
-    tk.Grid.columnconfigure(new_window, 0, weight=1)
+    tk.Grid.rowconfigure(plugin.AST_Codex_window, 0, weight=1)
+    tk.Grid.columnconfigure(plugin.AST_Codex_window, 0, weight=1)
 
     tab1.grid(row=0, column=0, sticky="nsew")
     tab2.grid(row=0, column=0, sticky="nsew")
@@ -517,6 +546,9 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     for col in columns:
         tree.column(col, width=75, stretch=True)
+
+    if plugin.AST_debug.get():
+        logger.debug("Rebuild Tree")
 
     tree_rebuild(tree, cmdr)
 
@@ -539,6 +571,9 @@ def show_codex_window(plugin, cmdr: str) -> None:
     ex_tree.heading("#0", text="System", command=lambda: ex_tree_sort_column(ex_tree, "#0", False))
 
     ex_tree_rebuild(ex_tree, cmdr, "")
+
+    if plugin.AST_debug.get():
+        logger.debug("Rebuild Ex Tree")
 
     ex_tree.grid(row=1, column=0, sticky="nsew")
 
@@ -563,15 +598,32 @@ def show_codex_window(plugin, cmdr: str) -> None:
     tab2.columnconfigure((1, 1), weight=0)
     tab2.rowconfigure((1, 1), weight=10)
 
+    if plugin.AST_debug.get():
+        logger.debug("Going in main loop")
+
+    # plugin.AST_Codex_window.mainloop()
     while True:
-        if plugin.newwindowrequested:
-            # new_window.destroy()
-            plugin.newwindowrequested = False
+        try:
+            plugin.AST_Codex_window.grab_status()
+            if plugin.newwindowrequested:
+                logger.debug("New window is requested")
+                try:
+                    plugin.AST_Codex_window.destroy()
+                except Exception as e:
+                    logger.error(f"Error: {e}")
+                break
+            plugin.AST_Codex_window.update_idletasks()
+            plugin.AST_Codex_window.update()
+        except Exception as e:
+            logger.error(f"Error: {e}")
             break
 
-        new_window.update_idletasks()
-        new_window.update()
-    # new_window.mainloop()
+    logger.info("Closing AST Codex ...")
+
+    plugin.AST_Codex_window = None
+    plugin.newwindowrequested = False
+
+    gc.collect()
 
 
 def clear_ui(frame) -> None:
@@ -824,16 +876,8 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
                              f"and body list of species {bodylistofspecies[species]}")
                 logger.debug(f"{bodylist}")
 
-            # already defined the same way?
-            # currentbody = plugin.AST_current_body.get().replace(plugin.AST_current_system.get(), "")[1:]
-
             if currentbody in bodylist:
                 colour = "green"
 
             colourlabel(plugin.frame, species, current_row, 0, colour, tk.W)
             label(plugin.frame, bodies, current_row, 1, tk.W)
-
-
-def set_data_init(bool) -> None:
-    global data_initialised
-    data_initialised = bool
