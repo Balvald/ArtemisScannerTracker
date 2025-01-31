@@ -108,7 +108,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - Tabs: Table View, Tree View (experimental)
     - Enables switching between the two views to look at the data. The Tree view is due to undergo some changes in the near future.
 - Search
-    - Write your search term for any System, Planet, Species into the text field and press the button with the "" to search for that term in the data you have collected.
+    - Write your search term for any System, Planet, Species into the text field and press the button with the "🔍" to search for that term in the data you have collected.
 - Table View
     - Only visible when the Table view tab is selected.
     - Can sort all data alphabetically for systems, bodies (planets) or species by clicking their respective columns.
