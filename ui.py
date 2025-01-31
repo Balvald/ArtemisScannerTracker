@@ -1,15 +1,19 @@
-"""AST UI functions"""
+"""AST UI functions."""
 
+import gc
 import json
 import logging
 import os
-import gc
 import threading
 import tkinter as tk
 
+# Own modules
+from organicinfo import getvistagenomicprices
+
+# EDMC specific imports
 try:
-    import myNotebook as nb  # type: ignore
     from config import appname  # type: ignore
+    import myNotebook as nb  # type: ignore
     from theme import theme  # type: ignore
     from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
     testmode = False
@@ -18,9 +22,6 @@ except ImportError:
     # from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
     appname = "AST"
     testmode = True
-
-from organicinfo import getvistagenomicprices
-
 
 directory, filename = os.path.split(os.path.realpath(__file__))
 

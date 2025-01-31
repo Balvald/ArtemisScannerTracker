@@ -1,13 +1,15 @@
-"""AST event handling functions"""
+"""AST event handling functions."""
 
 import json
 import logging
 import os
+
 # Own modules
+import organicinfo as orgi
 import saving
 import ui
-import organicinfo as orgi
 
+# EDMC specific imports
 try:
     from config import appname  # type: ignore
 except ImportError:

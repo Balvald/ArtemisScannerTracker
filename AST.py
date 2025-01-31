@@ -1,19 +1,22 @@
-"""Artemis Scanner Tracker Class"""
+"""Artemis Scanner Tracker Class."""
 
 import logging
 import os
 import requests
+import time
 import threading
 import tkinter as tk
 from typing import Optional
+
 # Own modules
+from journalcrawler import build_biodata_json
+import organicinfo as orgi
 import saving
 import ui
-import organicinfo as orgi
-from journalcrawler import build_biodata_json
 
-# try to import config and notebook, if it fails we are in testmode
+# EDMC specific imports
 try:
+    # try to import config and notebook, if it fails we are in testmode
     testmode = False
     import myNotebook as nb  # type: ignore
     from config import appname, config  # type: ignore
@@ -523,17 +526,8 @@ class ArtemisScannerTracker:
         if self.codexthread is not None:
             if self.codexthread.is_alive():
                 logger.warning("show_codex_window_worker: thread is already running")
-                # force close the thread
-                self.newwindowrequested = True
-                try:
-                    self.init_thread.join()
-                except Exception as e:
-                    logger.error(f"show_codex_window_worker: {e}")
-                try:
-                    self.codexthread.join()
-                except Exception as e:
-                    logger.error(f"show_codex_window_worker: {e}")
-                logger.warning("show_codex_window_worker: thread was already running: joined")
+                logger.warning("show_codex_window_worker: returning instead")
+                return
             else:
                 logger.warning("show_codex_window_worker: thread is not alive")
 

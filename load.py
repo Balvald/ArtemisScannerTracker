@@ -6,18 +6,23 @@ import os
 import tkinter as tk
 from typing import Optional
 
+import eventhandling
+import organicinfo as orgi
+import ui
+
+# Own Modules
+from AST import ArtemisScannerTracker
+
+# EDMC specific imports
 try:
     import myNotebook as nb  # type: ignore
     from config import appname  # type: ignore
+
     testmode = False
 except ImportError:
     import tkinter.ttk as nb  # type: ignore
-    testmode = True
 
-import eventhandling
-import ui
-import organicinfo as orgi
-from AST import ArtemisScannerTracker
+    testmode = True
 
 frame: Optional[tk.Frame] = None
 

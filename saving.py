@@ -1,9 +1,10 @@
-"""AST saving/loading helper functions"""
+"""AST saving/loading helper functions."""
 
 import json
 import logging
 import os
 
+# EDMC specific imports
 try:
     testmode = False
     from config import appname  # type: ignore

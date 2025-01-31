@@ -1,12 +1,12 @@
 """
 Here resides the journalcrawler that can read through all the journal files.
-
 It retraces all exobiology scans and sell actions.
 """
 
 import json
 import os
 
+# Own Modules
 from organicinfo import generaltolocalised, getvistagenomicprices
 
 
