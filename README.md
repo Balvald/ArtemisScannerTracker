@@ -26,7 +26,6 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 - Bugfix: The Search button from the Tree View now reads from the right rext field.
 - Changed Feature: The Tree View from the AST Codex window now has all systems as top level elements that expand into the different planets and finally the individual signals.
     - _This is much better now._
-- New Feature: AST Codex window now has tabs with a table and a hierarchical tree view (which will undergo some changes)
 
 ## Features
 
