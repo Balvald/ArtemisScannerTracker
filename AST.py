@@ -158,8 +158,11 @@ class ArtemisScannerTracker:
 
         self.thread = None
         self.codexthread = None
+        self.init_thread = None
         self.newwindowrequested = False
         self.searchthread = None
+
+        self.AST_Codex_window = None
 
         if not testmode:
             response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
@@ -514,26 +517,42 @@ class ArtemisScannerTracker:
         return False
 
     def show_codex_window_worker(self) -> None:
+        """Start the thread to show the Codex window."""
         logger.warning("show_codex_window_worker")
         # check if the thread is already running
         if self.codexthread is not None:
             if self.codexthread.is_alive():
-                # logger.warning("show_codex_window_worker: thread is already running")
+                logger.warning("show_codex_window_worker: thread is already running")
                 # force close the thread
                 self.newwindowrequested = True
-                self.codexthread.join()
-                self.newwindowrequested = False
-                ui.set_data_init(False)
+                try:
+                    self.init_thread.join()
+                except Exception as e:
+                    logger.error(f"show_codex_window_worker: {e}")
+                try:
+                    self.codexthread.join()
+                except Exception as e:
+                    logger.error(f"show_codex_window_worker: {e}")
+                logger.warning("show_codex_window_worker: thread was already running: joined")
+            else:
+                logger.warning("show_codex_window_worker: thread is not alive")
 
-                # logger.warning("show_codex_window_worker: thread is already running: joined")
-        self.codexthread = threading.Thread(target=self.show_codex_window_thread, name="show_codex_window")
-        self.codexthread.start()
-        # ui.show_codex_window(self, self.AST_current_CMDR)
-        # ui.rebuild_ui(self, self.AST_current_CMDR)
+        self.codexthread = None
+        self.newwindowrequested = False
+
+        logger.warning(f"Codex thread should not be running {self.codexthread}")
+
+        logger.warning("show_codex_window_worker: start new thread")
+        self.codexthread = threading.Thread(target=self.show_codex_window_thread,
+                                            name="show_codex_window")
+
+        try:
+            self.codexthread.start()
+        except Exception as e:
+            logger.error(f"show_codex_window_worker: {e}")
 
     def show_codex_window_thread(self) -> None:
         ui.show_codex_window(self, self.AST_current_CMDR)
-        # ui.rebuild_ui(self, self.AST_current_CMDR)
 
     def debug_config(self) -> any:
         """Return the current configuration only used for testing purposes
