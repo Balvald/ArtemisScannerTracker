@@ -18,14 +18,14 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 > best for biology ever.  13/10.  
 >     — CMDR SlippyCheeze
 
-## New in v0.3.1
+## New in v0.3.2
 
-- Bugfix: Analyse Events that do not have any Species get ignored while scanning journals for historic data.
-    - _Was probably because of some plant from Null Island._
-- Bugfix: The AST Codex now properly sorts the entries by value if the CMDR wishes so.
-    - _Someone sorted numbers alphabetically and didn't notice._ :eyes:
-- Bugfix: The AST Codex now opens properly even when there is no data so show.
-    - _The AST Codex window finally overcame its anxiety to turn up empty-handed._
+- Bugfix: Clean install of AST now properly recognise any performed scan.
+- Bugfix: AST Codex induced EDMC crashes are fixed now.
+    - _You can press that AST Codex button as often and as fast as you like._
+- Bugfix: The Search button from the Tree View now reads from the right rext field.
+- Changed Feature: The Tree View from the AST Codex window now has all systems as top level elements that expand into the different planets and finally the individual signals.
+    - _This is much better now._
 - New Feature: AST Codex window now has tabs with a table and a hierarchical tree view (which will undergo some changes)
 
 ## Features
