@@ -12,7 +12,7 @@ from organicinfo import getvistagenomicprices
 
 # EDMC specific imports
 try:
-    from config import appname  # type: ignore
+    from config import appname, config  # type: ignore
     import myNotebook as nb  # type: ignore
     from theme import theme  # type: ignore
     from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
@@ -523,6 +523,42 @@ def show_codex_window(plugin, cmdr: str) -> None:
     plugin.AST_Codex_window = tk.Tk()
     plugin.AST_Codex_window.title("AST Codex")
 
+    # Set theme colours
+
+    if not testmode:
+        # Get colours from imported theme
+        logger.warning(theme)
+
+        #
+        # THEME_DEFAULT = 0
+        # THEME_DARK = 1
+        # THEME_TRANSPARENT = 2
+        #
+
+        theme_indicator = config.get_int('theme')
+
+        logger.info(f"Theme indicator is set to: {theme_indicator}")
+
+        theme_values = {
+                            "fg": "#000000",
+                            "bg": "#FFFFFF",
+                            "fieldbg": "#FFFFFF",
+                            "selectfg": "#FFFFFF",
+                            "selectbg": "#000000"
+                        }
+
+        if theme_indicator != 0:
+            # Only apply black and orange theme colours if we use them.
+            theme_values = {
+                                "fg": "#FF8000",
+                                "bg": "#000000",
+                                "fieldbg": "#000000",
+                                "selectfg": "#000000",
+                                "selectbg": "#FF8000"
+                            }
+
+        logger.info(f"Theme values: {theme_values}")
+
     tabControl = tk.ttk.Notebook(plugin.AST_Codex_window)
 
     tab1 = tk.ttk.Frame(tabControl)
@@ -554,16 +590,22 @@ def show_codex_window(plugin, cmdr: str) -> None:
     tree_rebuild(tree, cmdr)
 
     tree.grid(row=1, column=0, sticky="nsew")
-    search_label = tk.Label(tab1, text="Search:")
-    search_label.grid(row=0, column=0, sticky=tk.W)
-    search_entry = tk.Entry(tab1, width=30)
-    search_entry.grid(row=0, column=0, padx=45, sticky=tk.W)
-    search_button = tk.Button(tab1, text="🔍",
-                              command=lambda _search_entry=search_entry:
-                              tree_search_worker(plugin, tree, _search_entry, cmdr))
-    search_button.grid(row=0, column=0, sticky=tk.W, padx=240)
 
-    scrollbar = tk.Scrollbar(tab1, orient="vertical", command=tree.yview)
+    search_label = tk.ttk.Label(tab1, text="Search:")
+    search_label.grid(row=0, column=0, sticky=tk.W)
+
+    search_entry = tk.ttk.Entry(tab1, width=30)
+    search_entry.grid(row=0, column=0, padx=(45, 0), sticky=tk.W)
+
+    search_button = tk.ttk.Button(tab1, text="🔍",
+                                  command=lambda _search_entry=search_entry:
+                                  tree_search_worker(plugin, tree, _search_entry, cmdr))
+    search_button.grid(row=0, column=0, sticky=tk.W, padx=(240, 0))
+
+    scrollbar = tk.ttk.Scrollbar(tab1,
+                                 orient="vertical",
+                                 command=tree.yview,
+                                 style="AST.Vertical.TScrollbar")
     tree.configure(yscrollcommand=scrollbar.set)
     scrollbar.grid(row=1, column=1, sticky="nsew")
 
@@ -578,16 +620,21 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     ex_tree.grid(row=1, column=0, sticky="nsew")
 
-    search_label2 = tk.Label(tab2, text="Search:")
+    search_label2 = tk.ttk.Label(tab2, text="Search:")
     search_label2.grid(row=0, column=0, sticky=tk.W)
-    search_entry2 = tk.Entry(tab2, width=30)
-    search_entry2.grid(row=0, column=0, padx=45, sticky=tk.W)
-    search_button2 = tk.Button(tab2, text="🔍",
-                               command=lambda _search_entry2=search_entry2:
-                               tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr))
-    search_button2.grid(row=0, column=0, sticky=tk.W, padx=240)
 
-    scrollbar2 = tk.Scrollbar(tab2, orient="vertical", command=ex_tree.yview)
+    search_entry2 = tk.ttk.Entry(tab2, width=30)
+    search_entry2.grid(row=0, column=0, padx=(45, 0), sticky=tk.W)
+
+    search_button2 = tk.ttk.Button(tab2, text="🔍",
+                                   command=lambda _search_entry2=search_entry2:
+                                   tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr))
+    search_button2.grid(row=0, column=0, sticky=tk.W, padx=(240, 0))
+
+    scrollbar2 = tk.ttk.Scrollbar(tab2,
+                                  orient="vertical",
+                                  command=ex_tree.yview,
+                                  style="AST.Vertical.TScrollbar")
     ex_tree.configure(yscrollcommand=scrollbar2.set)
     scrollbar2.grid(row=1, column=1, sticky="nsew")
 
@@ -615,6 +662,14 @@ def show_codex_window(plugin, cmdr: str) -> None:
                 break
             plugin.AST_Codex_window.update_idletasks()
             plugin.AST_Codex_window.update()
+
+            if not testmode:
+                pass
+                # theme.update(plugin.AST_Codex_window)
+                # theme.update(tab1)
+                # theme.update(tab2)
+                # theme.update(scrollbar)
+                # theme.update(scrollbar2)
         except Exception as e:
             logger.error(f"Error: {e}")
             break
@@ -730,8 +785,6 @@ def rebuild_ui(plugin, cmdr: str) -> None:
         build_sold_bio_ui(plugin, cmdr, current_row)
 
     if not testmode:
-        logger.error(theme)
-        logger.error(theme)
         theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
 
 

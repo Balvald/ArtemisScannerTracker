@@ -3,7 +3,6 @@
 import logging
 import os
 import requests
-import time
 import threading
 import tkinter as tk
 from typing import Optional
