@@ -4,6 +4,7 @@ import gc
 import json
 import logging
 import os
+import sys
 import threading
 import tkinter as tk
 
@@ -23,8 +24,6 @@ except ImportError:
     appname = "AST"
     testmode = True
 
-directory, filename = os.path.split(os.path.realpath(__file__))
-
 try:
     logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file__))}")
 except NameError:
@@ -32,8 +31,211 @@ except NameError:
 
 directory, filename = os.path.split(os.path.realpath(__file__))
 
-filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
+# region Theme
 
+tk_to_ttk_migration = True
+
+try:
+    from theme import _Theme  # type: ignore
+
+    # Just yoinked this from EDMC's own theme.py from ElSaico's ttk branch
+    if sys.platform == 'win32':
+        import win32con
+        import win32gui
+        from winrt.microsoft.ui.interop import get_window_id_from_window
+        from winrt.microsoft.ui.windowing import AppWindow
+        from winrt.windows.ui import Color, Colors  # noqa E402
+        from ctypes import windll
+        FR_PRIVATE = 0x10
+        fonts_loaded = windll.gdi32.AddFontResourceExW(str(config.respath_path / 'EUROCAPS.TTF'), FR_PRIVATE, 0)
+        if fonts_loaded < 1:
+            logger.error('Unable to load Euro Caps font for Transparent theme')
+
+    elif sys.platform == 'linux':
+        from ctypes import POINTER, Structure, byref, c_char_p, c_int, c_long, c_uint, c_ulong, c_void_p, cdll
+        XID = c_ulong 	# from X.h: typedef unsigned long XID
+        Window = XID
+        Atom = c_ulong
+        Display = c_void_p  # Opaque
+
+        PropModeReplace = 0
+        PropModePrepend = 1
+        PropModeAppend = 2
+
+        # From xprops.h
+        MWM_HINTS_FUNCTIONS = 1 << 0
+        MWM_HINTS_DECORATIONS = 1 << 1
+        MWM_HINTS_INPUT_MODE = 1 << 2
+        MWM_HINTS_STATUS = 1 << 3
+        MWM_FUNC_ALL = 1 << 0
+        MWM_FUNC_RESIZE = 1 << 1
+        MWM_FUNC_MOVE = 1 << 2
+        MWM_FUNC_MINIMIZE = 1 << 3
+        MWM_FUNC_MAXIMIZE = 1 << 4
+        MWM_FUNC_CLOSE = 1 << 5
+        MWM_DECOR_ALL = 1 << 0
+        MWM_DECOR_BORDER = 1 << 1
+        MWM_DECOR_RESIZEH = 1 << 2
+        MWM_DECOR_TITLE = 1 << 3
+        MWM_DECOR_MENU = 1 << 4
+        MWM_DECOR_MINIMIZE = 1 << 5
+        MWM_DECOR_MAXIMIZE = 1 << 6
+
+        class MotifWmHints(Structure):
+            """MotifWmHints structure."""
+
+            _fields_ = [
+                ('flags', c_ulong),
+                ('functions', c_ulong),
+                ('decorations', c_ulong),
+                ('input_mode', c_long),
+                ('status', c_ulong),
+            ]
+
+        # workaround for https://github.com/EDCD/EDMarketConnector/issues/568
+        if not os.getenv("EDMC_NO_UI"):
+            try:
+                xlib = cdll.LoadLibrary('libX11.so.6')
+                XInternAtom = xlib.XInternAtom
+                XInternAtom.argtypes = [POINTER(Display), c_char_p, c_int]
+                XInternAtom.restype = Atom
+                XChangeProperty = xlib.XChangeProperty
+                XChangeProperty.argtypes = [POINTER(Display), Window, Atom, Atom, c_int,
+                                            c_int, POINTER(MotifWmHints), c_int]
+                XChangeProperty.restype = c_int
+                XFlush = xlib.XFlush
+                XFlush.argtypes = [POINTER(Display)]
+                XFlush.restype = c_int
+                XOpenDisplay = xlib.XOpenDisplay
+                XOpenDisplay.argtypes = [c_char_p]
+                XOpenDisplay.restype = POINTER(Display)
+                XQueryTree = xlib.XQueryTree
+                XQueryTree.argtypes = [POINTER(Display), Window, POINTER(
+                    Window), POINTER(Window), POINTER(Window), POINTER(c_uint)]
+                XQueryTree.restype = c_int
+                dpy = xlib.XOpenDisplay(None)
+                if not dpy:
+                    raise Exception("Can't find your display, can't continue")
+
+                motif_wm_hints_property = XInternAtom(dpy, b'_MOTIF_WM_HINTS', False)
+                motif_wm_hints_normal = MotifWmHints(
+                    MWM_HINTS_FUNCTIONS | MWM_HINTS_DECORATIONS,
+                    MWM_FUNC_RESIZE | MWM_FUNC_MOVE | MWM_FUNC_MINIMIZE | MWM_FUNC_CLOSE,
+                    MWM_DECOR_BORDER | MWM_DECOR_RESIZEH | MWM_DECOR_TITLE | MWM_DECOR_MENU | MWM_DECOR_MINIMIZE,
+                    0, 0
+                )
+                motif_wm_hints_dark = MotifWmHints(MWM_HINTS_FUNCTIONS | MWM_HINTS_DECORATIONS,
+                                                   MWM_FUNC_RESIZE | MWM_FUNC_MOVE | MWM_FUNC_MINIMIZE | MWM_FUNC_CLOSE,
+                                                   0, 0, 0)
+            except Exception:
+                if __debug__:
+                    print_exc()  # noqa F821  # type: ignore  
+
+                dpy = None
+
+    # Redefining Theme Class to fit the needs of the independent window in this plugin.
+    # _Theme is a class from EDMC's theme.py from ElSaico's ttk branch
+
+    class AST_Theme(_Theme):
+        THEME_DEFAULT = 0
+        THEME_DARK = 1
+        THEME_TRANSPARENT = 2
+        packages = {
+            THEME_DEFAULT: 'light',  # 'default' is the name of a builtin theme
+            THEME_DARK: 'dark',
+            THEME_TRANSPARENT: 'transparent',
+        }
+        style: tk.ttk.Style
+        root: tk.Tk
+        binds: dict[str, str] = {}
+
+        def __init__(self):
+            super().__init__()
+
+        def initialize(self, parent):
+            super().initialize(parent)
+
+        def transparent_onenter(self, event):
+            super().transparent_onenter(event)
+
+        def transparent_onleave(self, event):
+            super().transparent_onleave(event)
+
+        def set_title_buttins_background(self, colour):
+            super().set_title_buttins_background(colour)
+
+        def apply(self):
+            theme = config.get_int('theme')
+            try:
+                self.root.tk.call('ttk::setTheme', self.packages[theme])
+            except tk.TclError:
+                logger.exception(f'Failure setting theme: {self.packages[theme]}')
+
+            if self.active == theme:
+                return  # Don't need to mess with the window manager
+            self.active = theme
+
+            self.root.withdraw()
+            self.root.update_idletasks()  # Size gets recalculated here
+
+            if sys.platform == 'win32':
+                hwnd = win32gui.GetParent(self.root.winfo_id())
+                window = AppWindow.get_from_window_id(get_window_id_from_window(hwnd))
+
+                if theme == self.THEME_DEFAULT:
+                    window.title_bar.reset_to_default()
+                else:
+                    window.title_bar.extends_content_into_title_bar = True
+                    self.set_title_buttons_background(Color(255, 10, 10, 10))
+
+                if theme == self.THEME_TRANSPARENT:
+                    # TODO prevent loss of focus when hovering the title bar area
+                    win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
+                                           win32con.WS_EX_APPWINDOW | win32con.WS_EX_LAYERED)  # Add to taskbar
+                    self.binds['<Enter>'] = self.root.bind('<Enter>', self.transparent_onenter)
+                    self.binds['<FocusIn>'] = self.root.bind('<FocusIn>', self.transparent_onenter)
+                    self.binds['<Leave>'] = self.root.bind('<Leave>', self.transparent_onleave)
+                    self.binds['<FocusOut>'] = self.root.bind('<FocusOut>', self.transparent_onleave)
+                else:
+                    win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32con.WS_EX_APPWINDOW)  # Add to taskbar
+                    for event, bind in self.binds.items():
+                        self.root.unbind(event, bind)
+                    self.binds.clear()
+            else:
+                if dpy:
+                    xroot = Window()
+                    parent = Window()
+                    children = Window()
+                    nchildren = c_uint()
+                    XQueryTree(dpy, self.root.winfo_id(),
+                               byref(xroot), byref(parent),
+                               byref(children), byref(nchildren))
+                    if theme == self.THEME_DEFAULT:
+                        wm_hints = motif_wm_hints_normal
+                    else:  # Dark *or* Transparent
+                        wm_hints = motif_wm_hints_dark
+
+                    XChangeProperty(
+                        dpy, parent, motif_wm_hints_property, motif_wm_hints_property, 32, PropModeReplace, wm_hints, 5
+                    )
+
+                    XFlush(dpy)
+
+            self.root.deiconify()
+            self.root.wait_visibility()  # need main window to be displayed before returning
+
+            if not self.minwidth:
+                self.minwidth = self.root.winfo_width()  # Minimum width = width on first creation
+                self.root.minsize(self.minwidth, -1)
+
+except Exception as e:
+    logger.error(f"Error: {e}")
+
+    tk_to_ttk_migration = False
+
+# endregion
+
+filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
 
 for file in filenames:
     if not os.path.exists(directory + file):
@@ -52,6 +254,73 @@ for file in filenames:
                 f.seek(0)
                 f.write(r"{}")
                 f.truncate()
+
+# region tk/ttk shorthand definitions
+
+
+def prefs_label(frame, text, row: int, col: int, sticky) -> None:
+    """Create label for the preferences of the plugin."""
+    global tk_to_ttk_migration
+    if tk_to_ttk_migration:
+        tk.ttk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
+    else:
+        nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
+
+
+def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> None:
+    """Create an entry field for the preferences of the plugin."""
+    global tk_to_ttk_migration
+    if tk_to_ttk_migration:
+        tk.ttk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
+    else:
+        nb.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
+
+
+def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
+    """Create a button for the prefereces of the plugin."""
+    global tk_to_ttk_migration
+    if tk_to_ttk_migration:
+        tk.ttk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
+    else:
+        nb.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
+
+
+def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
+    """Create a tickbox for the preferences of the plugin."""
+    if tk_to_ttk_migration:
+        tk.ttk.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
+    else:
+        nb.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
+
+
+def label(frame, text, row: int, col: int, sticky) -> None:
+    """Create a label for the ui of the plugin."""
+    tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
+
+
+def entry(frame, textvariable, row: int, col: int, sticky) -> None:
+    """Create a label that displays the content of a textvariable for the ui of the plugin."""
+    tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
+
+
+def colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
+    """Create a label with coloured text for the ui of the plugin."""
+    tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
+
+
+def colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> None:
+    """Create a label that displays the content of a textvariable for the ui of the plugin."""
+    tk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
+
+
+def button(frame, text, command, row: int, col: int, sticky) -> None:
+    """Create a button for the ui of the plugin."""
+    tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
+
+# endregion
+
+# region AST Codex Window
+
 
 data = {}
 data_initialised = False
@@ -120,56 +389,6 @@ def init_data() -> None:
     # logger.warning(f"{data}")
 
     data_initialised = True
-
-
-# region ui shorthand definitions
-
-
-def prefs_label(frame, text, row: int, col: int, sticky) -> None:
-    """Create label for the preferences of the plugin."""
-    nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
-
-
-def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> None:
-    """Create an entry field for the preferences of the plugin."""
-    nb.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
-
-
-def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
-    """Create a button for the prefereces of the plugin."""
-    nb.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
-
-
-def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
-    """Create a tickbox for the preferences of the plugin."""
-    nb.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
-
-
-def label(frame, text, row: int, col: int, sticky) -> None:
-    """Create a label for the ui of the plugin."""
-    tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
-
-
-def entry(frame, textvariable, row: int, col: int, sticky) -> None:
-    """Create a label that displays the content of a textvariable for the ui of the plugin."""
-    tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
-
-
-def colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
-    """Create a label with coloured text for the ui of the plugin."""
-    tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
-
-
-def colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> None:
-    """Create a label that displays the content of a textvariable for the ui of the plugin."""
-    tk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
-
-
-def button(frame, text, command, row: int, col: int, sticky) -> None:
-    """Create a button for the ui of the plugin."""
-    tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
-
-# endregion
 
 
 def shortcreditstring(number) -> str:
@@ -395,20 +614,20 @@ def tree_search(tree, search_entry, cmdr: str) -> None:
     if search_entry.get() == "":
         tree.selection_set([])
         return
-    logger.warning(f"Children: {children}")
+    # logger.info(f"Children: {children}")
     for child in children:
-        logger.warning(f"Child: {child}")
-        logger.warning(f"Values: {tree.item(child)['values']}")
+        # logger.info(f"Child: {child}")
+        # logger.info(f"Values: {tree.item(child)['values']}")
         for value in tree.item(child)['values']:
             if query.lower() in str(value).lower():
-                logger.warning(f"Found: {tree.item(child)['values']}")
+                # logger.info(f"Found: {tree.item(child)['values']}")
                 selections.append(child)
                 break
             elif str(value).lower() == "no" or str(value).lower() == "yes":
                 tree.delete(child)
                 break
-    logger.warning(f"Selections: {selections}")
-    logger.warning("Search complete")
+    # logger.info(f"Selections: {selections}")
+    logger.info("Search complete")
     tree.selection_set(selections)
 
 
@@ -523,56 +742,32 @@ def show_codex_window(plugin, cmdr: str) -> None:
     plugin.AST_Codex_window = tk.Tk()
     plugin.AST_Codex_window.title("AST Codex")
 
-    # Set theme colours
+    logger.info(f"{theme}")
 
-    if not testmode:
-        # Get colours from imported theme
-        logger.warning(theme)
+    if tk_to_ttk_migration:
+        # Initialize theme Object for AST Codex
+        themething = AST_Theme()
+        themething.initialize(plugin.AST_Codex_window)
+        # logger.info(f"{themething}")
 
-        #
-        # THEME_DEFAULT = 0
-        # THEME_DARK = 1
-        # THEME_TRANSPARENT = 2
-        #
-
-        theme_indicator = config.get_int('theme')
-
-        logger.info(f"Theme indicator is set to: {theme_indicator}")
-
-        theme_values = {
-                            "fg": "#000000",
-                            "bg": "#FFFFFF",
-                            "fieldbg": "#FFFFFF",
-                            "selectfg": "#FFFFFF",
-                            "selectbg": "#000000"
-                        }
-
-        if theme_indicator != 0:
-            # Only apply black and orange theme colours if we use them.
-            theme_values = {
-                                "fg": "#FF8000",
-                                "bg": "#000000",
-                                "fieldbg": "#000000",
-                                "selectfg": "#000000",
-                                "selectbg": "#FF8000"
-                            }
-
-        logger.info(f"Theme values: {theme_values}")
+    titlegap = tk.ttk.Frame(plugin.AST_Codex_window)
+    titlegap.grid(row=0, column=0, sticky="nsew", pady=(0, 28))
 
     tabControl = tk.ttk.Notebook(plugin.AST_Codex_window)
 
     tab1 = tk.ttk.Frame(tabControl)
     tab2 = tk.ttk.Frame(tabControl)
 
-    tk.Grid.rowconfigure(plugin.AST_Codex_window, 0, weight=1)
-    tk.Grid.columnconfigure(plugin.AST_Codex_window, 0, weight=1)
+    # tk.Grid.rowconfigure(plugin.AST_Codex_window, 0, weight=0)
+    tk.Grid.rowconfigure(plugin.AST_Codex_window, 1, weight=10)
+    tk.Grid.columnconfigure(plugin.AST_Codex_window, 0, weight=10)
 
     tab1.grid(row=0, column=0, sticky="nsew")
     tab2.grid(row=0, column=0, sticky="nsew")
 
     tabControl.add(tab1, text="Table View")
     tabControl.add(tab2, text="Tree View")
-    tabControl.grid(row=0, column=0, sticky='nsew')
+    tabControl.grid(row=1, column=0, sticky='nsew')
 
     columns = ["System", "Body", "Species", "Value", "Sold"]
 
@@ -595,12 +790,12 @@ def show_codex_window(plugin, cmdr: str) -> None:
     search_label.grid(row=0, column=0, sticky=tk.W)
 
     search_entry = tk.ttk.Entry(tab1, width=30)
-    search_entry.grid(row=0, column=0, padx=(45, 0), sticky=tk.W)
+    search_entry.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
 
-    search_button = tk.ttk.Button(tab1, text="🔍",
-                                  command=lambda _search_entry=search_entry:
-                                  tree_search_worker(plugin, tree, _search_entry, cmdr))
-    search_button.grid(row=0, column=0, sticky=tk.W, padx=(240, 0))
+    search_button = tk.Button(tab1, text="🔍",
+                              command=lambda _search_entry=search_entry:
+                              tree_search_worker(plugin, tree, _search_entry, cmdr))
+    search_button.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
     scrollbar = tk.ttk.Scrollbar(tab1,
                                  orient="vertical",
@@ -624,12 +819,12 @@ def show_codex_window(plugin, cmdr: str) -> None:
     search_label2.grid(row=0, column=0, sticky=tk.W)
 
     search_entry2 = tk.ttk.Entry(tab2, width=30)
-    search_entry2.grid(row=0, column=0, padx=(45, 0), sticky=tk.W)
+    search_entry2.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
 
-    search_button2 = tk.ttk.Button(tab2, text="🔍",
-                                   command=lambda _search_entry2=search_entry2:
-                                   tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr))
-    search_button2.grid(row=0, column=0, sticky=tk.W, padx=(240, 0))
+    search_button2 = tk.Button(tab2, text="🔍",
+                               command=lambda _search_entry2=search_entry2:
+                               tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr))
+    search_button2.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
     scrollbar2 = tk.ttk.Scrollbar(tab2,
                                   orient="vertical",
@@ -649,10 +844,18 @@ def show_codex_window(plugin, cmdr: str) -> None:
     if plugin.AST_debug.get():
         logger.debug("Going in main loop")
 
+    if tk_to_ttk_migration:
+        themething.apply()
+
+        applied_theme = themething.active
+
     # plugin.AST_Codex_window.mainloop()
     while True:
         try:
             plugin.AST_Codex_window.grab_status()
+            if tk_to_ttk_migration:
+                if applied_theme != theme.active:
+                    break
             if plugin.newwindowrequested:
                 logger.debug("New window is requested")
                 try:
@@ -680,6 +883,10 @@ def show_codex_window(plugin, cmdr: str) -> None:
     plugin.newwindowrequested = False
 
     gc.collect()
+
+# endregion
+
+# region AST Main UI
 
 
 def clear_ui(frame) -> None:
@@ -935,3 +1142,5 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
 
             colourlabel(plugin.frame, species, current_row, 0, colour, tk.W)
             label(plugin.frame, bodies, current_row, 1, tk.W)
+
+# endregion
