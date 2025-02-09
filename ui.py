@@ -161,6 +161,28 @@ try:
         def transparent_onleave(self, event):
             super().transparent_onleave(event)
 
+        def transparent_move(self, event=None):
+            logger.warning(f'event: {event} in transparent_move')
+            # upper left corner of our window
+            x, y = self.root.winfo_rootx(), self.root.winfo_rooty()
+            # logger.warning(f"x = {x}, y = {y}")
+            # lower right corner of our window
+            max_x = x + self.root.winfo_width()
+            max_y = y + self.root.winfo_height()
+            # mouse position
+            mouse_x, mouse_y = self.root.winfo_pointerx(), self.root.winfo_pointery()
+            # logger.warning(f"x = {mouse_x}, y = {mouse_y}")
+
+            if x <= mouse_x <= max_x and y <= mouse_y <= max_y:
+                # mouse is inside the window
+                self.root.attributes("-transparentcolor", '')
+                if sys.platform == 'win32':
+                    self.set_title_buttons_background(Color(255, 10, 10, 10))
+            else:
+                self.root.attributes("-transparentcolor", 'grey4')
+                if sys.platform == 'win32':
+                    self.set_title_buttons_background(Colors.transparent)
+
         def set_title_buttins_background(self, colour):
             super().set_title_buttins_background(colour)
 
@@ -192,14 +214,17 @@ try:
                     # TODO prevent loss of focus when hovering the title bar area
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
                                            win32con.WS_EX_APPWINDOW | win32con.WS_EX_LAYERED)  # Add to taskbar
-                    self.binds['<Enter>'] = self.root.bind('<Enter>', self.transparent_onenter)
-                    self.binds['<FocusIn>'] = self.root.bind('<FocusIn>', self.transparent_onenter)
-                    self.binds['<Leave>'] = self.root.bind('<Leave>', self.transparent_onleave)
-                    self.binds['<FocusOut>'] = self.root.bind('<FocusOut>', self.transparent_onleave)
+                    self.binds['<Enter>'] = self.root.bind('<Enter>', self.transparent_move)
+                    self.binds['<FocusIn>'] = self.root.bind('<FocusIn>', self.transparent_move)
+                    self.binds['<Leave>'] = self.root.bind('<Leave>', self.transparent_move)
+                    self.binds['<FocusOut>'] = self.root.bind('<FocusOut>', self.transparent_move)
                 else:
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32con.WS_EX_APPWINDOW)  # Add to taskbar
                     for event, bind in self.binds.items():
-                        self.root.unbind(event, bind)
+                        try:
+                            self.root.unbind(event, bind)
+                        except tk.TclError:
+                            logger.error(f'Failed to unbind {event} with {bind}')
                     self.binds.clear()
             else:
                 if dpy:
@@ -750,8 +775,8 @@ def show_codex_window(plugin, cmdr: str) -> None:
         themething.initialize(plugin.AST_Codex_window)
         # logger.info(f"{themething}")
 
-    titlegap = tk.ttk.Frame(plugin.AST_Codex_window)
-    titlegap.grid(row=0, column=0, sticky="nsew", pady=(0, 28))
+    titlegap = tk.ttk.Label(plugin.AST_Codex_window, text=" ")
+    titlegap.grid(row=0, column=0, sticky="nsew", pady=(0, 0))
 
     tabControl = tk.ttk.Notebook(plugin.AST_Codex_window)
 
