@@ -312,6 +312,7 @@ def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
 
 def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
     """Create a tickbox for the preferences of the plugin."""
+    global tk_to_ttk_migration
     if tk_to_ttk_migration:
         tk.ttk.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
     else:
