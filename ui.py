@@ -44,7 +44,7 @@ try:
         import win32gui
         from winrt.microsoft.ui.interop import get_window_id_from_window
         from winrt.microsoft.ui.windowing import AppWindow
-        from winrt.windows.ui import Color, Colors  # noqa E402
+        from winrt.windows.ui import Color, Colors, ColorHelper  # noqa E402
         from ctypes import windll
         FR_PRIVATE = 0x10
         fonts_loaded = windll.gdi32.AddFontResourceExW(str(config.respath_path / 'EUROCAPS.TTF'), FR_PRIVATE, 0)
@@ -155,41 +155,213 @@ try:
         def initialize(self, parent):
             super().initialize(parent)
 
-        def transparent_onenter(self, event):
-            super().transparent_onenter(event)
+        def load_colors(self):
+            # load colors from the current theme which is a *.tcl file
+            # and store them in the colors dict
 
-        def transparent_onleave(self, event):
-            super().transparent_onleave(event)
+            # get the current theme
+            theme = config.get_int('theme')
+            theme_name = self.packages[theme]
+
+            # get the path to the theme file
+            theme_file = config.internal_theme_dir_path / theme_name / (theme_name + '.tcl')
+
+            # load the theme file
+            with open(theme_file, 'r') as f:
+                lines = f.readlines()
+                foundstart = False
+                for line in lines:
+                    # logger.info(line)
+                    if line.lstrip().startswith('array set colors'):
+                        foundstart = True
+                        continue
+                    if line.lstrip().startswith('}'):
+                        break
+                    if foundstart:
+                        pair = line.lstrip().replace('\n', '').replace('"', '').split()
+                        self.colors[pair[0]] = pair[1]
+
+            logger.info(f'Loaded colors: {self.colors}')
+
+        # WORKAROUND $elite-dangerous-version | 2025/02/11 : Because for some reason the theme is not applied to
+        # all widgets upon the second theme change we have to force it
+
+        def _get_all_widgets(self):
+            all_widgets = []
+            all_widgets.append(self.root)
+
+            for child in self.root.winfo_children():
+                all_widgets.append(child)
+                all_widgets.extend(child.winfo_children())
+
+            oldlen = 0
+            newlen = len(all_widgets)
+
+            while newlen > oldlen:
+                oldlen = newlen
+                for widget in all_widgets:
+                    try:
+                        widget_children = widget.winfo_children()
+                        for child in widget_children:
+                            if child not in all_widgets:
+                                all_widgets.append(child)
+                    except Exception as e:
+                        logger.error(f'Error getting children of {widget}: {e}')
+                newlen = len(all_widgets)
+            return all_widgets
+
+        def _force_theme_menubutton(self, widget):
+            # get colors from map
+            background = self.style.map('TMenubutton', 'background')
+            foreground = self.style.map('TMenubutton', 'foreground')
+            self.style.configure('TMenubutton', background=self.style.lookup('TMenubutton', 'background'))
+            self.style.configure('TMenubutton', foreground=self.style.lookup('TMenubutton', 'foreground'))
+            self.style.map('TMenubutton', background=[('active', background[0][1])])
+            self.style.map('TMenubutton', foreground=[('active', foreground[0][1])])
+
+        def _force_theme_menu(self, widget):
+            colors = self.colors
+            widget.configure(background=self.style.lookup('TMenu', 'background'))
+            widget.configure(foreground=self.style.lookup('TMenu', 'foreground'))
+            widget.configure(activebackground=colors['-selectbg'])
+            widget.configure(activeforeground=colors['-selectfg'])
+
+        def _force_theme_button(self, widget):
+            colors = self.colors
+            widget.configure(background=self.style.lookup('TButton', 'background'))
+            widget.configure(foreground=self.style.lookup('TButton', 'foreground'))
+            widget.configure(activebackground=colors['-selectbg'])
+            widget.configure(activeforeground=colors['-selectfg'])
+
+        def _force_theme_label(self, widget):
+            widget.configure(background=self.style.lookup('TLabel', 'background'))
+            widget.configure(foreground=self.style.lookup('TLabel', 'foreground'))
+
+        def _force_theme_frame(self, widget):
+            widget.configure(background=self.style.lookup('TFrame', 'background'))
+
+        def _force_theme_scale(self, widget):
+            # get colors from the current theme
+            # keys are -fg, -bg, -disabledfg, -selectfg, -selectbg -highlight
+            colors = self.colors
+            # logger.info('foreground')
+            widget.configure(foreground=colors['-fg'])
+            # logger.info('highlightbackground')
+            widget.configure(highlightbackground=colors['-bg'])
+            # logger.info('activebackground')
+            widget.configure(activebackground=colors['-selectbg'])
+            # logger.info('background')
+            widget.configure(background=colors['-bg'])
+            # logger.info('highlight')
+            widget.configure(highlightcolor=colors['-highlight'])
+            # logger.info('trough')
+            widget.configure(troughcolor=colors['-bg'])
+
+        def _force_theme(self):
+            logger.info('Forcing theme change')
+            # get absolute top root
+
+            """if sys.platform == 'win32':
+                title_label = self.root.nametowidget('.title_label')
+                title_icon = self.root.nametowidget('.title_icon')
+                self._force_theme_label(title_label)
+                self._force_theme_label(title_icon)"""
+
+            all_widgets = self._get_all_widgets()
+
+            for widget in all_widgets:
+                try:
+                    if isinstance(widget, tk.Button):
+                        self._force_theme_button(widget)
+                    elif isinstance(widget, tk.Label):
+                        self._force_theme_label(widget)
+                    elif isinstance(widget, tk.Frame):
+                        self._force_theme_frame(widget)
+                    elif isinstance(widget, tk.ttk.Menubutton):
+                        self._force_theme_menubutton(widget)
+                    elif isinstance(widget, tk.Menu):
+                        self._force_theme_menu(widget)
+                    elif isinstance(widget, tk.Scale):
+                        self._force_theme_scale(widget)
+                    elif isinstance(widget, (tk.Canvas,
+                                    tk.ttk.Checkbutton,
+                                    tk.Checkbutton,
+                                    tk.ttk.Frame,
+                                    tk.ttk.Separator,
+                                    tk.ttk.Scrollbar,
+                                    tk.ttk.Notebook,
+                                    tk.ttk.Radiobutton,
+                                    tk.ttk.Button,
+                                    tk.Tk)):
+                        continue
+                    else:
+                        self._force_theme_label(widget)
+                except Exception as e:
+                    logger.debug(f'Error forcing theme for {widget} with type {type(widget)}: {e}')
+
+        def to_hex(self, hex_color) -> str:
+            hex_color = str(hex_color)
+            hex_color = hex_color.lstrip()
+            if not hex_color.startswith('#'):
+                hex_color = self.root.winfo_rgb(hex_color)
+                hex_color = [int(hex_color[i] // 256) for i in range(len(hex_color))]
+                hex_color = '#{:02x}{:02x}{:02x}'.format(*hex_color)
+            return hex_color
+
+        if sys.platform == 'win32':
+            def hex_to_rgb(self, hex_color) -> Color:
+                hex_color = self.to_hex(hex_color)
+                hex_color = hex_color.strip('#')
+                return ColorHelper.from_argb(255,
+                                             int(hex_color[0:2], 16),
+                                             int(hex_color[2:4], 16),
+                                             int(hex_color[4:6], 16))
 
         def transparent_move(self, event=None):
-            logger.warning(f'event: {event} in transparent_move')
+            # to make it adjustable for any style we need to give this the background color of the title bar
+            # that should turn transparent, ideally as hex value
             # upper left corner of our window
             x, y = self.root.winfo_rootx(), self.root.winfo_rooty()
-            # logger.warning(f"x = {x}, y = {y}")
             # lower right corner of our window
             max_x = x + self.root.winfo_width()
             max_y = y + self.root.winfo_height()
             # mouse position
             mouse_x, mouse_y = self.root.winfo_pointerx(), self.root.winfo_pointery()
-            # logger.warning(f"x = {mouse_x}, y = {mouse_y}")
 
+            if sys.platform == 'win32':
+                hwnd = win32gui.GetParent(self.root.winfo_id())
+                window = AppWindow.get_from_window_id(get_window_id_from_window(hwnd))
+
+            # check if mouse is inside the window
             if x <= mouse_x <= max_x and y <= mouse_y <= max_y:
-                # mouse is inside the window
+                # mouse is inside the window area
                 self.root.attributes("-transparentcolor", '')
                 if sys.platform == 'win32':
-                    self.set_title_buttons_background(Color(255, 10, 10, 10))
+                    self.set_title_buttons_background(self.hex_to_rgb(self.style.lookup('TButton', 'background')))
+                    window.title_bar.background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
+                    window.title_bar.inactive_background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
+                    window.title_bar.button_hover_background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'selectbackground'))
             else:
-                self.root.attributes("-transparentcolor", 'grey4')
+                self.root.attributes("-transparentcolor", self.style.lookup('TButton', 'background'))
                 if sys.platform == 'win32':
                     self.set_title_buttons_background(Colors.transparent)
+                    window.title_bar.background_color = Colors.transparent
+                    window.title_bar.inactive_background_color = Colors.transparent
+                    window.title_bar.button_hover_background_color = Colors.transparent
 
         def set_title_buttins_background(self, colour):
             super().set_title_buttins_background(colour)
 
         def apply(self):
+            logger.info('Applying theme')
             theme = config.get_int('theme')
             try:
                 self.root.tk.call('ttk::setTheme', self.packages[theme])
+                # WORKAROUND $elite-dangerous-version | 2025/02/11 : Because for some reason the theme is not applied to
+                # all widgets upon the second theme change we have to force it
+                self.load_colors()
+                self._force_theme()
             except tk.TclError:
                 logger.exception(f'Failure setting theme: {self.packages[theme]}')
 
@@ -199,19 +371,31 @@ try:
 
             self.root.withdraw()
             self.root.update_idletasks()  # Size gets recalculated here
-
             if sys.platform == 'win32':
                 hwnd = win32gui.GetParent(self.root.winfo_id())
                 window = AppWindow.get_from_window_id(get_window_id_from_window(hwnd))
+                # title_gap: tk.ttk.Frame = self.root.nametowidget('.alternate_menubar.title_gap')
 
-                if theme == self.THEME_DEFAULT:
-                    window.title_bar.reset_to_default()
+                window.title_bar.extends_content_into_title_bar = True
+                # title_gap['height'] = window.title_bar.height
+
+                if theme != self.THEME_TRANSPARENT:
+                    # window.title_bar.reset_to_default()  # This makes it crash when switchthing back to default
+                    self.set_title_buttons_background(self.hex_to_rgb(self.style.lookup('TButton', 'background')))
+                    window.title_bar.background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
+                    window.title_bar.inactive_background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
+                    window.title_bar.button_hover_background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'selectbackground'))
                 else:
-                    window.title_bar.extends_content_into_title_bar = True
-                    self.set_title_buttons_background(Color(255, 10, 10, 10))
+                    self.set_title_buttons_background(Colors.transparent)
+                    window.title_bar.background_color = Colors.transparent
+                    window.title_bar.inactive_background_color = Colors.transparent
+                    window.title_bar.button_hover_background_color = Colors.transparent
 
                 if theme == self.THEME_TRANSPARENT:
-                    # TODO prevent loss of focus when hovering the title bar area
+                    # TODO prevent loss of focus when hovering the title bar area  # fixed by transparent_move,
+                    # we just don't regain focus when hovering over the title bar,
+                    # we have to hover over some visible widget first.
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
                                            win32con.WS_EX_APPWINDOW | win32con.WS_EX_LAYERED)  # Add to taskbar
                     self.binds['<Enter>'] = self.root.bind('<Enter>', self.transparent_move)
@@ -221,10 +405,7 @@ try:
                 else:
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32con.WS_EX_APPWINDOW)  # Add to taskbar
                     for event, bind in self.binds.items():
-                        try:
-                            self.root.unbind(event, bind)
-                        except tk.TclError:
-                            logger.error(f'Failed to unbind {event} with {bind}')
+                        self.root.unbind(event, bind)
                     self.binds.clear()
             else:
                 if dpy:
@@ -232,9 +413,7 @@ try:
                     parent = Window()
                     children = Window()
                     nchildren = c_uint()
-                    XQueryTree(dpy, self.root.winfo_id(),
-                               byref(xroot), byref(parent),
-                               byref(children), byref(nchildren))
+                    XQueryTree(dpy, self.root.winfo_id(), byref(xroot), byref(parent), byref(children), byref(nchildren))
                     if theme == self.THEME_DEFAULT:
                         wm_hints = motif_wm_hints_normal
                     else:  # Dark *or* Transparent
@@ -321,27 +500,27 @@ def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
 
 def label(frame, text, row: int, col: int, sticky) -> None:
     """Create a label for the ui of the plugin."""
-    tk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
+    return tk.ttk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
 def entry(frame, textvariable, row: int, col: int, sticky) -> None:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
-    tk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
+    return tk.ttk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
 def colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
     """Create a label with coloured text for the ui of the plugin."""
-    tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
+    return tk.ttk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
 def colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> None:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
-    tk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
+    return tk.ttk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
 def button(frame, text, command, row: int, col: int, sticky) -> None:
     """Create a button for the ui of the plugin."""
-    tk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
+    return tk.ttk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 # endregion
 
@@ -973,7 +1152,9 @@ def rebuild_ui(plugin, cmdr: str) -> None:
             if i < len(uielementlistright):
                 entry(plugin.frame, uielementlistright[i], current_row, 1, tk.W)
             if uielementlistextra[i] == "clipboardbutton":
-                button(plugin.frame, "📋", plugin.clipboard, current_row, 2, tk.E)
+                # button(plugin.frame, "📋", plugin.clipboard, current_row, 2, tk.E)
+                clippy_button = tk.ttk.Button(plugin.frame, text="📋", command=plugin.clipboard, width=0)
+                clippy_button.grid(row=current_row, column=2, sticky=tk.E)
             current_row += 1
 
     # Clonal Colonial Range here.
@@ -1018,7 +1199,8 @@ def rebuild_ui(plugin, cmdr: str) -> None:
         build_sold_bio_ui(plugin, cmdr, current_row)
 
     if not testmode:
-        theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
+        # theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
+        pass
 
 
 def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
