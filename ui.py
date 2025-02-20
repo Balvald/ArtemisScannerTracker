@@ -532,16 +532,30 @@ def entry(frame, textvariable, row: int, col: int, sticky) -> tk.ttk.Label:
 
 def colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> tk.ttk.Label:
     """Create a label with coloured text for the ui of the plugin."""
+    global tk_to_ttk_migration
     if tk_to_ttk_migration:
-        return tk.ttk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)  # , fg=colour
+        if colour == "green":
+            colour = "AST.green.TLabel"
+        elif colour == "red":
+            colour = "AST.red.TLabel"
+        else:
+            colour = "TLabel"
+        return tk.ttk.Label(frame, text=text, style=colour).grid(row=row, column=col, sticky=sticky)
     else:
         return tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
 def colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> tk.ttk.Label:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
+    global tk_to_ttk_migration
     if tk_to_ttk_migration:
-        return tk.ttk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)  # , fg=colour
+        if colour == "green":
+            colour = "AST.green.TLabel"
+        elif colour == "red":
+            colour = "AST.red.TLabel"
+        else:
+            colour = "TLabel"
+        return tk.ttk.Label(frame, textvariable=textvariable, style=colour).grid(row=row, column=col, sticky=sticky)
     else:
         return tk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
 
@@ -916,6 +930,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     """Show the AST Codex window."""
     global data
     global data_initialised
+    global tk_to_ttk_migration
 
     logger.info("Opening AST Codex ...")
 
@@ -1137,6 +1152,7 @@ def clear_ui(frame) -> None:
 
 def rebuild_ui(plugin, cmdr: str) -> None:  # noqa: CCR001
     """Rebuild the UI in case of preferences change."""
+    global tk_to_ttk_migration
     if plugin.AST_debug.get():
         logger.debug("Rebuilding UI ...")
 
@@ -1144,6 +1160,11 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa: CCR001
 
     # recreate UI
     current_row = 0
+
+    if tk_to_ttk_migration:
+        style = tk.ttk.Style()
+        style.configure("AST.green.TLabel", foreground="green")
+        style.configure("AST.red.TLabel", foreground="red")
 
     if plugin.updateavailable:
         latest = f"https://github.com/{plugin.AST_REPO}/releases/latest"
@@ -1250,6 +1271,7 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa: CCR001
 
 def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa: CCR001
     """Build the UI for the sold/scanned exobiology scans in current system."""
+    global tk_to_ttk_migration
     soldbiodata = {}
     notsoldbiodata = {}
 
@@ -1341,6 +1363,11 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa: CCR001
     except KeyError:
         # if we don't have the cmdr in the notsold data yet we just pass.
         pass
+
+    if tk_to_ttk_migration:
+        style = tk.ttk.Style()
+        style.configure("AST.green.TLabel", foreground="green")
+        style.configure("AST.red.TLabel", foreground="red")
 
     if bodylistofspecies == {}:
         count = "None"
