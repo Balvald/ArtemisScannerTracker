@@ -1361,17 +1361,17 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa: CCR001
     if plugin.AST_hide_scans_in_system.get() != 0:
         if tk_to_ttk_migration:
             down_button = tk.ttk.Button(plugin.frame, text=" ▼ ", command=plugin.switchhidesoldexobio)
-            down_button.grid(current_row, 2, tk.W, width=0)
+            down_button.grid(row=current_row, column=2, sticky=tk.W, width=0)
         else:
             down_button = tk.Button(plugin.frame, text=" ▼ ", command=plugin.switchhidesoldexobio)
-            down_button.grid(current_row, 2, tk.W)
+            down_button.grid(row=current_row, column=2, sticky=tk.W)
     else:
         if tk_to_ttk_migration:
             up_button = tk.ttk.Button(plugin.frame, text=" ▲ ", command=plugin.switchhidesoldexobio)
-            up_button.grid(current_row, 2, tk.W, width=0)
+            up_button.grid(row=current_row, column=2, sticky=tk.W, width=0)
         else:
             up_button = tk.Button(plugin.frame, text=" ▲ ", command=plugin.switchhidesoldexobio)
-            up_button.grid(current_row, 2, tk.W)
+            up_button.grid(row=current_row, column=2, sticky=tk.W)
 
         sortedspecieslist = sorted(bodylistofspecies.keys())
 
