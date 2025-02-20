@@ -1104,13 +1104,8 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
             plugin.AST_Codex_window.update_idletasks()
             plugin.AST_Codex_window.update()
 
-            if not testmode:
-                pass
-                # theme.update(plugin.AST_Codex_window)
-                # theme.update(tab1)
-                # theme.update(tab2)
-                # theme.update(scrollbar)
-                # theme.update(scrollbar2)
+            if not testmode and not tk_to_ttk_migration:
+                theme.update(plugin.AST_Codex_window)
         except Exception as e:
             logger.error(f"Error: {e}")
             break
@@ -1242,11 +1237,9 @@ def rebuild_ui(plugin, cmdr: str) -> None:  # noqa: CCR001
     if plugin.AST_hide_sold_bio.get() != 1:
         build_sold_bio_ui(plugin, cmdr, current_row)
 
-    if not testmode:
-        if not tk_to_ttk_migration:
-            # Apply theme colours to the frame and its children, including the new widgets
-            theme.update(plugin.frame)
-        pass
+    if not testmode and not tk_to_ttk_migration:
+        # Apply theme colours to the frame and its children, including the new widgets
+        theme.update(plugin.frame)
 
 
 def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa: CCR001
