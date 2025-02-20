@@ -1,5 +1,6 @@
 """
 Here resides the journalcrawler that can read through all the journal files.
+
 It retraces all exobiology scans and sell actions.
 """
 
@@ -29,11 +30,11 @@ alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
 def get_date(f_name: str, logger: any) -> str:
-    """Get the date from a filename in form of a stanardized string.
+    """
+    Get the date from a filename in form of a stanardized string.
 
     Format is: YYYY-MM-DD HH:MM:SS
     """
-
     if "CAPIJournal" in f_name:
         # This is a journal file from journal limpet
         year = "20" + f_name[12:14]
@@ -70,7 +71,7 @@ def get_date(f_name: str, logger: any) -> str:
     return [f"{year}-{month}-{day}T{hour}:{minute}:{second}Z", version]
 
 
-def build_biodata_json(logger: any, journaldir: str) -> int:
+def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
     """Build a soldbiodata.json and a notsoldbiodata that includes all sold organic scans that the player sold.
 
     Also return the value of still unsold scans.

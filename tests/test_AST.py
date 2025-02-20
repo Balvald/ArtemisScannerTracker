@@ -1,8 +1,9 @@
+"""Tests for the ArtemisScannerTracker module."""
+
 import json
 import os
 import sys
 import tkinter as tk
-import tkinter.ttk as nb
 
 import pytest
 
@@ -13,7 +14,7 @@ directory, filename = os.path.split(os.path.realpath(__file__))
 sys.path.append(directory[:-5])
 
 # Own Modules
-from AST import ArtemisScannerTracker as AST  # noqa: E402
+from AST import ArtemisScannerTracker as AST  # noqa: E402 N817
 
 # import eventhandling
 
@@ -47,7 +48,8 @@ good_event = {
 }
 
 
-def test_init_json_files():
+def test_init_json_files():  # noqa: CCR001
+    """Initialize json files."""
     directory, filename = os.path.split(os.path.realpath(__file__))
     filenames = ["/soldbiodata.json", "/notsoldbiodata.json", "/cmdrstates.json"]
     # Create anew.
@@ -60,7 +62,7 @@ def test_init_json_files():
             # (not)soldbiodata file already exists
             with open(directory + file, "r+", encoding="utf8") as f:
                 test = json.load(f)
-                if type([]) == type(test):  # noqa E721
+                if type([]) == type(test):  # noqa: E721
                     # we have an old version of the (not)soldbiodata.json
                     # clear it, have the user do the journal crawling again.
                     print(f"Found old {file} format")
@@ -70,7 +72,8 @@ def test_init_json_files():
                     f.truncate()
 
 
-def test_AST_on_load():
+def test_AST_on_load() -> None:  # noqa: N802
+    """Test the on_load method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     ast = AST(
         "Jameson",
@@ -84,9 +87,10 @@ def test_AST_on_load():
     assert ast.on_load() == "AST"
 
 
-def test_AST_setup_preferences():
+def test_AST_setup_preferences() -> None:  # noqa: N802
+    """Test setup_preferences."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
-    notebook = nb.Notebook(root)
+    notebook = tk.ttk.Notebook(root)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -100,10 +104,11 @@ def test_AST_setup_preferences():
     assert True
 
 
-def test_AST_setup_main_ui():
+def test_AST_setup_main_ui() -> None:  # noqa: N802
+    """Test setup_main_ui."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -119,10 +124,11 @@ def test_AST_setup_main_ui():
     assert True
 
 
-def test_AST_on_preferences_closed():
+def test_AST_on_preferences_closed() -> None:  # noqa: N802
+    """Test the on_preferences_closed method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -141,10 +147,11 @@ def test_AST_on_preferences_closed():
     assert True
 
 
-def test_AST_handle_possible_cmdr_change():
+def test_AST_handle_possible_cmdr_change() -> None:  # noqa: N802
+    """Test the handle_possible_cmdr_change method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "test",
         "Balvald/ArtemisScannerTracker",
@@ -175,10 +182,11 @@ def test_AST_handle_possible_cmdr_change():
     ast.on_unload()
 
 
-def test_AST_forcehideshow():
+def test_AST_forcehideshow() -> None:  # noqa: N802
+    """Test the forcehideshow method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -200,10 +208,11 @@ def test_AST_forcehideshow():
     assert ast.AST_after_selling.get() == 0
 
 
-def test_AST_switchhidesoldexobio():
+def test_AST_switchhidesoldexobio() -> None:  # noqa: N802
+    """Test the switchhidesoldexobio method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -225,10 +234,11 @@ def test_AST_switchhidesoldexobio():
     assert ast.AST_hide_scans_in_system.get() == 0
 
 
-def test_AST_update_scan_plant():
+def test_AST_update_scan_plant() -> None:  # noqa: N802
+    """Test the update_scan_plant method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -250,10 +260,11 @@ def test_AST_update_scan_plant():
     assert good_event["Species_Localised"] in ast.AST_last_scan_plant.get()
 
 
-def test_AST_reset():
+def test_AST_reset() -> None:  # noqa: N802
+    """Test the reset method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -275,10 +286,11 @@ def test_AST_reset():
     assert ast.AST_scan_2_pos_vector == [None, None]
 
 
-def test_AST_on_unload():
+def test_AST_on_unload() -> None:  # noqa: N802
+    """Test the on_unload method."""
     print(f"Running test: {sys._getframe(  ).f_code.co_name}.")
     parent = tk.Tk()
-    notebook = nb.Notebook(parent)
+    notebook = tk.ttk.Notebook(parent)
     ast = AST(
         "Jameson",
         "Balvald/ArtemisScannerTracker",
@@ -308,7 +320,8 @@ def test_AST_on_unload():
     # assert (config.get_str("AST_last_CMDR") == "Jameson")
 
 
-def test_Cleanup():
+def test_cleanup() -> None:
+    """Cleanup test environment."""
     # directory, filename = os.path.split(os.path.realpath(__file__))
     # filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
     for file in filenames:
@@ -319,7 +332,7 @@ def test_Cleanup():
 if __name__ == "__main__":
 
     print("Cleanup")
-    test_Cleanup()
+    test_cleanup()
 
     print("Initializing json files")
     test_init_json_files()
@@ -380,5 +393,5 @@ if __name__ == "__main__":
     print("Cleaning up...")
 
     # Clear files in test environment first
-    test_Cleanup()
+    test_cleanup()
     print("Done.")

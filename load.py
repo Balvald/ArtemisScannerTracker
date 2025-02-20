@@ -15,7 +15,7 @@ from AST import ArtemisScannerTracker
 
 # EDMC specific imports
 try:
-    import myNotebook as nb  # type: ignore
+    import myNotebook as nb  # type: ignore  # noqa: N813
     from config import appname  # type: ignore
 
     testmode = False
@@ -62,7 +62,7 @@ if not testmode:
             # (not)soldbiodata file already exists
             with open(directory + file, "r+", encoding="utf8") as f:
                 test = json.load(f)
-                if type([]) == type(test):  # noqa E721
+                if type([]) == type(test):  # noqa: E721
                     # we have an old version of the (not)soldbiodata.json
                     # clear it, have the user do the journal crawling again.
                     logger.warning(f"Found old {file} format")
@@ -83,7 +83,7 @@ with open(directory + "/cmdrstates.json", "r+", encoding="utf8") as f:
 
 # region eventhandling
 
-def dashboard_entry(cmdr: str, is_beta, entry) -> None:
+def dashboard_entry(cmdr: str, is_beta, entry) -> None:  # noqa: CCR001
     """
     React to changes in the CMDRs status (Movement for CCR feature).
 
@@ -217,7 +217,7 @@ def dashboard_entry(cmdr: str, is_beta, entry) -> None:
         # ui.rebuild_ui(plugin, cmdr) is already done in on_preferences_closed
 
 
-def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state) -> None:
+def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, state) -> None:  # noqa: CCR001
     """
     React accordingly to events in the journal.
 
@@ -231,7 +231,6 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
     :param entry: the current Journal entry
     :param state: More info about the commander, their ship, and their cargo
     """
-
     global plugin, firstsystemevent
 
     if plugin.AST_debug.get():

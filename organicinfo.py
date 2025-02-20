@@ -1,5 +1,6 @@
 """
 Contains the info for exobiology for the Artemis Scanner Tracker.
+
 Such as prices for different types of organic scans and colonial range.
 """
 
