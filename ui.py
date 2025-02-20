@@ -532,12 +532,18 @@ def entry(frame, textvariable, row: int, col: int, sticky) -> tk.ttk.Label:
 
 def colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> tk.ttk.Label:
     """Create a label with coloured text for the ui of the plugin."""
-    return tk.ttk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
+    if tk_to_ttk_migration:
+        return tk.ttk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)  # , fg=colour
+    else:
+        return tk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
 def colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> tk.ttk.Label:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
-    return tk.ttk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
+    if tk_to_ttk_migration:
+        return tk.ttk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)  # , fg=colour
+    else:
+        return tk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
 def button(frame, text, command, row: int, col: int, sticky) -> tk.ttk.Button:
