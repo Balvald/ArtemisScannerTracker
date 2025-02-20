@@ -17,36 +17,35 @@ else:
     logger = logging.getLogger(f"{os.path.basename(os.path.dirname(__file__))}")
 
 
-def save_cmdr(cmdr, plugin) -> None:
+def save_cmdr(cmdr, plugin) -> None:  # noqa: CCR001
     """Save information specific to the cmdr in the cmdrstates.json."""
-
     if cmdr not in plugin.CMDR_states.keys():
         plugin.CMDR_states[cmdr] = ["None", "None", "None", "0/3", "None", 0, 0, [None, None], [None, None]]
 
     try:
-        AST_last_scan_plant = plugin.AST_last_scan_plant.get()
+        ast_last_scan_plant = plugin.AST_last_scan_plant.get()
     except AttributeError:
-        AST_last_scan_plant = "None"
+        ast_last_scan_plant = "None"
 
     try:
-        AST_last_scan_system = plugin.AST_last_scan_system.get()
+        ast_last_scan_system = plugin.AST_last_scan_system.get()
     except AttributeError:
-        AST_last_scan_system = "None"
+        ast_last_scan_system = "None"
 
     try:
-        AST_last_scan_body = plugin.AST_last_scan_body.get()
+        ast_last_scan_body = plugin.AST_last_scan_body.get()
     except AttributeError:
-        AST_last_scan_body = "None"
+        ast_last_scan_body = "None"
 
     try:
-        AST_current_scan_progress = plugin.AST_current_scan_progress.get()
+        ast_current_scan_progress = plugin.AST_current_scan_progress.get()
     except AttributeError:
-        AST_current_scan_progress = "0/3"
+        ast_current_scan_progress = "0/3"
 
     try:
-        AST_state = plugin.AST_state.get()
+        ast_state = plugin.AST_state.get()
     except AttributeError:
-        AST_state = "None"
+        ast_state = "None"
 
     try:
         rawvalue = plugin.rawvalue
@@ -54,27 +53,27 @@ def save_cmdr(cmdr, plugin) -> None:
         rawvalue = 0
 
     try:
-        AST_CCR = plugin.AST_CCR.get()
+        ast_ccr = plugin.AST_CCR.get()
     except AttributeError:
-        AST_CCR = 0
+        ast_ccr = 0
 
     try:
-        AST_scan_1_pos_vector = plugin.AST_scan_1_pos_vector
-        if AST_scan_1_pos_vector == "None":
-            AST_scan_1_pos_vector = [None, None]
+        ast_scan_1_pos_vector = plugin.AST_scan_1_pos_vector
+        if ast_scan_1_pos_vector == "None":
+            ast_scan_1_pos_vector = [None, None]
     except AttributeError:
-        AST_scan_1_pos_vector = [None, None]
+        ast_scan_1_pos_vector = [None, None]
 
     try:
-        AST_scan_2_pos_vector = plugin.AST_scan_2_pos_vector
-        if AST_scan_2_pos_vector == "None":
-            AST_scan_2_pos_vector = [None, None]
+        ast_scan_2_pos_vector = plugin.AST_scan_2_pos_vector
+        if ast_scan_2_pos_vector == "None":
+            ast_scan_2_pos_vector = [None, None]
     except AttributeError:
-        AST_scan_2_pos_vector = [None, None]
+        ast_scan_2_pos_vector = [None, None]
 
-    valuelist = [AST_last_scan_plant, AST_last_scan_system, AST_last_scan_body,
-                 AST_current_scan_progress, AST_state, rawvalue,
-                 AST_CCR, AST_scan_1_pos_vector, AST_scan_2_pos_vector]
+    valuelist = [ast_last_scan_plant, ast_last_scan_system, ast_last_scan_body,
+                 ast_current_scan_progress, ast_state, rawvalue,
+                 ast_ccr, ast_scan_1_pos_vector, ast_scan_2_pos_vector]
 
     if plugin.AST_debug.get():
         logger.debug(f"Saving CMDR states: {valuelist} for CMDR: {cmdr}")
@@ -93,7 +92,6 @@ def save_cmdr(cmdr, plugin) -> None:
 
 def load_cmdr(cmdr, plugin) -> None:
     """Load information about a cmdr from cmdrstates.json."""
-
     file = plugin.AST_DIR + "/cmdrstates.json"
 
     with open(file, "r+", encoding="utf8") as f:

@@ -28,9 +28,8 @@ def resurrection_event(plugin) -> None:
     return []
 
 
-def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> None:
+def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> None:  # noqa: CCR001
     """Handle the ScanOrganic event."""
-
     if plugin.AST_debug.get():
         logger.debug("Handling ScanOrganic event.")
 
@@ -38,9 +37,9 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
     # the "Location" event happens and directly scans a plant
     # these lines wouldn"t be able to do anything but to
     # set the System and body of the last Scan to "None"
-    old_AST_last_scan_system = plugin.AST_last_scan_system.get()
-    old_AST_last_scan_body = plugin.AST_last_scan_body.get()
-    old_AST_last_scan_plant = str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
+    old_ast_last_scan_system = plugin.AST_last_scan_system.get()
+    old_ast_last_scan_body = plugin.AST_last_scan_body.get()
+    old_ast_last_scan_plant = str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])
 
     plugin.AST_last_scan_system.set(plugin.AST_current_system.get())
     plugin.AST_last_scan_body.set(plugin.AST_current_body.get())
@@ -110,9 +109,9 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
         else:
             if plugin.AST_debug.get():
                 logger.debug("Found Sample event")
-            notthesame = (not (old_AST_last_scan_system == plugin.AST_last_scan_system.get()
-                          and old_AST_last_scan_body == plugin.AST_last_scan_body.get()
-                          and old_AST_last_scan_plant == str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])))
+            notthesame = (not (old_ast_last_scan_system == plugin.AST_last_scan_system.get()
+                          and old_ast_last_scan_body == plugin.AST_last_scan_body.get()
+                          and old_ast_last_scan_plant == str(plugin.AST_last_scan_plant.get().split(" (Worth: ")[0])))
             # Check if we already have scan progress 2/3 with same species on the same body.
             # case 1: "0/3" not the same -> clear 1st distance change 2nd
             # case 2: "0/3" same -> change 2nd distance
@@ -162,7 +161,7 @@ def bioscan_event(cmdr: str, is_beta, entry, plugin, currententrytowrite) -> Non
     # ui.rebuild_ui(plugin, cmdr)
 
 
-def system_body_change_event(cmdr: str, entry, plugin) -> None:
+def system_body_change_event(cmdr: str, entry, plugin) -> None:  # noqa: CCR001
     """Handle all events that give a tell in which system we are or on what planet we are on."""
     systemchange = False
 
@@ -200,7 +199,7 @@ def system_body_change_event(cmdr: str, entry, plugin) -> None:
         saving.save_cmdr(cmdr, plugin)
 
 
-def biosell_event(cmdr: str, entry, plugin) -> None:
+def biosell_event(cmdr: str, entry, plugin) -> None:  # noqa: CCR001
     """Handle the SellOrganicData event."""
     soldvalue = 0
 
@@ -429,7 +428,8 @@ def biosell_event(cmdr: str, entry, plugin) -> None:
     ui.rebuild_ui(plugin, cmdr)
 
 
-def SAASignalsFound_event(entry, plugin) -> None:
+def SAASignalsFound_event(entry, plugin) -> None:  # noqa: CCR001 N802
+    """Handle the SAASignalsFound event."""
     if plugin.AST_debug.get():
         logger.debug(f"iterating over entry {entry}")
     for i in range(len(entry["Signals"])):

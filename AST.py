@@ -17,13 +17,16 @@ import ui
 try:
     # try to import config and notebook, if it fails we are in testmode
     testmode = False
-    import myNotebook as nb  # type: ignore
+    import myNotebook as nb  # type: ignore  # noqa: N813
     from config import appname, config  # type: ignore
 except ImportError:
     import tkinter.ttk as nb  # type: ignore
 
-    class config_replacement():
+    class ConfigReplacement():
+        """Config Replacement for testing purposes."""
+
         def __init__(self) -> None:
+            """Initialize the Config Replacement."""
             self.storage = {"AST_debug": "0",
                             "AST_hide_fullscan": "0",
                             "AST_hide_species": "0",
@@ -46,15 +49,18 @@ except ImportError:
                             "AST_value": "0"}
 
         def get_int(self, key: str) -> int:
+            """Return value of key as int."""
             return int(self.storage[key])
 
         def get_str(self, key: str) -> str:
+            """Return value of key as str."""
             return str(self.storage[key])
 
         def set(self, key: str, value: any) -> None:
+            """Set value of key in Config Replacement."""
             self.storage[key] = value
 
-    config = config_replacement()
+    config = ConfigReplacement()
 
     testmode = True
 
@@ -67,13 +73,12 @@ else:
 class ArtemisScannerTracker:
     """Artemis Scanner Tracker plugin class."""
 
-    def __init__(self, AST_VERSION: str, AST_REPO: str, PLUGIN_NAME: str,
+    def __init__(self, ast_version: str, ast_repo: str, plugin_name: str,  # noqa: CCR001
                  directory: str, cmdrstates: dict, notyetsolddata: dict, soldexobiology: dict) -> None:
         """Initialize the plugin by getting values from the config file."""
-
-        self.AST_VERSION = AST_VERSION
-        self.AST_REPO = AST_REPO
-        self.PLUGIN_NAME = PLUGIN_NAME
+        self.AST_VERSION = ast_version
+        self.AST_REPO = ast_repo
+        self.PLUGIN_NAME = plugin_name
         self.AST_DIR = directory
         self.CMDR_states = cmdrstates
 
@@ -167,12 +172,12 @@ class ArtemisScannerTracker:
         self.AST_Codex_window = None
 
         if not testmode:
-            response = requests.get(f"https://api.github.com/repos/{AST_REPO}/releases/latest", timeout=20)
+            response = requests.get(f"https://api.github.com/repos/{ast_repo}/releases/latest", timeout=20)
 
             if response.ok:
                 data = response.json()
 
-                if AST_VERSION != data['tag_name']:
+                if ast_version != data['tag_name']:
                     self.updateavailable = True
             else:
                 logger.error("Check for update failed!")
@@ -201,7 +206,7 @@ class ArtemisScannerTracker:
         self.newwindowrequested = True
         self.on_preferences_closed("", False)  # Save our prefs
 
-    def setup_preferences(self, parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]:
+    def setup_preferences(self, parent: nb.Notebook, cmdr: str, is_beta: bool) -> Optional[tk.Frame]:  # noqa: CCR001
         """
         setup_preferences is called by plugin_prefs in load.py.
 
@@ -320,16 +325,14 @@ class ArtemisScannerTracker:
 
         return frame
 
-    def on_preferences_closed(self, cmdr: str, is_beta: bool) -> None:
+    def on_preferences_closed(self, cmdr: str, is_beta: bool) -> None:  # noqa: CCR001
         """
         on_preferences_closed is called by prefs_changed in load.py.
 
         It is called when the preferences dialog is dismissed by the user.
-
         :param cmdr: The current ED Commander
         :param is_beta: Whether or not EDMC is currently marked as in beta mode
         """
-
         if self.AST_current_CMDR != "" and self.AST_current_CMDR is not None:
             saving.save_cmdr(self.AST_current_CMDR, self)
         if self.AST_current_CMDR != cmdr and cmdr != "" and cmdr is not None:
@@ -393,7 +396,6 @@ class ArtemisScannerTracker:
         :param parent: EDMC main window Tk
         :return: Our frame
         """
-
         try:
             saving.load_cmdr(self.AST_last_CMDR.get(), self)
         except KeyError:
@@ -438,11 +440,9 @@ class ArtemisScannerTracker:
         ui.rebuild_ui(self, self.AST_current_CMDR)
 
     def buildsoldbiodatajsonlocalworker(self) -> None:
+        """Start the thread to build the soldbiodata.json using the local journal folder."""
         self.thread = threading.Thread(target=self.buildsoldbiodatajsonlocal, name="buildsoldbiodatajsonlocal")
         self.thread.start()
-        # self.thread.join()
-        # self.thread = None
-        pass
 
     def buildsoldbiodatajsonlocal(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py searching through local journal folder."""
@@ -452,11 +452,9 @@ class ArtemisScannerTracker:
         self.rawvalue = build_biodata_json(logger, os.path.join(directory, "journals"))[self.AST_current_CMDR]
 
     def buildsoldbiodatajsonworker(self) -> None:
+        """Start the thread to build the soldbiodata.json using the game journal directory."""
         self.thread = threading.Thread(target=self.buildsoldbiodatajson, name="buildsoldbiodatajson")
         self.thread.start()
-        # self.thread.join()
-        # self.thread = None
-        pass
 
     def buildsoldbiodatajson(self) -> None:
         """Build the soldbiodata.json using the neighboring journalcrawler.py."""
@@ -489,7 +487,8 @@ class ArtemisScannerTracker:
         self.AST_last_scan_plant.set(plantname + " (Worth: " + worthstring + ")")
         return plantname, plantworth
 
-    def handle_possible_cmdr_change(self, cmdr: str) -> bool:
+    def handle_possible_cmdr_change(self, cmdr: str) -> bool:  # noqa: CCR001
+        """Handle possible CMDR change."""
         if self.AST_debug:
             logger.debug(f"Current CMDR: {self.AST_current_CMDR}, New CMDR: {cmdr}")
         if self.CMDR_states == {}:
@@ -545,9 +544,13 @@ class ArtemisScannerTracker:
             logger.error(f"show_codex_window_worker: {e}")
 
     def show_codex_window_thread(self) -> None:
+        """Show the Codex window."""
         ui.show_codex_window(self, self.AST_current_CMDR)
 
     def debug_config(self) -> any:
-        """Return the current configuration only used for testing purposes
-        where we return an instance of config_replacement."""
+        """
+        Return the current configuration only used for testing purposes.
+
+        So we only return an instance of ConfigReplacement().
+        """
         return config

@@ -14,7 +14,7 @@ from organicinfo import getvistagenomicprices
 # EDMC specific imports
 try:
     from config import appname, config  # type: ignore
-    import myNotebook as nb  # type: ignore
+    import myNotebook as nb  # type: ignore  # noqa: N813
     from theme import theme  # type: ignore
     from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
     testmode = False
@@ -44,7 +44,7 @@ try:
         import win32gui
         from winrt.microsoft.ui.interop import get_window_id_from_window
         from winrt.microsoft.ui.windowing import AppWindow
-        from winrt.windows.ui import Color, Colors, ColorHelper  # noqa E402
+        from winrt.windows.ui import Color, Colors, ColorHelper  # noqa: E402
         from ctypes import windll
         FR_PRIVATE = 0x10
         fonts_loaded = windll.gdi32.AddFontResourceExW(str(config.respath_path / 'EUROCAPS.TTF'), FR_PRIVATE, 0)
@@ -129,14 +129,16 @@ try:
                                                    0, 0, 0)
             except Exception:
                 if __debug__:
-                    print_exc()  # noqa F821  # type: ignore  
+                    print_exc()  # type: ignore  # noqa: F821
 
                 dpy = None
 
     # Redefining Theme Class to fit the needs of the independent window in this plugin.
     # _Theme is a class from EDMC's theme.py from ElSaico's ttk branch
 
-    class AST_Theme(_Theme):
+    class ASTTheme(_Theme):
+        """Theme class for the AST Codex window."""
+
         THEME_DEFAULT = 0
         THEME_DARK = 1
         THEME_TRANSPARENT = 2
@@ -150,12 +152,15 @@ try:
         binds: dict[str, str] = {}
 
         def __init__(self):
+            """Initialise ASTTheme object."""
             super().__init__()
 
         def initialize(self, parent):
+            """Initialise the theme."""
             super().initialize(parent)
 
-        def load_colors(self):
+        def load_colors(self) -> None:
+            """Load colors from the current theme."""
             # load colors from the current theme which is a *.tcl file
             # and store them in the colors dict
 
@@ -183,10 +188,8 @@ try:
 
             logger.info(f'Loaded colors: {self.colors}')
 
-        # WORKAROUND $elite-dangerous-version | 2025/02/11 : Because for some reason the theme is not applied to
-        # all widgets upon the second theme change we have to force it
-
-        def _get_all_widgets(self):
+        def _get_all_widgets(self) -> list:  # noqa: CCR001
+            """Get all widgets in the current window."""
             all_widgets = []
             all_widgets.append(self.root)
 
@@ -210,7 +213,7 @@ try:
                 newlen = len(all_widgets)
             return all_widgets
 
-        def _force_theme_menubutton(self, widget):
+        def _force_theme_menubutton(self, widget) -> None:
             # get colors from map
             background = self.style.map('TMenubutton', 'background')
             foreground = self.style.map('TMenubutton', 'foreground')
@@ -219,28 +222,28 @@ try:
             self.style.map('TMenubutton', background=[('active', background[0][1])])
             self.style.map('TMenubutton', foreground=[('active', foreground[0][1])])
 
-        def _force_theme_menu(self, widget):
+        def _force_theme_menu(self, widget) -> None:
             colors = self.colors
             widget.configure(background=self.style.lookup('TMenu', 'background'))
             widget.configure(foreground=self.style.lookup('TMenu', 'foreground'))
             widget.configure(activebackground=colors['-selectbg'])
             widget.configure(activeforeground=colors['-selectfg'])
 
-        def _force_theme_button(self, widget):
+        def _force_theme_button(self, widget) -> None:
             colors = self.colors
             widget.configure(background=self.style.lookup('TButton', 'background'))
             widget.configure(foreground=self.style.lookup('TButton', 'foreground'))
             widget.configure(activebackground=colors['-selectbg'])
             widget.configure(activeforeground=colors['-selectfg'])
 
-        def _force_theme_label(self, widget):
+        def _force_theme_label(self, widget) -> None:
             widget.configure(background=self.style.lookup('TLabel', 'background'))
             widget.configure(foreground=self.style.lookup('TLabel', 'foreground'))
 
-        def _force_theme_frame(self, widget):
+        def _force_theme_frame(self, widget) -> None:
             widget.configure(background=self.style.lookup('TFrame', 'background'))
 
-        def _force_theme_scale(self, widget):
+        def _force_theme_scale(self, widget) -> None:
             # get colors from the current theme
             # keys are -fg, -bg, -disabledfg, -selectfg, -selectbg -highlight
             colors = self.colors
@@ -257,7 +260,7 @@ try:
             # logger.info('trough')
             widget.configure(troughcolor=colors['-bg'])
 
-        def _force_theme(self):
+        def _force_theme(self):  # noqa: CCR001
             logger.info('Forcing theme change')
             # get absolute top root
 
@@ -283,16 +286,17 @@ try:
                         self._force_theme_menu(widget)
                     elif isinstance(widget, tk.Scale):
                         self._force_theme_scale(widget)
-                    elif isinstance(widget, (tk.Canvas,
-                                    tk.ttk.Checkbutton,
-                                    tk.Checkbutton,
-                                    tk.ttk.Frame,
-                                    tk.ttk.Separator,
-                                    tk.ttk.Scrollbar,
-                                    tk.ttk.Notebook,
-                                    tk.ttk.Radiobutton,
-                                    tk.ttk.Button,
-                                    tk.Tk)):
+                    elif isinstance(widget,
+                                    (tk.Canvas,
+                                     tk.Checkbutton,
+                                     tk.ttk.Checkbutton,
+                                     tk.ttk.Frame,
+                                     tk.ttk.Separator,
+                                     tk.ttk.Scrollbar,
+                                     tk.ttk.Notebook,
+                                     tk.ttk.Radiobutton,
+                                     tk.ttk.Button,
+                                     tk.Tk)):
                         continue
                     else:
                         self._force_theme_label(widget)
@@ -300,16 +304,18 @@ try:
                     logger.debug(f'Error forcing theme for {widget} with type {type(widget)}: {e}')
 
         def to_hex(self, hex_color) -> str:
+            """Convert color to hex color."""
             hex_color = str(hex_color)
             hex_color = hex_color.lstrip()
             if not hex_color.startswith('#'):
                 hex_color = self.root.winfo_rgb(hex_color)
                 hex_color = [int(hex_color[i] // 256) for i in range(len(hex_color))]
-                hex_color = '#{:02x}{:02x}{:02x}'.format(*hex_color)
+                hex_color = '#{:02x}{:02x}{:02x}'.format(*hex_color)  # noqa: FS002
             return hex_color
 
         if sys.platform == 'win32':
             def hex_to_rgb(self, hex_color) -> Color:
+                """Convert hex color to RGB color."""
                 hex_color = self.to_hex(hex_color)
                 hex_color = hex_color.strip('#')
                 return ColorHelper.from_argb(255,
@@ -317,9 +323,12 @@ try:
                                              int(hex_color[2:4], 16),
                                              int(hex_color[4:6], 16))
 
-        def transparent_move(self, event=None):
-            # to make it adjustable for any style we need to give this the background color of the title bar
-            # that should turn transparent, ideally as hex value
+        def transparent_move(self, event=None):  # noqa: CCR001
+            """
+            Make it adjustable for any style we need to give this the background color of the title bar.
+
+            That one should turn transparent, ideally as hex value
+            """
             # upper left corner of our window
             x, y = self.root.winfo_rootx(), self.root.winfo_rooty()
             # lower right corner of our window
@@ -337,9 +346,12 @@ try:
                 # mouse is inside the window area
                 self.root.attributes("-transparentcolor", '')
                 if sys.platform == 'win32':
-                    self.set_title_buttons_background(self.hex_to_rgb(self.style.lookup('TButton', 'background')))
-                    window.title_bar.background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
-                    window.title_bar.inactive_background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
+                    self.set_title_buttons_background(self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background')))
+                    window.title_bar.background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background'))
+                    window.title_bar.inactive_background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background'))
                     window.title_bar.button_hover_background_color = self.hex_to_rgb(
                         self.style.lookup('TButton', 'selectbackground'))
             else:
@@ -351,9 +363,11 @@ try:
                     window.title_bar.button_hover_background_color = Colors.transparent
 
         def set_title_buttins_background(self, colour):
+            """Set the background color of the title buttons."""
             super().set_title_buttins_background(colour)
 
-        def apply(self):
+        def apply(self):  # noqa: CCR001
+            """Apply the theme."""
             logger.info('Applying theme')
             theme = config.get_int('theme')
             try:
@@ -381,9 +395,12 @@ try:
 
                 if theme != self.THEME_TRANSPARENT:
                     # window.title_bar.reset_to_default()  # This makes it crash when switchthing back to default
-                    self.set_title_buttons_background(self.hex_to_rgb(self.style.lookup('TButton', 'background')))
-                    window.title_bar.background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
-                    window.title_bar.inactive_background_color = self.hex_to_rgb(self.style.lookup('TButton', 'background'))
+                    self.set_title_buttons_background(self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background')))
+                    window.title_bar.background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background'))
+                    window.title_bar.inactive_background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background'))
                     window.title_bar.button_hover_background_color = self.hex_to_rgb(
                         self.style.lookup('TButton', 'selectbackground'))
                 else:
@@ -413,7 +430,12 @@ try:
                     parent = Window()
                     children = Window()
                     nchildren = c_uint()
-                    XQueryTree(dpy, self.root.winfo_id(), byref(xroot), byref(parent), byref(children), byref(nchildren))
+                    XQueryTree(dpy,
+                               self.root.winfo_id(),
+                               byref(xroot),
+                               byref(parent),
+                               byref(children),
+                               byref(nchildren))
                     if theme == self.THEME_DEFAULT:
                         wm_hints = motif_wm_hints_normal
                     else:  # Dark *or* Transparent
@@ -450,7 +472,7 @@ for file in filenames:
         # (not)soldbiodata file already exists
         with open(directory + file, "r+", encoding="utf8") as f:
             test = json.load(f)
-            if type([]) == type(test):  # noqa E721
+            if type([]) == type(test):  # noqa: E721
                 # we have an old version of the (not)soldbiodata.json
                 # clear it, have the user do the journal crawling again.
                 logger.warning(f"Found old {file} format")
@@ -462,7 +484,7 @@ for file in filenames:
 # region tk/ttk shorthand definitions
 
 
-def prefs_label(frame, text, row: int, col: int, sticky) -> None:
+def prefs_label(frame, text, row: int, col: int, sticky) -> tk.ttk.Label:
     """Create label for the preferences of the plugin."""
     global tk_to_ttk_migration
     if tk_to_ttk_migration:
@@ -471,7 +493,7 @@ def prefs_label(frame, text, row: int, col: int, sticky) -> None:
         nb.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
-def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> None:
+def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> tk.ttk.Label:
     """Create an entry field for the preferences of the plugin."""
     global tk_to_ttk_migration
     if tk_to_ttk_migration:
@@ -480,7 +502,7 @@ def prefs_entry(frame, textvariable, row: int, col: int, sticky) -> None:
         nb.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
-def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
+def prefs_button(frame, text, command, row: int, col: int, sticky) -> tk.ttk.Button:
     """Create a button for the prefereces of the plugin."""
     global tk_to_ttk_migration
     if tk_to_ttk_migration:
@@ -489,7 +511,7 @@ def prefs_button(frame, text, command, row: int, col: int, sticky) -> None:
         nb.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
 
-def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
+def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> tk.ttk.Checkbutton:
     """Create a tickbox for the preferences of the plugin."""
     global tk_to_ttk_migration
     if tk_to_ttk_migration:
@@ -498,27 +520,27 @@ def prefs_tickbutton(frame, text, variable, row: int, col: int, sticky) -> None:
         nb.Checkbutton(frame, text=text, variable=variable).grid(row=row, column=col, sticky=sticky)
 
 
-def label(frame, text, row: int, col: int, sticky) -> None:
+def label(frame, text, row: int, col: int, sticky) -> tk.ttk.Label:
     """Create a label for the ui of the plugin."""
     return tk.ttk.Label(frame, text=text).grid(row=row, column=col, sticky=sticky)
 
 
-def entry(frame, textvariable, row: int, col: int, sticky) -> None:
+def entry(frame, textvariable, row: int, col: int, sticky) -> tk.ttk.Label:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
     return tk.ttk.Label(frame, textvariable=textvariable).grid(row=row, column=col, sticky=sticky)
 
 
-def colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> None:
+def colourlabel(frame, text: str, row: int, col: int, colour: str, sticky) -> tk.ttk.Label:
     """Create a label with coloured text for the ui of the plugin."""
     return tk.ttk.Label(frame, text=text, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
-def colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> None:
+def colourentry(frame, textvariable, row: int, col: int, colour: str, sticky) -> tk.ttk.Label:
     """Create a label that displays the content of a textvariable for the ui of the plugin."""
     return tk.ttk.Label(frame, textvariable=textvariable, fg=colour).grid(row=row, column=col, sticky=sticky)
 
 
-def button(frame, text, command, row: int, col: int, sticky) -> None:
+def button(frame, text, command, row: int, col: int, sticky) -> tk.ttk.Button:
     """Create a button for the ui of the plugin."""
     return tk.ttk.Button(frame, text=text, command=command).grid(row=row, column=col, sticky=sticky)
 
@@ -539,7 +561,8 @@ notsoldbiodata_file_mtime = os.path.getmtime(notsoldbiodata_file)
 full_ex_tree = None
 
 
-def init_data() -> None:
+def init_data() -> None:  # noqa: CCR001
+    """Initialise the data for the AST Codex window."""
     global data
     global soldbiodata_file
     global notsoldbiodata_file
@@ -620,6 +643,7 @@ def shortcreditstring(number) -> str:
 
 
 def tree_sort_column(tree, col, reverse) -> None:
+    """Sort the columns of the Table View."""
     table = [(tree.set(k, col), k) for k in tree.get_children("")]
 
     if col == "Value":
@@ -638,6 +662,7 @@ def tree_sort_column(tree, col, reverse) -> None:
 
 
 def ex_tree_sort_column(tree, col, reverse) -> None:
+    """Sort the columns of the Tree View."""
     # in this tree there is only the #0 column
     table = [(tree.item(k)['text'], k) for k in tree.get_children("")]
     table.sort(key=lambda x: str(x[0]), reverse=reverse)
@@ -653,6 +678,7 @@ def ex_tree_sort_column(tree, col, reverse) -> None:
 
 
 def tree_rebuild(tree, cmdr: str) -> None:
+    """Rebuild the Table View for the main window."""
     global data
     tree.delete(*tree.get_children())
     try:
@@ -662,7 +688,8 @@ def tree_rebuild(tree, cmdr: str) -> None:
         pass
 
 
-def save_treeview_state(tree) -> None:
+def save_treeview_state(tree) -> None:  # noqa: CCR001
+    """Prepare the treeview state for saving."""
     nodes = {}
     parent_of_child = {}
 
@@ -698,6 +725,7 @@ def save_treeview_state(tree) -> None:
 
 
 def load_treeview_state(treevar, tree) -> None:
+    """Load the treeview state from a saved state."""
     nodes = treevar[0]
 
     # logger.error(f"Levels: {nodes}")
@@ -713,7 +741,8 @@ def load_treeview_state(treevar, tree) -> None:
             tree.insert(parent_of_child[node], tk.END, node, **nodes[node])
 
 
-def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
+def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
+    """Rebuild the treeview for the explorer window."""
     global data
     global full_ex_tree
 
@@ -809,7 +838,8 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:
         full_ex_tree = save_treeview_state(tree)
 
 
-def tree_search(tree, search_entry, cmdr: str) -> None:
+def tree_search(tree, search_entry, cmdr: str) -> None:  # noqa: CCR001
+    """Search items in the table."""
     logger.warning("Searching ...")
     query = search_entry.get()
     logger.warning(f"Query: {query}")
@@ -836,7 +866,8 @@ def tree_search(tree, search_entry, cmdr: str) -> None:
     tree.selection_set(selections)
 
 
-def tree_search_ex(tree, search_entry, cmdr: str) -> None:
+def tree_search_ex(tree, search_entry, cmdr: str) -> None:  # noqa: CCR001
+    """Search the tree."""
     logger.warning("Searching ...")
     query = search_entry.get()
     logger.warning(f"Query: {query}")
@@ -864,17 +895,19 @@ def tree_search_ex(tree, search_entry, cmdr: str) -> None:
 
 
 def tree_search_worker(plugin, tree, search_entry, cmdr: str) -> None:
+    """Start a thread to search the tree."""
     plugin.searchthread = threading.Thread(target=tree_search(tree, search_entry, cmdr))
     plugin.searchthread.start()
 
 
 def tree_search_worker_ex(plugin, tree, search_entry, cmdr: str) -> None:
+    """Start a thread to search the tree."""
     plugin.searchthread = threading.Thread(target=tree_search_ex(tree, search_entry, cmdr))
     plugin.searchthread.start()
 
 
-def show_codex_window(plugin, cmdr: str) -> None:
-
+def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
+    """Show the AST Codex window."""
     global data
     global data_initialised
 
@@ -951,17 +984,17 @@ def show_codex_window(plugin, cmdr: str) -> None:
 
     if tk_to_ttk_migration:
         # Initialize theme Object for AST Codex
-        themething = AST_Theme()
+        themething = ASTTheme()
         themething.initialize(plugin.AST_Codex_window)
         # logger.info(f"{themething}")
 
     titlegap = tk.ttk.Label(plugin.AST_Codex_window, text=" ")
     titlegap.grid(row=0, column=0, sticky="nsew", pady=(0, 0))
 
-    tabControl = tk.ttk.Notebook(plugin.AST_Codex_window)
+    tab_control = tk.ttk.Notebook(plugin.AST_Codex_window)
 
-    tab1 = tk.ttk.Frame(tabControl)
-    tab2 = tk.ttk.Frame(tabControl)
+    tab1 = tk.ttk.Frame(tab_control)
+    tab2 = tk.ttk.Frame(tab_control)
 
     # tk.Grid.rowconfigure(plugin.AST_Codex_window, 0, weight=0)
     tk.Grid.rowconfigure(plugin.AST_Codex_window, 1, weight=10)
@@ -970,9 +1003,9 @@ def show_codex_window(plugin, cmdr: str) -> None:
     tab1.grid(row=0, column=0, sticky="nsew")
     tab2.grid(row=0, column=0, sticky="nsew")
 
-    tabControl.add(tab1, text="Table View")
-    tabControl.add(tab2, text="Tree View")
-    tabControl.grid(row=1, column=0, sticky='nsew')
+    tab_control.add(tab1, text="Table View")
+    tab_control.add(tab2, text="Tree View")
+    tab_control.grid(row=1, column=0, sticky='nsew')
 
     columns = ["System", "Body", "Species", "Value", "Sold"]
 
@@ -1101,9 +1134,8 @@ def clear_ui(frame) -> None:
         label.destroy()
 
 
-def rebuild_ui(plugin, cmdr: str) -> None:
+def rebuild_ui(plugin, cmdr: str) -> None:  # noqa: CCR001
     """Rebuild the UI in case of preferences change."""
-
     if plugin.AST_debug.get():
         logger.debug("Rebuilding UI ...")
 
@@ -1152,8 +1184,11 @@ def rebuild_ui(plugin, cmdr: str) -> None:
             if i < len(uielementlistright):
                 entry(plugin.frame, uielementlistright[i], current_row, 1, tk.W)
             if uielementlistextra[i] == "clipboardbutton":
-                # button(plugin.frame, "📋", plugin.clipboard, current_row, 2, tk.E)
-                clippy_button = tk.ttk.Button(plugin.frame, text="📋", command=plugin.clipboard, width=0)
+                # Copy to Clipboard button
+                if tk_to_ttk_migration:
+                    clippy_button = tk.ttk.Button(plugin.frame, text="📋", command=plugin.clipboard, width=0)
+                else:
+                    clippy_button = tk.Button(plugin.frame, text="📋", command=plugin.clipboard)
                 clippy_button.grid(row=current_row, column=2, sticky=tk.E)
             current_row += 1
 
@@ -1191,7 +1226,16 @@ def rebuild_ui(plugin, cmdr: str) -> None:
         logger.debug("Building AST sold/scanned exobio ...")
 
     if plugin.AST_hide_CODEX_button.get() != 1:
-        button(plugin.frame, " Open AST Codex ", plugin.show_codex_window_worker, current_row, 0, tk.W)
+        if tk_to_ttk_migration:
+            codex_button = button(plugin.frame,
+                                  " Open AST Codex ",
+                                  plugin.show_codex_window_worker,
+                                  current_row,
+                                  0,
+                                  tk.W)
+        else:
+            codex_button = tk.Button(plugin.frame, text=" Open AST Codex ", command=plugin.show_codex_window_worker)
+            codex_button.grid(row=current_row, column=0, sticky=tk.W)
         current_row += 1
 
     # Tracked sold bio scans as the last thing to add to the UI
@@ -1199,11 +1243,14 @@ def rebuild_ui(plugin, cmdr: str) -> None:
         build_sold_bio_ui(plugin, cmdr, current_row)
 
     if not testmode:
-        # theme.update(plugin.frame)  # Apply theme colours to the frame and its children, including the new widgets
+        if not tk_to_ttk_migration:
+            # Apply theme colours to the frame and its children, including the new widgets
+            theme.update(plugin.frame)
         pass
 
 
-def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
+def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:  # noqa: CCR001
+    """Build the UI for the sold/scanned exobiology scans in current system."""
     soldbiodata = {}
     notsoldbiodata = {}
 
@@ -1319,9 +1366,19 @@ def build_sold_bio_ui(plugin, cmdr: str, current_row) -> None:
 
     # skip
     if plugin.AST_hide_scans_in_system.get() != 0:
-        button(plugin.frame, " ▼ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+        if tk_to_ttk_migration:
+            down_button = tk.ttk.Button(plugin.frame, text=" ▼ ", command=plugin.switchhidesoldexobio)
+            down_button.grid(current_row, 2, tk.W, width=0)
+        else:
+            down_button = tk.Button(plugin.frame, text=" ▼ ", command=plugin.switchhidesoldexobio)
+            down_button.grid(current_row, 2, tk.W)
     else:
-        button(plugin.frame, " ▲ ", plugin.switchhidesoldexobio, current_row, 2, tk.W)
+        if tk_to_ttk_migration:
+            up_button = tk.ttk.Button(plugin.frame, text=" ▲ ", command=plugin.switchhidesoldexobio)
+            up_button.grid(current_row, 2, tk.W, width=0)
+        else:
+            up_button = tk.Button(plugin.frame, text=" ▲ ", command=plugin.switchhidesoldexobio)
+            up_button.grid(current_row, 2, tk.W)
 
         sortedspecieslist = sorted(bodylistofspecies.keys())
 
