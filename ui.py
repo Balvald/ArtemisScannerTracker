@@ -31,7 +31,7 @@ except NameError:
 
 directory, filename = os.path.split(os.path.realpath(__file__))
 
-# region Theme
+# region ASTTheme
 
 tk_to_ttk_migration = True
 
@@ -44,7 +44,7 @@ try:
         import win32gui
         from winrt.microsoft.ui.interop import get_window_id_from_window
         from winrt.microsoft.ui.windowing import AppWindow
-        from winrt.windows.ui import Color, Colors, ColorHelper  # noqa: E402
+        from winrt.windows.ui import Colors
         from ctypes import windll
         FR_PRIVATE = 0x10
         fonts_loaded = windll.gdi32.AddFontResourceExW(str(config.respath_path / 'EUROCAPS.TTF'), FR_PRIVATE, 0)
@@ -139,278 +139,65 @@ try:
     class ASTTheme(_Theme):
         """Theme class for the AST Codex window."""
 
-        THEME_DEFAULT = 0
-        THEME_DARK = 1
-        THEME_TRANSPARENT = 2
-        packages = {
-            THEME_DEFAULT: 'light',  # 'default' is the name of a builtin theme
-            THEME_DARK: 'dark',
-            THEME_TRANSPARENT: 'transparent',
-        }
-        style: tk.ttk.Style
-        root: tk.Tk
-        binds: dict[str, str] = {}
-
         def __init__(self):
-            """Initialise ASTTheme object."""
+            """Initialise the theme."""
             super().__init__()
 
-        def initialize(self, parent):
-            """Initialise the theme."""
-            super().initialize(parent)
-
-        def load_colors(self) -> None:
-            """Load colors from the current theme."""
-            # load colors from the current theme which is a *.tcl file
-            # and store them in the colors dict
-
-            # get the current theme
-            theme = config.get_int('theme')
-            theme_name = self.packages[theme]
-
-            # get the path to the theme file
-            theme_file = config.internal_theme_dir_path / theme_name / (theme_name + '.tcl')
-
-            # load the theme file
-            with open(theme_file, 'r') as f:
-                lines = f.readlines()
-                foundstart = False
-                for line in lines:
-                    # logger.info(line)
-                    if line.lstrip().startswith('array set colors'):
-                        foundstart = True
-                        continue
-                    if line.lstrip().startswith('}'):
-                        break
-                    if foundstart:
-                        pair = line.lstrip().replace('\n', '').replace('"', '').split()
-                        self.colors[pair[0]] = pair[1]
-
-            logger.info(f'Loaded colors: {self.colors}')
-
-        def _get_all_widgets(self) -> list:  # noqa: CCR001
-            """Get all widgets in the current window."""
-            all_widgets = []
-            all_widgets.append(self.root)
-
-            for child in self.root.winfo_children():
-                all_widgets.append(child)
-                all_widgets.extend(child.winfo_children())
-
-            oldlen = 0
-            newlen = len(all_widgets)
-
-            while newlen > oldlen:
-                oldlen = newlen
-                for widget in all_widgets:
-                    try:
-                        widget_children = widget.winfo_children()
-                        for child in widget_children:
-                            if child not in all_widgets:
-                                all_widgets.append(child)
-                    except Exception as e:
-                        logger.error(f'Error getting children of {widget}: {e}')
-                newlen = len(all_widgets)
-            return all_widgets
-
-        def _force_theme_menubutton(self, widget) -> None:
-            # get colors from map
-            background = self.style.map('TMenubutton', 'background')
-            foreground = self.style.map('TMenubutton', 'foreground')
-            self.style.configure('TMenubutton', background=self.style.lookup('TMenubutton', 'background'))
-            self.style.configure('TMenubutton', foreground=self.style.lookup('TMenubutton', 'foreground'))
-            self.style.map('TMenubutton', background=[('active', background[0][1])])
-            self.style.map('TMenubutton', foreground=[('active', foreground[0][1])])
-
-        def _force_theme_menu(self, widget) -> None:
-            colors = self.colors
-            widget.configure(background=self.style.lookup('TMenu', 'background'))
-            widget.configure(foreground=self.style.lookup('TMenu', 'foreground'))
-            widget.configure(activebackground=colors['-selectbg'])
-            widget.configure(activeforeground=colors['-selectfg'])
-
-        def _force_theme_button(self, widget) -> None:
-            colors = self.colors
-            widget.configure(background=self.style.lookup('TButton', 'background'))
-            widget.configure(foreground=self.style.lookup('TButton', 'foreground'))
-            widget.configure(activebackground=colors['-selectbg'])
-            widget.configure(activeforeground=colors['-selectfg'])
-
-        def _force_theme_label(self, widget) -> None:
-            widget.configure(background=self.style.lookup('TLabel', 'background'))
-            widget.configure(foreground=self.style.lookup('TLabel', 'foreground'))
-
-        def _force_theme_frame(self, widget) -> None:
-            widget.configure(background=self.style.lookup('TFrame', 'background'))
-
-        def _force_theme_scale(self, widget) -> None:
-            # get colors from the current theme
-            # keys are -fg, -bg, -disabledfg, -selectfg, -selectbg -highlight
-            colors = self.colors
-            # logger.info('foreground')
-            widget.configure(foreground=colors['-fg'])
-            # logger.info('highlightbackground')
-            widget.configure(highlightbackground=colors['-bg'])
-            # logger.info('activebackground')
-            widget.configure(activebackground=colors['-selectbg'])
-            # logger.info('background')
-            widget.configure(background=colors['-bg'])
-            # logger.info('highlight')
-            widget.configure(highlightcolor=colors['-highlight'])
-            # logger.info('trough')
-            widget.configure(troughcolor=colors['-bg'])
-
-        def _force_theme(self):  # noqa: CCR001
-            logger.info('Forcing theme change')
-            # get absolute top root
-
-            """if sys.platform == 'win32':
-                title_label = self.root.nametowidget('.title_label')
-                title_icon = self.root.nametowidget('.title_icon')
-                self._force_theme_label(title_label)
-                self._force_theme_label(title_icon)"""
-
-            all_widgets = self._get_all_widgets()
-
-            for widget in all_widgets:
-                try:
-                    if isinstance(widget, tk.Button):
-                        self._force_theme_button(widget)
-                    elif isinstance(widget, tk.Label):
-                        self._force_theme_label(widget)
-                    elif isinstance(widget, tk.Frame):
-                        self._force_theme_frame(widget)
-                    elif isinstance(widget, tk.ttk.Menubutton):
-                        self._force_theme_menubutton(widget)
-                    elif isinstance(widget, tk.Menu):
-                        self._force_theme_menu(widget)
-                    elif isinstance(widget, tk.Scale):
-                        self._force_theme_scale(widget)
-                    elif isinstance(widget,
-                                    (tk.Canvas,
-                                     tk.Checkbutton,
-                                     tk.ttk.Checkbutton,
-                                     tk.ttk.Frame,
-                                     tk.ttk.Separator,
-                                     tk.ttk.Scrollbar,
-                                     tk.ttk.Notebook,
-                                     tk.ttk.Radiobutton,
-                                     tk.ttk.Button,
-                                     tk.Tk)):
-                        continue
-                    else:
-                        self._force_theme_label(widget)
-                except Exception as e:
-                    logger.debug(f'Error forcing theme for {widget} with type {type(widget)}: {e}')
-
-        def to_hex(self, hex_color) -> str:
-            """Convert color to hex color."""
-            hex_color = str(hex_color)
-            hex_color = hex_color.lstrip()
-            if not hex_color.startswith('#'):
-                hex_color = self.root.winfo_rgb(hex_color)
-                hex_color = [int(hex_color[i] // 256) for i in range(len(hex_color))]
-                hex_color = '#{:02x}{:02x}{:02x}'.format(*hex_color)  # noqa: FS002
-            return hex_color
-
-        if sys.platform == 'win32':
-            def hex_to_rgb(self, hex_color) -> Color:
-                """Convert hex color to RGB color."""
-                hex_color = self.to_hex(hex_color)
-                hex_color = hex_color.strip('#')
-                return ColorHelper.from_argb(255,
-                                             int(hex_color[0:2], 16),
-                                             int(hex_color[2:4], 16),
-                                             int(hex_color[4:6], 16))
-
-        def transparent_move(self, event=None):  # noqa: CCR001
-            """
-            Make it adjustable for any style we need to give this the background color of the title bar.
-
-            That one should turn transparent, ideally as hex value
-            """
-            # upper left corner of our window
-            x, y = self.root.winfo_rootx(), self.root.winfo_rooty()
-            # lower right corner of our window
-            max_x = x + self.root.winfo_width()
-            max_y = y + self.root.winfo_height()
-            # mouse position
-            mouse_x, mouse_y = self.root.winfo_pointerx(), self.root.winfo_pointery()
-
-            if sys.platform == 'win32':
-                hwnd = win32gui.GetParent(self.root.winfo_id())
-                window = AppWindow.get_from_window_id(get_window_id_from_window(hwnd))
-
-            # check if mouse is inside the window
-            if x <= mouse_x <= max_x and y <= mouse_y <= max_y:
-                # mouse is inside the window area
-                self.root.attributes("-transparentcolor", '')
-                if sys.platform == 'win32':
-                    self.set_title_buttons_background(self.hex_to_rgb(
-                        self.style.lookup('TButton', 'background')))
-                    window.title_bar.background_color = self.hex_to_rgb(
-                        self.style.lookup('TButton', 'background'))
-                    window.title_bar.inactive_background_color = self.hex_to_rgb(
-                        self.style.lookup('TButton', 'background'))
-                    window.title_bar.button_hover_background_color = self.hex_to_rgb(
-                        self.style.lookup('TButton', 'selectbackground'))
-            else:
-                self.root.attributes("-transparentcolor", self.style.lookup('TButton', 'background'))
-                if sys.platform == 'win32':
-                    self.set_title_buttons_background(Colors.transparent)
-                    window.title_bar.background_color = Colors.transparent
-                    window.title_bar.inactive_background_color = Colors.transparent
-                    window.title_bar.button_hover_background_color = Colors.transparent
-
-        def set_title_buttins_background(self, colour):
-            """Set the background color of the title buttons."""
-            super().set_title_buttins_background(colour)
-
-        def apply(self):  # noqa: CCR001
-            """Apply the theme."""
+        def apply(self) -> None:
             logger.info('Applying theme')
-            theme = config.get_int('theme')
+            theme = config.get_str('theme_name')
+            if not theme:
+                theme = 'light'
+                config.set('theme_name', theme.capitalize())
+            else:
+                theme = theme.lower()
+            transparent = config.get_bool('transparent')
+
             try:
                 self.root.tk.call('ttk::setTheme', self.packages[theme])
-                # WORKAROUND $elite-dangerous-version | 2025/02/11 : Because for some reason the theme is not applied to
-                # all widgets upon the second theme change we have to force it
+                # load colors from the current theme into self.colors
                 self.load_colors()
+                # call tk_setPalette to apply the theme to all widgets
+                # these are mostly tk widgets or tk widgets that are part of more complex ttk widgets
+                self.root.tk.call('tk_setPalette',
+                                  'activeBackground', self.colors['-selectbg'],
+                                  'activeForeground', self.colors['-selectfg'],
+                                  'background', self.colors['-bg'],
+                                  'foreground', self.colors['-fg'],
+                                  'highlightColor', self.colors['-highlight'],
+                                  'highlightBackground', self.colors['-bg'],
+                                  'selectBackground', self.colors['-selectbg'],
+                                  'selectForeground', self.colors['-selectfg'],
+                                  'disabledForeground', self.colors['-disabledfg'],
+                                  'insertBackground', self.colors['-fg'],
+                                  'selectColor', self.colors['-selectbg'],
+                                  'troughColor', self.colors['-bg'])
+                # Because tk.Radiobutton and tk.Checkbutton cannot be properly read with the settings of the
+                # tk_setPalette call we have to additionally force a fitting theme for them.
                 self._force_theme()
             except tk.TclError:
                 logger.exception(f'Failure setting theme: {self.packages[theme]}')
 
-            if self.active == theme:
+            if self.active == theme and self.active_transparent == transparent:
                 return  # Don't need to mess with the window manager
             self.active = theme
+            self.active_transparent = transparent
 
             self.root.withdraw()
             self.root.update_idletasks()  # Size gets recalculated here
             if sys.platform == 'win32':
                 hwnd = win32gui.GetParent(self.root.winfo_id())
                 window = AppWindow.get_from_window_id(get_window_id_from_window(hwnd))
-                # title_gap: tk.ttk.Frame = self.root.nametowidget('.alternate_menubar.title_gap')
 
                 window.title_bar.extends_content_into_title_bar = True
-                # title_gap['height'] = window.title_bar.height
 
-                if theme != self.THEME_TRANSPARENT:
-                    # window.title_bar.reset_to_default()  # This makes it crash when switchthing back to default
-                    self.set_title_buttons_background(self.hex_to_rgb(
-                        self.style.lookup('TButton', 'background')))
-                    window.title_bar.background_color = self.hex_to_rgb(
-                        self.style.lookup('TButton', 'background'))
-                    window.title_bar.inactive_background_color = self.hex_to_rgb(
-                        self.style.lookup('TButton', 'background'))
-                    window.title_bar.button_hover_background_color = self.hex_to_rgb(
-                        self.style.lookup('TButton', 'selectbackground'))
-                else:
+                if self.transparent.get():
                     self.set_title_buttons_background(Colors.transparent)
                     window.title_bar.background_color = Colors.transparent
                     window.title_bar.inactive_background_color = Colors.transparent
                     window.title_bar.button_hover_background_color = Colors.transparent
-
-                if theme == self.THEME_TRANSPARENT:
-                    # TODO prevent loss of focus when hovering the title bar area  # fixed by transparent_move,
+                    # TODO prevent loss of focus when hovering the title bar area
+                    # # fixed by transparent_move,
                     # we just don't regain focus when hovering over the title bar,
                     # we have to hover over some visible widget first.
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
@@ -420,6 +207,14 @@ try:
                     self.binds['<Leave>'] = self.root.bind('<Leave>', self.transparent_move)
                     self.binds['<FocusOut>'] = self.root.bind('<FocusOut>', self.transparent_move)
                 else:
+                    self.set_title_buttons_background(self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background')))
+                    window.title_bar.background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background'))
+                    window.title_bar.inactive_background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'background'))
+                    window.title_bar.button_hover_background_color = self.hex_to_rgb(
+                        self.style.lookup('TButton', 'selectbackground'))
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32con.WS_EX_APPWINDOW)  # Add to taskbar
                     for event, bind in self.binds.items():
                         self.root.unbind(event, bind)
@@ -436,9 +231,9 @@ try:
                                byref(parent),
                                byref(children),
                                byref(nchildren))
-                    if theme == self.THEME_DEFAULT:
+                    if theme == 'light':
                         wm_hints = motif_wm_hints_normal
-                    else:  # Dark *or* Transparent
+                    else:  # anything but light
                         wm_hints = motif_wm_hints_dark
 
                     XChangeProperty(
@@ -1051,9 +846,11 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_entry = tk.ttk.Entry(tab1, width=30)
     search_entry.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
 
-    search_button = tk.Button(tab1, text="🔍",
-                              command=lambda _search_entry=search_entry:
-                              tree_search_worker(plugin, tree, _search_entry, cmdr))
+    search_button = tk.ttk.Button(tab1,
+                                  text="🔍",
+                                  command=lambda _search_entry=search_entry:
+                                  tree_search_worker(plugin, tree, _search_entry, cmdr),
+                                  width=0)
     search_button.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
     scrollbar = tk.ttk.Scrollbar(tab1,
@@ -1080,9 +877,11 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_entry2 = tk.ttk.Entry(tab2, width=30)
     search_entry2.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
 
-    search_button2 = tk.Button(tab2, text="🔍",
-                               command=lambda _search_entry2=search_entry2:
-                               tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr))
+    search_button2 = tk.ttk.Button(tab2,
+                                   text="🔍",
+                                   command=lambda _search_entry2=search_entry2:
+                                   tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr),
+                                   width=0)
     search_button2.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
     scrollbar2 = tk.ttk.Scrollbar(tab2,
