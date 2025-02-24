@@ -219,10 +219,7 @@ try:
                         self.style.lookup('TButton', 'selectbackground'))
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32con.WS_EX_APPWINDOW)  # Add to taskbar
                     for event, bind in self.binds.items():
-                        # try:
                         self.root.unbind(event, bind)
-                        # except tk.TclError as e:
-                        #     logger.error(f"tk.TclError when trying to unbind: {e}")
                     self.binds.clear()
             else:
                 if dpy:
