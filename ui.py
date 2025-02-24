@@ -148,6 +148,11 @@ try:
             """Apply the theme to AST Codex Window."""
             logger.info('Applying theme')
             theme = config.get_str('theme_name').lower()
+            if theme not in self.packages.keys():
+                theme = 'light'
+                config.set('theme_name', theme.capitalize())
+            else:
+                theme = theme.lower()
             transparent = config.get_bool('transparent')
 
             try:
@@ -188,7 +193,7 @@ try:
 
                 window.title_bar.extends_content_into_title_bar = True
 
-                if self.transparent.get():
+                if transparent:
                     self.set_title_buttons_background(Colors.transparent)
                     window.title_bar.background_color = Colors.transparent
                     window.title_bar.inactive_background_color = Colors.transparent
@@ -214,7 +219,10 @@ try:
                         self.style.lookup('TButton', 'selectbackground'))
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32con.WS_EX_APPWINDOW)  # Add to taskbar
                     for event, bind in self.binds.items():
+                        # try:
                         self.root.unbind(event, bind)
+                        # except tk.TclError as e:
+                        #     logger.error(f"tk.TclError when trying to unbind: {e}")
                     self.binds.clear()
             else:
                 if dpy:
@@ -911,7 +919,8 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
             plugin.AST_Codex_window.grab_status()
             if tk_to_ttk_migration:
                 if (applied_theme != theme.active) or (transparent != theme.active_transparent):
-                    break
+                    applied_theme, transparent = themething.apply()
+                    # break
             if plugin.newwindowrequested:
                 logger.debug("New window is requested")
                 try:
