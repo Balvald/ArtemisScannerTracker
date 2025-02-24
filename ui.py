@@ -143,12 +143,14 @@ try:
             """Initialise the theme."""
             super().__init__()
 
-        def apply(self) -> None:
+        def apply(self) -> None:  # noqa: CCR001
+            """Apply the theme for the AST Codex window."""
             logger.info('Applying theme')
             theme = config.get_str('theme_name')
-            if not theme:
+            if theme not in self.packages.keys():
                 theme = 'light'
                 config.set('theme_name', theme.capitalize())
+                config.set('theme', 0)
             else:
                 theme = theme.lower()
             transparent = config.get_bool('transparent')
@@ -196,10 +198,6 @@ try:
                     window.title_bar.background_color = Colors.transparent
                     window.title_bar.inactive_background_color = Colors.transparent
                     window.title_bar.button_hover_background_color = Colors.transparent
-                    # TODO prevent loss of focus when hovering the title bar area
-                    # # fixed by transparent_move,
-                    # we just don't regain focus when hovering over the title bar,
-                    # we have to hover over some visible widget first.
                     win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
                                            win32con.WS_EX_APPWINDOW | win32con.WS_EX_LAYERED)  # Add to taskbar
                     self.binds['<Enter>'] = self.root.bind('<Enter>', self.transparent_move)
