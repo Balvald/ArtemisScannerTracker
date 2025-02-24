@@ -139,18 +139,15 @@ try:
     class ASTTheme(_Theme):
         """Theme class for the AST Codex window."""
 
-        def __init__(self):
+        def __init__(self, root):
             """Initialise the theme."""
             super().__init__()
+            super().initialize(root)
 
-        def apply(self) -> None:
+        def apply(self) -> None:  # noqa: CCR001
+            """Apply the theme to AST Codex Window."""
             logger.info('Applying theme')
-            theme = config.get_str('theme_name')
-            if not theme:
-                theme = 'light'
-                config.set('theme_name', theme.capitalize())
-            else:
-                theme = theme.lower()
+            theme = config.get_str('theme_name').lower()
             transparent = config.get_bool('transparent')
 
             try:
@@ -179,7 +176,7 @@ try:
                 logger.exception(f'Failure setting theme: {self.packages[theme]}')
 
             if self.active == theme and self.active_transparent == transparent:
-                return  # Don't need to mess with the window manager
+                return self.active, self.active_transparent  # Don't need to mess with the window manager
             self.active = theme
             self.active_transparent = transparent
 
@@ -248,6 +245,8 @@ try:
             if not self.minwidth:
                 self.minwidth = self.root.winfo_width()  # Minimum width = width on first creation
                 self.root.minsize(self.minwidth, -1)
+
+            return self.active, self.active_transparent
 
 except Exception as e:
     logger.error(f"Error: {e}")
@@ -800,9 +799,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
 
     if tk_to_ttk_migration:
         # Initialize theme Object for AST Codex
-        themething = ASTTheme()
-        themething.initialize(plugin.AST_Codex_window)
-        # logger.info(f"{themething}")
+        themething = ASTTheme(plugin.AST_Codex_window)
 
     titlegap = tk.ttk.Label(plugin.AST_Codex_window, text=" ")
     titlegap.grid(row=0, column=0, sticky="nsew", pady=(0, 0))
@@ -906,13 +903,14 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
         themething.apply()
 
         applied_theme = themething.active
+        transparent = themething.active_transparent
 
     # plugin.AST_Codex_window.mainloop()
     while True:
         try:
             plugin.AST_Codex_window.grab_status()
             if tk_to_ttk_migration:
-                if applied_theme != theme.active:
+                if (applied_theme != theme.active) or (transparent != theme.active_transparent):
                     break
             if plugin.newwindowrequested:
                 logger.debug("New window is requested")
