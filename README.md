@@ -1,4 +1,4 @@
-# ArtemisScannerTracker v0.3.2
+# ArtemisScannerTracker v0.3.3
  An [EDMC](https://github.com/EDCD/EDMarketConnector) plugin that keeps track of the exobiology scanner of a CMDRs Artemis suit in ED:Odyssey
 
 
@@ -18,14 +18,12 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 > best for biology ever.  13/10.
 >     — CMDR SlippyCheeze
 
-## New in v0.3.2
+## New in v0.3.3
 
-- Bugfix: Clean install of AST now properly recognise any performed scan.
-- Bugfix: AST Codex induced EDMC crashes are fixed now.
-    - _You can press that AST Codex button as often and as fast as you like._
-- Bugfix: The Search button from the Tree View now reads from the right rext field.
-- Changed Feature: The Tree View from the AST Codex window now has all systems as top level elements that expand into the different planets and finally the individual signals.
-    - _This is much better now._
+- Bugfix:
+- Bugfix:
+- Bugfix: 
+- New Feature: 
 
 ## Features
 
