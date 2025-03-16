@@ -38,6 +38,11 @@ tk_to_ttk_migration = True
 try:
     from theme import _Theme  # type: ignore
 
+    # Check if implementation of _Theme is compatible with the alternative ui mode
+    # things that are not in the old _theme but my new custom one
+    if not hasattr(_Theme, 'colors') or not hasattr(_Theme, 'fonts') or not hasattr(_Theme, 'force_skips'):
+        raise AttributeError("Theme class is not compatible with the alternative ui mode")
+
     # Just yoinked this from EDMC's own theme.py from ElSaico's ttk branch
     if sys.platform == 'win32':
         import win32con
