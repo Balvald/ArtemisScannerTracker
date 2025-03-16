@@ -489,7 +489,8 @@ class ArtemisScannerTracker:
 
     def handle_possible_cmdr_change(self, cmdr: str) -> bool:  # noqa: CCR001
         """Handle possible CMDR change."""
-        if self.AST_debug:
+        if self.AST_debug and self.AST_current_CMDR != cmdr:
+            logger.debug("CMDR change detected")
             logger.debug(f"Current CMDR: {self.AST_current_CMDR}, New CMDR: {cmdr}")
         if self.CMDR_states == {}:
             self.CMDR_states = {cmdr: ["None", "None", "None", "0/3", "None", 0, 0, [None, None], [None, None]]}
