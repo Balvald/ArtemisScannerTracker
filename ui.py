@@ -481,27 +481,84 @@ def tree_sort_column(tree, col, reverse) -> None:
                  tree_sort_column(tree, _col, not reverse))
 
 
-def ex_tree_sort_column(tree, col, reverse) -> None:
+def ex_tree_sort_column(ex_tree, col, reverse) -> None:  # noqa: CCR001
     """Sort the columns of the Tree View."""
-    # in this tree there is only the #0 column
+    # in this tree there is the #0 column Name with all System names.
+    # and the #1 column Value with all the values.
+    # and the #2 column Sold only with Yes or No on signals.
 
     logger.warning(f"Sorting by {col} in reverse: {reverse}")
 
-    table = [(tree.item(k)['text'], k) for k in tree.get_children("")]
+    if col == "#0":
+        table = [(ex_tree.item(k)['text'], k) for k in ex_tree.get_children("")]
+        table.sort(key=lambda x: str(x[0]), reverse=reverse)
+        # rearrange items in sorted positions
+        for index, (val, k) in enumerate(table):
+            children = ex_tree.get_children(k)
+            if children:
+                children_table = [(ex_tree.item(child)['text'], child)
+                                  for child in children]
+                # logger.warning(f"Children: {children_table}")
+                children_table.sort(key=lambda x: str(x[0]), reverse=False)
+                for child_index, (child_val, child_k) in enumerate(children_table):
+                    grand_children = ex_tree.get_children(child_k)
+                    if grand_children:
+                        grand_children_table = [(ex_tree.item(grand_child)['text'], grand_child)
+                                                for grand_child in grand_children]
+                        # logger.warning(f"Grandchildren: {grand_children_table}")
+                        grand_children_table.sort(key=lambda x: str(x[0]), reverse=False)
+                        for grand_child_index, (grand_child_val, grand_child_k) in enumerate(grand_children_table):
+                            ex_tree.move(grand_child_k, child_k, grand_child_index)
+                            grand_child_val = grand_child_val
+                    ex_tree.move(child_k, k, child_index)
+                    child_val = child_val
+            ex_tree.move(k, "", index)
+            val = val
+    else:
+        # get column index char and cast to int.
+        col_index = int(col[1])-1
+        table = [(ex_tree.item(k)['values'][col_index], k) for k in ex_tree.get_children("")]
 
-    table.sort(key=lambda x: str(x[0]), reverse=reverse)
-
-    # rearrange items in sorted positions
-    for index, (val, k) in enumerate(table):
-        tree.move(k, "", index)
-        val = val
+        if col_index == 0:
+            table.sort(key=lambda x: int(x[0]), reverse=reverse)
+        # rearrange items in sorted positions
+        for index, (val, k) in enumerate(table):
+            children = ex_tree.get_children(k)
+            if children:
+                children_table = [(ex_tree.item(child)['values'][col_index], child)
+                                  for child in children]
+                # logger.warning(f"Children: {children_table}")
+                if col_index == 0:
+                    children_table.sort(key=lambda x: int(x[0]), reverse=reverse)
+                for child_index, (child_val, child_k) in enumerate(children_table):
+                    grand_children = ex_tree.get_children(child_k)
+                    if grand_children:
+                        grand_children_table = [(ex_tree.item(grand_child)['values'][col_index], grand_child)
+                                                for grand_child in grand_children]
+                        # logger.warning(f"Grandchildren: {grand_children_table}")
+                        if col_index == 0:
+                            grand_children_table.sort(key=lambda x: int(x[0]), reverse=False)
+                        elif col_index == 1:
+                            grand_children_table.sort(key=lambda x: str(x[0]), reverse=reverse)
+                        for grand_child_index, (grand_child_val, grand_child_k) in enumerate(grand_children_table):
+                            ex_tree.move(grand_child_k, child_k, grand_child_index)
+                            grand_child_val = grand_child_val
+                    ex_tree.move(child_k, k, child_index)
+                    child_val = child_val
+            ex_tree.move(k, "", index)
+            val = val
 
     # reverse sort next time
-    columns2 = ["#0", "#1", "#2"]
     text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
-    for col in columns2:
-        tree.heading(col, text=text2[col], command=lambda:
-                     ex_tree_sort_column(tree, col, not reverse))
+    """for col in columns2:
+        ex_tree.heading(col, text=text2[col], command=lambda:
+                     ex_tree_sort_column(ex_tree, col, not reverse))"""
+    ex_tree.heading("#0", text=text2["#0"], command=lambda:
+                    ex_tree_sort_column(ex_tree, "#0", not reverse))
+    ex_tree.heading("#1", text=text2["#1"], command=lambda:
+                    ex_tree_sort_column(ex_tree, "#1", not reverse))
+    ex_tree.heading("#2", text=text2["#2"], command=lambda:
+                    ex_tree_sort_column(ex_tree, "#2", not reverse))
 
 
 def tree_rebuild(tree, cmdr: str) -> None:
@@ -659,6 +716,21 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                     # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
                     break
                 child += 1
+
+        # tree is rebuild. Now update exobio payout values for each body and system.
+
+        systems = tree.get_children()
+        for system in systems:
+            bodies = tree.get_children(system)
+            system_value = 0
+            for body in bodies:
+                signals = tree.get_children(body)
+                body_value = 0
+                for signal in signals:
+                    body_value += int(tree.item(signal)['values'][0])
+                tree.item(body, values=[body_value, ""])
+                system_value += body_value
+            tree.item(system, values=[system_value, ""])
 
     except KeyError as e:
         logger.error(f"KeyError: {e}")
@@ -873,14 +945,16 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     tree.configure(yscrollcommand=scrollbar.set)
     scrollbar.grid(row=1, column=1, sticky="nsew")
 
-    columns2 = ["#0", "#1", "#2"]
     text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
-
     ex_tree = tk.ttk.Treeview(tab2, columns=["#1", "#2"])
 
-    for col in columns2:
-        ex_tree.heading(col, text=text2[col], command=lambda:
-                        ex_tree_sort_column(ex_tree, col, False))
+    # for col in columns2:
+    ex_tree.heading("#0", text=text2["#0"], command=lambda:
+                    ex_tree_sort_column(ex_tree, "#0", False))
+    ex_tree.heading("#1", text=text2["#1"], command=lambda:
+                    ex_tree_sort_column(ex_tree, "#1", False))
+    ex_tree.heading("#2", text=text2["#2"], command=lambda:
+                    ex_tree_sort_column(ex_tree, "#2", False))
 
     ex_tree_rebuild(ex_tree, cmdr, "")
 
