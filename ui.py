@@ -537,7 +537,7 @@ def ex_tree_sort_column(ex_tree, col, reverse) -> None:  # noqa: CCR001
                                                 for grand_child in grand_children]
                         # logger.warning(f"Grandchildren: {grand_children_table}")
                         if col_index == 0:
-                            grand_children_table.sort(key=lambda x: int(x[0]), reverse=False)
+                            grand_children_table.sort(key=lambda x: int(x[0]), reverse=reverse)
                         elif col_index == 1:
                             grand_children_table.sort(key=lambda x: str(x[0]), reverse=reverse)
                         for grand_child_index, (grand_child_val, grand_child_k) in enumerate(grand_children_table):
@@ -949,7 +949,6 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
     ex_tree = tk.ttk.Treeview(tab2, columns=["#1", "#2"])
 
-    # for col in columns2:
     ex_tree.heading("#0", text=text2["#0"], command=lambda:
                     ex_tree_sort_column(ex_tree, "#0", False))
     ex_tree.heading("#1", text=text2["#1"], command=lambda:
