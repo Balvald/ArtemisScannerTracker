@@ -876,7 +876,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     columns2 = ["#0", "#1", "#2"]
     text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
 
-    ex_tree = tk.ttk.Treeview(tab2, columns=columns2)
+    ex_tree = tk.ttk.Treeview(tab2, columns=["#1", "#2"])
 
     for col in columns2:
         ex_tree.heading(col, text=text2[col], command=lambda:
@@ -933,7 +933,6 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
             if tk_to_ttk_migration:
                 if (applied_theme != theme.active) or (transparent != theme.active_transparent):
                     applied_theme, transparent = themething.apply()
-                    # break
             if plugin.newwindowrequested:
                 logger.debug("New window is requested")
                 try:
