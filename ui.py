@@ -550,15 +550,16 @@ def ex_tree_sort_column(ex_tree, col, reverse) -> None:  # noqa: CCR001
 
     # reverse sort next time
     text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
-    """for col in columns2:
-        ex_tree.heading(col, text=text2[col], command=lambda:
-                     ex_tree_sort_column(ex_tree, col, not reverse))"""
-    ex_tree.heading("#0", text=text2["#0"], command=lambda:
-                    ex_tree_sort_column(ex_tree, "#0", not reverse))
-    ex_tree.heading("#1", text=text2["#1"], command=lambda:
-                    ex_tree_sort_column(ex_tree, "#1", not reverse))
-    ex_tree.heading("#2", text=text2["#2"], command=lambda:
-                    ex_tree_sort_column(ex_tree, "#2", not reverse))
+
+    if col == "#0":
+        ex_tree.heading("#0", text=text2["#0"], command=lambda:
+                        ex_tree_sort_column(ex_tree, "#0", not reverse))
+    elif col == "#1":
+        ex_tree.heading("#1", text=text2["#1"], command=lambda:
+                        ex_tree_sort_column(ex_tree, "#1", not reverse))
+    elif col == "#2":
+        ex_tree.heading("#2", text=text2["#2"], command=lambda:
+                        ex_tree_sort_column(ex_tree, "#2", not reverse))
 
 
 def tree_rebuild(tree, cmdr: str) -> None:
