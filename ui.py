@@ -484,7 +484,11 @@ def tree_sort_column(tree, col, reverse) -> None:
 def ex_tree_sort_column(tree, col, reverse) -> None:
     """Sort the columns of the Tree View."""
     # in this tree there is only the #0 column
+
+    logger.warning(f"Sorting by {col} in reverse: {reverse}")
+
     table = [(tree.item(k)['text'], k) for k in tree.get_children("")]
+
     table.sort(key=lambda x: str(x[0]), reverse=reverse)
 
     # rearrange items in sorted positions
@@ -493,8 +497,11 @@ def ex_tree_sort_column(tree, col, reverse) -> None:
         val = val
 
     # reverse sort next time
-    tree.heading(col, text="System", command=lambda _col=col:
-                 ex_tree_sort_column(tree, _col, not reverse))
+    columns2 = ["#0", "#1", "#2"]
+    text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
+    for col in columns2:
+        tree.heading(col, text=text2[col], command=lambda:
+                     ex_tree_sort_column(tree, col, not reverse))
 
 
 def tree_rebuild(tree, cmdr: str) -> None:
@@ -606,7 +613,8 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                             while True:
                                 if str(item[1]) == tree.item(subchild)['text']:
                                     body_iid = subchild
-                                    tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
+                                    tree.insert(body_iid, tk.END, text=str(item[2]),
+                                                values=item[3:5], iid=iid, open=False)
                                     tree.move(iid, body_iid, "end")
                                     # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
                                     #  with iid {iid} and moved it to {body_iid}")
@@ -617,13 +625,14 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                         except Exception:
                             # logger.warning(f"parent: {tree.item(child)}")
                             parent_iid = child
-                            tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
+                            tree.insert(child, tk.END, text=str(item[1]), values=[0, ""], iid=iid, open=False)
                             tree.move(iid, parent_iid, "end")
                             # logger.debug(f"created body {item[1]} in system {item[0]}
                             #  with iid {iid} and moved it to {parent_iid}")
                             body_iid = iid
                             iid += 1
-                            tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
+                            tree.insert(body_iid, tk.END, text=str(item[2]),
+                                        values=item[3:5], iid=iid, open=False)
                             tree.move(iid, body_iid, "end")
                             # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
                             #  with iid {iid} and moved it to {body_iid}")
@@ -631,17 +640,18 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                             # logger.warning(f"Added {item} to {item[0]}")
                             break
                 except Exception:  # as e:
-                    tree.insert("", tk.END, text=str(item[0]), iid=iid, open=False)
+                    tree.insert("", tk.END, text=str(item[0]), values=[0, ""], iid=iid, open=False)
                     # logger.debug(f"created system {item[0]} with iid {iid}")
                     parent_iid = iid
                     iid += 1
-                    tree.insert(child, tk.END, text=str(item[1]), iid=iid, open=False)
+                    tree.insert(child, tk.END, text=str(item[1]), values=[0, ""], iid=iid, open=False)
                     tree.move(iid, parent_iid, "end")
                     # logger.debug(f"created body {item[1]} in system {item[0]}
                     #  with iid {iid} and moved it to {parent_iid}")
                     body_iid = iid
                     iid += 1
-                    tree.insert(body_iid, tk.END, text=str(item[2:]), iid=iid, open=False)
+                    tree.insert(body_iid, tk.END, text=str(item[2]),
+                                values=item[3:5], iid=iid, open=False)
                     tree.move(iid, body_iid, "end")
                     # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
                     #  with iid {iid} and moved it to {body_iid}")
@@ -863,9 +873,14 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     tree.configure(yscrollcommand=scrollbar.set)
     scrollbar.grid(row=1, column=1, sticky="nsew")
 
-    ex_tree = tk.ttk.Treeview(tab2)
+    columns2 = ["#0", "#1", "#2"]
+    text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
 
-    ex_tree.heading("#0", text="System", command=lambda: ex_tree_sort_column(ex_tree, "#0", False))
+    ex_tree = tk.ttk.Treeview(tab2, columns=columns2)
+
+    for col in columns2:
+        ex_tree.heading(col, text=text2[col], command=lambda:
+                        ex_tree_sort_column(ex_tree, col, False))
 
     ex_tree_rebuild(ex_tree, cmdr, "")
 
