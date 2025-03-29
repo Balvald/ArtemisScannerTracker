@@ -43,7 +43,12 @@ try:
     if not hasattr(_Theme, 'colors') or not hasattr(_Theme, 'fonts') or not hasattr(_Theme, 'force_skips'):
         raise AttributeError("Theme class is not compatible with the alternative ui mode")
 
-    # Just yoinked this from EDMC's own theme.py from ElSaico's ttk branch
+    # Just yoinked this from EDMC's own theme.py from ElSaico's ttk branch to support custom themes
+    # for the version of EDMC on my own ttk-dev branch based on the very same branch mentioned earlier.
+    # The branches mentioned:
+    # https://github.com/ElSaico/EDMarketConnector/tree/ttk
+    # https://github.com/Balvald/EDMarketConnector/tree/ttk-dev
+
     if sys.platform == 'win32':
         import win32con
         import win32gui
@@ -139,7 +144,7 @@ try:
                 dpy = None
 
     # Redefining Theme Class to fit the needs of the independent window in this plugin.
-    # _Theme is a class from EDMC's theme.py from ElSaico's ttk branch
+    # _Theme at this point is assumed to be the one from  https://github.com/Balvald/EDMarketConnector/tree/ttk-dev
 
     class ASTTheme(_Theme):
         """Theme class for the AST Codex window."""
@@ -929,7 +934,14 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_label = tk.ttk.Label(tab1, text="Search:")
     search_label.grid(row=0, column=0, sticky=tk.W)
 
-    search_entry = tk.ttk.Entry(tab1, width=30)
+    search_entry_width = 30
+
+    if sys.platform == 'linux':
+        search_entry_width = 20
+    elif sys.platform == 'win32' and tk_to_ttk_migration:
+        search_entry_width = 25
+
+    search_entry = tk.ttk.Entry(tab1, width=search_entry_width)
     search_entry.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
 
     search_button = tk.ttk.Button(tab1,
@@ -966,7 +978,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_label2 = tk.ttk.Label(tab2, text="Search:")
     search_label2.grid(row=0, column=0, sticky=tk.W)
 
-    search_entry2 = tk.ttk.Entry(tab2, width=30)
+    search_entry2 = tk.ttk.Entry(tab2, width=search_entry_width)
     search_entry2.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
 
     search_button2 = tk.ttk.Button(tab2,

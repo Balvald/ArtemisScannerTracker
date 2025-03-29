@@ -20,10 +20,8 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 
 ## New in v0.3.3
 
-- Bugfix:
-- Bugfix:
-- Bugfix: 
-- New Feature: 
+- Bugfix: Journal Files that do not get scanned due to JSON Decode Errors get now skipped.
+- Updated Feature: Tree View is out of being experimental.
 
 ## Features
 
@@ -112,7 +110,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
     - Can sort all data alphabetically for systems, bodies (planets) or species by clicking their respective columns.
     - Can sort for sold or unsold data with the "Sold" column.
     - Sort for the base value of an exobiology scan by clicking the "Value" column.
-- Tree View (experimental)
+- Tree View
     - Only visible when the Tree view tab is selected.
     - Due to undergo some changes
     - Currently has a single root node "Systems" where each system is found.
