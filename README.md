@@ -112,9 +112,10 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
     - Sort for the base value of an exobiology scan by clicking the "Value" column.
 - Tree View
     - Only visible when the Tree view tab is selected.
-    - Due to undergo some changes
-    - Currently has a single root node "Systems" where each system is found.
     - Individual entries are found under their respective system node.
+    - Each system node denotes the known amount that the system is worth at the least.
+    - Can sort systems, bodies and species by name alphabetically
+    - Can sort systems, bodies and species by value
 
 ## Motivation
 
