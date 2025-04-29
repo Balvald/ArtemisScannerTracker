@@ -101,7 +101,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 ![Table_View](./pictures/ASTCodexTableView.png "AST Codex Window in Table view")
 ![Tree_View](./pictures/ASTCodexTreeView.png "AST Codex Window in Tree/Hierarchical view")
 
-- Tabs: Table View, Tree View (experimental)
+- Tabs: Table View, Tree View
     - Enables switching between the two views to look at the data. The Tree view is due to undergo some changes in the near future.
 - Search
     - Write your search term for any System, Planet, Species into the text field and press the button with the "🔍" to search for that term in the data you have collected.
