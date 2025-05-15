@@ -172,15 +172,18 @@ class ArtemisScannerTracker:
         self.AST_Codex_window = None
 
         if not testmode:
-            response = requests.get(f"https://api.github.com/repos/{ast_repo}/releases/latest", timeout=20)
+            try:
+                response = requests.get(f"https://api.github.com/repos/{ast_repo}/releases/latest", timeout=20)
 
-            if response.ok:
-                data = response.json()
+                if response.ok:
+                    data = response.json()
 
-                if ast_version != data['tag_name']:
-                    self.updateavailable = True
-            else:
-                logger.error("Check for update failed!")
+                    if ast_version != data['tag_name']:
+                        self.updateavailable = True
+                else:
+                    logger.error("Check for update failed!")
+            except Exception as e:
+                logger.error(f"Check for update failed! {e}")
 
         logger.info("ArtemisScannerTracker instantiated")
 
