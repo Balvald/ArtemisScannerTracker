@@ -1030,7 +1030,9 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
             plugin.AST_Codex_window.update()
 
             if not testmode and not tk_to_ttk_migration:
-                theme.update(plugin.AST_Codex_window)
+                # This no longer works at all.
+                # theme.update(plugin.AST_Codex_window)
+                pass
         except Exception as e:
             logger.error(f"Error: {e}")
             break
