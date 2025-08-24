@@ -266,7 +266,9 @@ except Exception as e:
 
 # endregion
 
-filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
+filenames = ["/soldexplodata.json", "/notsoldexplodata.json",
+             "/soldbiodata.json", "/notsoldbiodata.json", 
+             "/cmdrstates.json"]
 
 for file in filenames:
     if not os.path.exists(directory + file):

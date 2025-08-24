@@ -50,7 +50,9 @@ plugin = None
 # tracking of all the biological things that the CMDR scans.
 directory, filename = os.path.split(os.path.realpath(__file__))
 
-filenames = ["/soldbiodata.json", "/notsoldbiodata.json",  "/cmdrstates.json"]
+filenames = ["/soldexplodata.json", "/notsoldexplodata.json",
+             "/soldbiodata.json", "/notsoldbiodata.json", 
+             "/cmdrstates.json"]
 
 if not testmode:
     for file in filenames:
