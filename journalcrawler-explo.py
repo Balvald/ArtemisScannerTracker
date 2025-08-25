@@ -233,7 +233,8 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                                 possibly_sold_data[cmdr].append({"type": "star",
                                                                  "system": entry["StarSystem"],
                                                                  "body": entry["BodyName"],
-                                                                 "dss": False})
+                                                                 "fss": True,
+                                                                 "dss": None})
                                 pass
                         if entry["ScanType"] == "Detailed":
                             # { "timestamp":"2025-08-24T14:17:28Z", "event":"Scan", "ScanType":"Detailed", "BodyName":"Synuefe PK-V b48-0 7", "BodyID":8, "Parents":[ {"Star":0} ], "StarSystem":"Synuefe PK-V b48-0", "SystemAddress":672027125153, "DistanceFromArrivalLS":3541.510279, "TidalLock":false, "TerraformState":"", "PlanetClass":"Icy body", "Atmosphere":"thin neon atmosphere", "AtmosphereType":"Neon", "AtmosphereComposition":[ { "Name":"Neon", "Percent":99.314926 }, { "Name":"Helium", "Percent":0.685068 } ], "Volcanism":"water magma volcanism", "MassEM":0.511434, "Radius":6310153.000000, "SurfaceGravity":5.119400, "SurfaceTemperature":35.006001, "SurfacePressure":313.713379, "Landable":true, "Materials":[ { "Name":"sulphur", "Percent":22.743006 }, { "Name":"carbon", "Percent":19.124514 }, { "Name":"iron", "Percent":15.989780 }, { "Name":"phosphorus", "Percent":12.243841 }, { "Name":"nickel", "Percent":12.094001 }, { "Name":"chromium", "Percent":7.191136 }, { "Name":"zinc", "Percent":4.345424 }, { "Name":"selenium", "Percent":3.559472 }, { "Name":"niobium", "Percent":1.092816 }, { "Name":"molybdenum", "Percent":1.044123 }, { "Name":"technetium", "Percent":0.571890 } ], "Composition":{ "Ice":0.667525, "Rock":0.222052, "Metal":0.110423 }, "SemiMajorAxis":1057057976722.717285, "Eccentricity":0.004564, "OrbitalInclination":-2.422081, "Periapsis":175.671089, "OrbitalPeriod":962838661.670685, "AscendingNode":-111.238039, "MeanAnomaly":195.056850, "RotationPeriod":174289.784540, "AxialTilt":0.870975, "WasDiscovered":false, "WasMapped":false }
@@ -251,6 +252,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                                 possibly_sold_data[cmdr].append({"type": "planet",
                                                                  "system": entry["StarSystem"],
                                                                  "body": entry["BodyName"],
+                                                                 "fss": True,
                                                                  "dss": False})
                             pass
 
@@ -259,11 +261,20 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         # { "timestamp":"2025-08-24T14:17:28Z", "event":"SAAScanComplete", "BodyName":"Synuefe PK-V b48-0 7", "SystemAddress":672027125153, "BodyID":8, "ProbesUsed":3, "EfficiencyTarget":7 }
                         print(entry)
                         # find the scan in possibly_sold_data and mark it as dss = true
+                        not_found = True
                         for scan in possibly_sold_data[cmdr]:
                             if (scan["body"] == entry["BodyName"]):
                                 if scan["dss"] is False:
                                     scan["dss"] = True
                                 break
+                        if not_found:
+                            possibly_sold_data[cmdr].append({"type": "planet",
+                                                             "system": currentsystem,
+                                                             "body": entry["BodyName"],
+                                                             "fss": False,
+                                                             "dss": True})
+                            # We didn't have the dss scan before so we sell just the dss scan.
+                            # but we might have had the fss scan before.
                         pass
 
                     if entry["event"] == "SAASignalsFound":
@@ -294,8 +305,22 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
 
                             for data in possibly_sold_data[cmdr]:
                                 if data["system"] == system:
-                                    if data not in sold_exploration[cmdr][firstletter][system]:
+                                    print("We sold data in system")
+                                    print(system)
+
+                                    not_found = True
+                                    for i in range(len(sold_exploration[cmdr][firstletter][system])):
+                                        if sold_exploration[cmdr][firstletter][system][i]["body"] == data["body"]:
+                                            not_found = False
+                                            if data["fss"] or sold_exploration[cmdr][firstletter][system][i]["fss"]:
+                                                sold_exploration[cmdr][firstletter][system][i]["fss"] = True
+                                            if data["dss"] or sold_exploration[cmdr][firstletter][system][i]["dss"]:
+                                                sold_exploration[cmdr][firstletter][system][i]["dss"] = True
+                                            break
+
+                                    if not_found:
                                         sold_exploration[cmdr][firstletter][system].append(data)
+
                             possibly_sold_data[cmdr] = [data for data in possibly_sold_data[cmdr] if data["system"] != system]
                         pass
 
@@ -314,8 +339,20 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
 
                             for data in possibly_sold_data[cmdr]:
                                 if data["system"] == system:
-                                    if data not in sold_exploration[cmdr][firstletter][system]:
+
+                                    not_found = True
+                                    for i in range(len(sold_exploration[cmdr][firstletter][system])):
+                                        if sold_exploration[cmdr][firstletter][system][i]["body"] == data["body"]:
+                                            not_found = False
+                                            if data["fss"] or sold_exploration[cmdr][firstletter][system][i]["fss"]:
+                                                sold_exploration[cmdr][firstletter][system][i]["fss"] = True
+                                            if data["dss"] or sold_exploration[cmdr][firstletter][system][i]["dss"]:
+                                                sold_exploration[cmdr][firstletter][system][i]["dss"] = True
+                                            break
+
+                                    if not_found:
                                         sold_exploration[cmdr][firstletter][system].append(data)
+
                             possibly_sold_data[cmdr] = [data for data in possibly_sold_data[cmdr] if data["system"] != system]
                         pass
 
@@ -495,6 +532,13 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                             alreadylogged = False
                             for loggeditem in solddata[currentcmdr][letter][system]:
                                 if loggeditem["body"] == item["body"]:
+                                    # Force fss and dss parity
+                                    if loggeditem["fss"] or item["fss"]:
+                                        item["fss"] = True
+                                        loggeditem["fss"] = True
+                                    if loggeditem["dss"] or item["dss"]:
+                                        item["dss"] = True
+                                        loggeditem["dss"] = True
                                     if loggeditem["type"] == item["type"]:
                                         alreadylogged = True
                                         continue

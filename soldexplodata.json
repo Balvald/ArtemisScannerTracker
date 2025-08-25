@@ -8,7 +8,8 @@
                     "type": "star",
                     "system": "Col 285 Sector RN-K c8-10",
                     "body": "Col 285 Sector RN-K c8-10",
-                    "dss": false
+                    "fss": true,
+                    "dss": null
                 }
             ],
             "Col 285 Sector BP-Y b14-1": [
@@ -16,7 +17,8 @@
                     "type": "star",
                     "system": "Col 285 Sector BP-Y b14-1",
                     "body": "Col 285 Sector BP-Y b14-1",
-                    "dss": false
+                    "fss": true,
+                    "dss": null
                 }
             ]
         },
@@ -41,18 +43,21 @@
                     "type": "star",
                     "system": "Synuefe GX-K c24-11",
                     "body": "Synuefe GX-K c24-11",
-                    "dss": false
+                    "fss": true,
+                    "dss": null
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe GX-K c24-11",
                     "body": "Synuefe GX-K c24-11 2",
-                    "dss": false
+                    "fss": true,
+                    "dss": true
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe GX-K c24-11",
                     "body": "Synuefe GX-K c24-11 1",
+                    "fss": true,
                     "dss": false
                 }
             ],
@@ -61,66 +66,77 @@
                     "type": "star",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0",
-                    "dss": false
+                    "fss": true,
+                    "dss": null
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 5",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 6",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 7",
+                    "fss": true,
                     "dss": true
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 7 a",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 1",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 4",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 3",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 3 a",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 8",
+                    "fss": true,
                     "dss": false
                 },
                 {
                     "type": "planet",
                     "system": "Synuefe PK-V b48-0",
                     "body": "Synuefe PK-V b48-0 2",
+                    "fss": true,
                     "dss": false
                 }
             ],
@@ -129,7 +145,8 @@
                     "type": "star",
                     "system": "Synuefe GX-K c24-3",
                     "body": "Synuefe GX-K c24-3 A",
-                    "dss": false
+                    "fss": true,
+                    "dss": null
                 }
             ]
         },
