@@ -51,7 +51,7 @@
                     "system": "Synuefe GX-K c24-11",
                     "body": "Synuefe GX-K c24-11 2",
                     "fss": true,
-                    "dss": true
+                    "dss": false
                 },
                 {
                     "type": "planet",
