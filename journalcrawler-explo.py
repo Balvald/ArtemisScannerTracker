@@ -212,11 +212,17 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         # FSS Discovery Scan
                         # System name, BodyCount, NonBodyCount
                         # Progress shows how far we finished the FSS Scan already.
+                        # If we have Progress 1.0 we have found all bodies in the system.
+                        # TODO Check if we never get Scan events with ScanType AutoScan or Detailed once we reached this.
+                        # If so we really might want to ask some database for all the bodies in the system and add them as already found and sold data.
                         # { "timestamp":"2025-08-24T14:10:32Z", "event":"FSSDiscoveryScan", "Progress":0.186954, "BodyCount":11, "NonBodyCount":0, "SystemName":"Synuefe PK-V b48-0", "SystemAddress":672027125153 }
                         print(entry)
 
                     if entry["event"] == "FSSAllBodiesFound":
                         # found all bodies in system
+                        # Doesn't appear in already known systems.
+                        # Is actually kind of useless as we will end up with FSSDiscoveryScan with Progress 1.0 more often enough anyway and that event has all the info we get from this event aswell. (this one actually has less info)
+                        # TODO Remove this later.
                         # { "timestamp":"2025-08-24T14:08:31Z", "event":"FSSAllBodiesFound", "SystemName":"Synuefe GX-K c24-11", "SystemAddress":3107710603986, "Count":3 }
                         print(entry)
                         pass
