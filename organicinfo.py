@@ -124,7 +124,8 @@ vistagenomicsprices = {
     "Fonticulua Campestris": 1000000,
     "Tussock Pennatis": 1000000,
     "Bacterium Vesicula": 1000000,
-    "Bacterium Acies": 1000000
+    "Bacterium Acies": 1000000,
+    "Radicoida Unica": 1904592  # Self measured Radicoida price from December 2025
 }
 
 # Journal name translation
@@ -245,7 +246,8 @@ organicnamesjournaltolocal = {
     "$codex_ent_fonticulus_02_name;": "Fonticulua Campestris",
     "$codex_ent_tussocks_06_name;": "Tussock Pennatis",
     "$codex_ent_bacterial_05_name;": "Bacterium Vesicula",
-    "$codex_ent_bacterial_04_name;": "Bacterium Acies"
+    "$codex_ent_bacterial_04_name;": "Bacterium Acies",
+    "$codex_ent_ingensradices_unicus_name;": "Radicoida Unica"
 }
 
 # Translations for Genus
@@ -270,7 +272,8 @@ genusnamesjournaltolocal = {
     "$Codex_Ent_Tube_Name;": "Sinuous Tubers",
     "$Codex_Ent_Stratum_Genus_Name;": "Stratum",
     "$Codex_Ent_Tubus_Genus_Name;": "Tubus",
-    "$Codex_Ent_Tussocks_Genus_Name;": "Tussock"
+    "$Codex_Ent_Tussocks_Genus_Name;": "Tussock",
+    "$Codex_Ent_Ingensradices_Genus_Name;": "Radicoida",
 }
 
 # Colonial ranges in m.
@@ -295,7 +298,8 @@ clonalcolonialranges = {
     "Frutexa": 150,
     "Tussock": 200,
     "Crystalline Shards": 100,  # According to fandom. Gotta check it.
-    "Amphora Plant": 100
+    "Amphora Plant": 100,
+    "Radicoida": 0  # Its so close its rarely a problem to just grab all 3 samples right next to each other.
 }
 
 
