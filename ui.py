@@ -267,7 +267,7 @@ except Exception as e:
 # endregion
 
 filenames = ["/soldexplodata.json", "/notsoldexplodata.json",
-             "/soldbiodata.json", "/notsoldbiodata.json", 
+             "/soldbiodata.json", "/notsoldbiodata.json",
              "/cmdrstates.json"]
 
 for file in filenames:
