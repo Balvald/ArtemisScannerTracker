@@ -51,7 +51,7 @@ plugin = None
 directory, filename = os.path.split(os.path.realpath(__file__))
 
 filenames = ["/soldexplodata.json", "/notsoldexplodata.json",
-             "/soldbiodata.json", "/notsoldbiodata.json", 
+             "/soldbiodata.json", "/notsoldbiodata.json",
              "/cmdrstates.json"]
 
 if not testmode:
