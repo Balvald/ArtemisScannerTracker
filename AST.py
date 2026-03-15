@@ -74,7 +74,9 @@ class ArtemisScannerTracker:
     """Artemis Scanner Tracker plugin class."""
 
     def __init__(self, ast_version: str, ast_repo: str, plugin_name: str,  # noqa: CCR001
-                 directory: str, cmdrstates: dict, notyetsolddata: dict, soldexobiology: dict) -> None:
+                 directory: str, cmdrstates: dict,
+                 notyetsolddata: dict, soldexobiology: dict,
+                 notyetsoldexplo: dict, soldexplo: dict) -> None:
         """Initialize the plugin by getting values from the config file."""
         self.AST_VERSION = ast_version
         self.AST_REPO = ast_repo
@@ -86,6 +88,9 @@ class ArtemisScannerTracker:
 
         self.notyetsolddata = notyetsolddata
         self.soldexobiology = soldexobiology
+
+        self.notyetsoldexplo = notyetsoldexplo
+        self.soldexplo = soldexplo
 
         self.AST_in_Legacy = False
 
