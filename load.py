@@ -346,12 +346,19 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
                 print(entry)
                 # Add Star to notsoldexplodata
                 # check if we already have this entry in sold_explodata
-                plugin.notyetsoldexplo[cmdr].append({"type": "star",
-                                                     "system": entry["StarSystem"],
-                                                     "body": entry["BodyName"],
-                                                     "fss": True,
-                                                     "dss": None})
-                pass
+                with open(directory + "/notsoldexplodata.json", "r+", encoding="utf8") as f:
+                    notsoldexplodata = json.load(f)
+                    plugin.notyetsoldexplo[cmdr].append({"type": "star",
+                                                         "system": entry["StarSystem"],
+                                                         "body": entry["BodyName"],
+                                                         "fss": True,
+                                                         "dss": None})
+        
+                    notsoldexplodata = plugin.notyetsoldexplo
+                    f.seek(0)
+                    json.dump(notsoldexplodata, f, indent=4)
+                    f.truncate()
+
         if entry["ScanType"] == "Detailed":
             # { "timestamp":"2025-08-24T14:17:28Z", "event":"Scan", "ScanType":"Detailed",
             # "BodyName":"Synuefe PK-V b48-0 7", "BodyID":8, "Parents":[ {"Star":0} ],
@@ -386,20 +393,26 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
             print(entry)
             # Add Planet to notsoldexplodata
             # check if we already have this entry in sold_explodata
-            not_found = True
+            with open(directory + "/notsoldexplodata.json", "r+", encoding="utf8") as f:
+                notsoldexplodata = json.load(f)
+                not_found = True
 
-            for scan in plugin.notyetsoldexplo[cmdr]:
-                if (scan["body"] == entry["BodyName"] and scan["system"] == entry["StarSystem"]):
-                    not_found = False
-                    break
+                for scan in plugin.notyetsoldexplo[cmdr]:
+                    if (scan["body"] == entry["BodyName"] and scan["system"] == entry["StarSystem"]):
+                        not_found = False
+                        break
 
-            if not_found:
-                plugin.notyetsoldexplo[cmdr].append({"type": "planet",
-                                                     "system": entry["StarSystem"],
-                                                     "body": entry["BodyName"],
-                                                     "fss": True,
-                                                     "dss": False})
-            pass
+                if not_found:
+                    plugin.notyetsoldexplo[cmdr].append({"type": "planet",
+                                                         "system": entry["StarSystem"],
+                                                         "body": entry["BodyName"],
+                                                         "fss": True,
+                                                         "dss": False})
+
+                notsoldexplodata = plugin.notyetsoldexplo
+                f.seek(0)
+                json.dump(notsoldexplodata, f, indent=4)
+                f.truncate()
 
     if entry["event"] == "SAAScanComplete":
         # SAAScanComplete
@@ -410,21 +423,27 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         # "ProbesUsed":3, "EfficiencyTarget":7 }
         print(entry)
         # find the scan in plugin.notyetsoldexplo and mark it as dss = true
-        not_found = True
-        for scan in plugin.notyetsoldexplo[cmdr]:
-            if (scan["body"] == entry["BodyName"]):
-                if scan["dss"] is False:
-                    scan["dss"] = True
-                break
-        if not_found:
-            plugin.notyetsoldexplo[cmdr].append({"type": "planet",
-                                                 "system": entry["StarSystem"],
-                                                 "body": entry["BodyName"],
-                                                 "fss": False,
-                                                 "dss": True})
-            # We didn't have the dss scan before so we sell just the dss scan.
-            # but we might have had the fss scan before.
-        pass
+        with open(directory + "/notsoldexplodata.json", "r+", encoding="utf8") as f:
+            notsoldexplodata = json.load(f)
+            not_found = True
+            for scan in plugin.notyetsoldexplo[cmdr]:
+                if (scan["body"] == entry["BodyName"]):
+                    if scan["dss"] is False:
+                        scan["dss"] = True
+                    break
+            if not_found:
+                plugin.notyetsoldexplo[cmdr].append({"type": "planet",
+                                                     "system": entry["StarSystem"],
+                                                     "body": entry["BodyName"],
+                                                     "fss": False,
+                                                     "dss": True})
+                # We didn't have the dss scan before so we sell just the dss scan.
+                # but we might have had the fss scan before.
+
+            notsoldexplodata = plugin.notyetsoldexplo
+            f.seek(0)
+            json.dump(notsoldexplodata, f, indent=4)
+            f.truncate()
 
     if entry["event"] == "SAASignalsFound":
         # SAASignalsFound
@@ -442,41 +461,55 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         # Sell events
 
         if entry["event"] == "SellExplorationData":
-            # SellExplorationData
-            # { "timestamp":"2025-08-24T14:38:03Z",
-            # "event":"SellExplorationData", "Systems":[ "Synuefe GX-K c24-11" ],
-            # "Discovered":[  ], "BaseValue":3440, "Bonus":0, "TotalEarnings":3096 }
-            print(entry)
-            for system in entry["Systems"]:
-                firstletter = system[0].lower()
-                if firstletter not in alphabet:
-                    firstletter = "-"
-                if ((system not in plugin.sold_explo[cmdr][firstletter].keys()
-                        and (system[0].lower() == firstletter or firstletter == "-"))):
-                    plugin.sold_explo[cmdr][firstletter][system] = []
+            with open(directory + "/notsoldexplodata.json", "r+", encoding="utf8") as f:
+                notsoldexplodata = json.load(f)
 
-                for data in plugin.notyetsoldexplo[cmdr]:
-                    if data["system"] == system:
-                        print("We sold data in system")
-                        print(system)
+                with open(directory + "/soldexplodata.json", "r+", encoding="utf8") as fs:
+                    soldexplodata = json.load(fs)
 
-                        not_found = True
-                        for i in range(len(plugin.sold_explo[cmdr][firstletter][system])):
-                            if plugin.sold_explo[cmdr][firstletter][system][i]["body"] == data["body"]:
-                                not_found = False
-                                if data["fss"] or plugin.sold_explo[cmdr][firstletter][system][i]["fss"]:
-                                    plugin.sold_explo[cmdr][firstletter][system][i]["fss"] = True
-                                if data["dss"] or plugin.sold_explo[cmdr][firstletter][system][i]["dss"]:
-                                    plugin.sold_explo[cmdr][firstletter][system][i]["dss"] = True
-                                break
+                    # SellExplorationData
+                    # { "timestamp":"2025-08-24T14:38:03Z",
+                    # "event":"SellExplorationData", "Systems":[ "Synuefe GX-K c24-11" ],
+                    # "Discovered":[  ], "BaseValue":3440, "Bonus":0, "TotalEarnings":3096 }
 
-                        if not_found:
-                            plugin.sold_explo[cmdr][firstletter][system].append(data)
+                    for system in entry["Systems"]:
+                        firstletter = system[0].lower()
+                        if firstletter not in alphabet:
+                            firstletter = "-"
+                        if ((system not in plugin.sold_explo[cmdr][firstletter].keys()
+                                and (system[0].lower() == firstletter or firstletter == "-"))):
+                            plugin.sold_explo[cmdr][firstletter][system] = []
 
-                plugin.notyetsoldexplo[cmdr] = [data for data
-                                                in plugin.notyetsoldexplo[cmdr]
-                                                if data["system"] != system]
-            pass
+                        for data in plugin.notyetsoldexplo[cmdr]:
+                            if data["system"] == system:
+                                print("We sold data in system")
+                                print(system)
+
+                                not_found = True
+                                for i in range(len(plugin.sold_explo[cmdr][firstletter][system])):
+                                    if plugin.sold_explo[cmdr][firstletter][system][i]["body"] == data["body"]:
+                                        not_found = False
+                                        if data["fss"] or plugin.sold_explo[cmdr][firstletter][system][i]["fss"]:
+                                            plugin.sold_explo[cmdr][firstletter][system][i]["fss"] = True
+                                        if data["dss"] or plugin.sold_explo[cmdr][firstletter][system][i]["dss"]:
+                                            plugin.sold_explo[cmdr][firstletter][system][i]["dss"] = True
+                                        break
+
+                                if not_found:
+                                    plugin.sold_explo[cmdr][firstletter][system].append(data)
+
+                        plugin.notyetsoldexplo[cmdr] = [data for data
+                                                        in plugin.notyetsoldexplo[cmdr]
+                                                        if data["system"] != system]
+
+                        soldexplodata = plugin.soldexplo
+                        notsoldexplodata = plugin.notyetsoldexplo
+                        f.seek(0)
+                        json.dump(notsoldexplodata, f, indent=4)
+                        f.truncate()
+                        fs.seek(0)
+                        json.dump(soldexplodata, fs, indent=4)
+                        fs.truncate()
 
         if entry["event"] == "MultiSellExplorationData":
             # MultiSellExplorationData
@@ -487,35 +520,49 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
             # { "SystemName":"Col 285 Sector BP-Y b14-1", "NumBodies":1 } ],
             # "BaseValue":17235, "Bonus":0, "TotalEarnings":15513 }
             print(entry)
-            for systementry in entry["Discovered"]:
-                system = systementry["SystemName"]
-                firstletter = system[0].lower()
-                if firstletter not in alphabet:
-                    firstletter = "-"
-                if ((system not in plugin.sold_explo[cmdr][firstletter].keys()
-                        and (system[0].lower() == firstletter or firstletter == "-"))):
-                    plugin.sold_explo[cmdr][firstletter][system] = []
+            with open(directory + "/notsoldexplodata.json", "r+", encoding="utf8") as f:
+                notsoldexplodata = json.load(f)
 
-                for data in plugin.notyetsoldexplo[cmdr]:
-                    if data["system"] == system:
+                with open(directory + "/soldexplodata.json", "r+", encoding="utf8") as fs:
+                    soldexplodata = json.load(fs)
 
-                        not_found = True
-                        for i in range(len(plugin.sold_explo[cmdr][firstletter][system])):
-                            if plugin.sold_explo[cmdr][firstletter][system][i]["body"] == data["body"]:
-                                not_found = False
-                                if data["fss"] or plugin.sold_explo[cmdr][firstletter][system][i]["fss"]:
-                                    plugin.sold_explo[cmdr][firstletter][system][i]["fss"] = True
-                                if data["dss"] or plugin.sold_explo[cmdr][firstletter][system][i]["dss"]:
-                                    plugin.sold_explo[cmdr][firstletter][system][i]["dss"] = True
-                                break
+                    for systementry in entry["Discovered"]:
+                        system = systementry["SystemName"]
+                        firstletter = system[0].lower()
+                        if firstletter not in alphabet:
+                            firstletter = "-"
+                        if ((system not in plugin.sold_explo[cmdr][firstletter].keys()
+                                and (system[0].lower() == firstletter or firstletter == "-"))):
+                            plugin.sold_explo[cmdr][firstletter][system] = []
 
-                        if not_found:
-                            plugin.sold_explo[cmdr][firstletter][system].append(data)
+                        for data in plugin.notyetsoldexplo[cmdr]:
+                            if data["system"] == system:
 
-                plugin.notyetsoldexplo[cmdr] = [data for data
-                                                in plugin.notyetsoldexplo[cmdr]
-                                                if data["system"] != system]
-            pass
+                                not_found = True
+                                for i in range(len(plugin.sold_explo[cmdr][firstletter][system])):
+                                    if plugin.sold_explo[cmdr][firstletter][system][i]["body"] == data["body"]:
+                                        not_found = False
+                                        if data["fss"] or plugin.sold_explo[cmdr][firstletter][system][i]["fss"]:
+                                            plugin.sold_explo[cmdr][firstletter][system][i]["fss"] = True
+                                        if data["dss"] or plugin.sold_explo[cmdr][firstletter][system][i]["dss"]:
+                                            plugin.sold_explo[cmdr][firstletter][system][i]["dss"] = True
+                                        break
+
+                                if not_found:
+                                    plugin.sold_explo[cmdr][firstletter][system].append(data)
+
+                        plugin.notyetsoldexplo[cmdr] = [data for data
+                                                        in plugin.notyetsoldexplo[cmdr]
+                                                        if data["system"] != system]
+
+                    soldexplodata = plugin.soldexplo
+                    notsoldexplodata = plugin.notyetsoldexplo
+                    f.seek(0)
+                    json.dump(notsoldexplodata, f, indent=4)
+                    f.truncate()
+                    fs.seek(0)
+                    json.dump(soldexplodata, fs, indent=4)
+                    fs.truncate()
 
     if flag:
         # save most recent relevant state so in case of crash of the system
