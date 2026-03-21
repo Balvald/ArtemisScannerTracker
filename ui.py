@@ -379,11 +379,20 @@ def button(frame, text, command, row: int, col: int, sticky) -> tk.ttk.Button:
 data = {}
 data_initialised = False
 
+data_explo = {}
+data_explo_initialised = False
+
 soldbiodata_file = directory + "/soldbiodata.json"
 notsoldbiodata_file = directory + "/notsoldbiodata.json"
 
 soldbiodata_file_mtime = os.path.getmtime(soldbiodata_file)
 notsoldbiodata_file_mtime = os.path.getmtime(notsoldbiodata_file)
+
+soldexplodata_file = directory + "/soldexplodata.json"
+notsoldexplodata_file = directory + "/notsoldexplodata.json"
+
+soldexplodata_file_mtime = os.path.getmtime(soldexplodata_file)
+notsoldexplodata_file_mtime = os.path.getmtime(notsoldexplodata_file)
 
 full_ex_tree = None
 
@@ -391,11 +400,17 @@ full_ex_tree = None
 def init_data() -> None:  # noqa: CCR001
     """Initialise the data for the AST Codex window."""
     global data
+    global data_explo
     global soldbiodata_file
     global notsoldbiodata_file
     global soldbiodata_file_mtime
     global notsoldbiodata_file_mtime
+    global soldexplodata_file
+    global notsoldexplodata_file
+    global soldexplodata_file_mtime
+    global notsoldexplodata_file_mtime
     global data_initialised
+    global data_explo_initialised
 
     logger.info("Initialising data ...")
 
@@ -410,6 +425,16 @@ def init_data() -> None:  # noqa: CCR001
         notsoldbiodata = json.load(f)
 
     notsoldbiodata_file_mtime = os.path.getmtime(notsoldbiodata_file)
+
+    with open(soldexplodata_file, "r+", encoding="utf8") as f:
+        soldexplodata = json.load(f)
+
+    soldexplodata_file_mtime = os.path.getmtime(soldexplodata_file)
+
+    with open(notsoldexplodata_file, "r+", encoding="utf8") as f:
+        notsoldexplodata = json.load(f)
+
+    notsoldexplodata_file_mtime = os.path.getmtime(notsoldexplodata_file)
 
     # logger.warning(f"Sold Bio Data: {soldbiodata}")
     # logger.warning(f"Not Sold Bio Data: {notsoldbiodata}")
@@ -444,6 +469,29 @@ def init_data() -> None:  # noqa: CCR001
     # logger.warning(f"{data}")
 
     data_initialised = True
+
+    for cmdr in notsoldexplodata.keys():
+        data_explo[cmdr] = []
+    for cmdr in soldexplodata.keys():
+        data_explo[cmdr] = []
+    
+    for cmdr in notsoldexplodata.keys():
+        if cmdr != cmdr:
+            continue
+        for item in notsoldexplodata[cmdr]:
+            # logger.warning(f"{item}")
+            data_explo[cmdr].append([item["system"], item["body"], item["signal"],
+                                     item["value"], "No"])
+
+    for cmdr in soldexplodata.keys():
+        if cmdr != cmdr:
+            continue
+        for item in soldexplodata[cmdr]:
+            # logger.warning(f"{item}")
+            data_explo[cmdr].append([item["system"], item["body"], item["signal"],
+                                     item["value"], "Yes"])
+
+    data_explo_initialised = True
 
 
 def shortcreditstring(number) -> str:
@@ -820,6 +868,8 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     """Show the AST Codex window."""
     global data
     global data_initialised
+    global data_explo
+    global data_explo_initialised
     global tk_to_ttk_migration
 
     logger.info("Opening AST Codex ...")
@@ -904,6 +954,8 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
 
     tab1 = tk.ttk.Frame(tab_control)
     tab2 = tk.ttk.Frame(tab_control)
+    tab3 = tk.ttk.Frame(tab_control)
+    tab4 = tk.ttk.Frame(tab_control)
 
     # tk.Grid.rowconfigure(plugin.AST_Codex_window, 0, weight=0)
     tk.Grid.rowconfigure(plugin.AST_Codex_window, 1, weight=10)
@@ -911,9 +963,13 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
 
     tab1.grid(row=0, column=0, sticky="nsew")
     tab2.grid(row=0, column=0, sticky="nsew")
+    tab3.grid(row=0, column=0, sticky="nsew")
+    tab4.grid(row=0, column=0, sticky="nsew")
 
-    tab_control.add(tab1, text="Table View")
-    tab_control.add(tab2, text="Tree View")
+    tab_control.add(tab1, text="Exobiology Table")
+    tab_control.add(tab2, text="Exobiology Tree")
+    tab_control.add(tab3, text="Exploration Table")
+    tab_control.add(tab4, text="Exploration Tree")
     tab_control.grid(row=1, column=0, sticky='nsew')
 
     columns = ["System", "Body", "Species", "Value", "Sold"]
@@ -997,6 +1053,101 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     ex_tree.configure(yscrollcommand=scrollbar2.set)
     scrollbar2.grid(row=1, column=1, sticky="nsew")
 
+    columns3 = ["System", "Body", "Type", "FSS", "DSS", "Value", "Sold"]
+
+    tree_explore = tk.ttk.Treeview(tab3, columns=columns3, show="headings")
+
+    for col in columns3:
+        tree_explore.heading(col, text=col, command=lambda _col=col:
+                             tree_sort_column(tree_explore, _col, False))
+
+    for col in columns3:
+        tree_explore.column(col, width=75, stretch=True)
+
+    if plugin.AST_debug.get():
+        logger.debug("Rebuild Tree")
+
+    # Have to rebuild the exploration tree. this needs a new tree rebuild function.
+    tree_rebuild(tree_explore, cmdr)
+
+    tree_explore.grid(row=1, column=0, sticky="nsew")
+
+    search_label3 = tk.ttk.Label(tab3, text="Search:")
+    search_label3.grid(row=0, column=0, sticky=tk.W)
+
+    search_entry_width = 30
+
+    if sys.platform == 'linux':
+        search_entry_width = 20
+    elif sys.platform == 'win32' and tk_to_ttk_migration:
+        search_entry_width = 25
+
+    search_entry3 = tk.ttk.Entry(tab3, width=search_entry_width)
+    search_entry3.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
+
+    search_button3 = tk.ttk.Button(tab3,
+                                   text="🔍",
+                                   command=lambda _search_entry=search_entry3:
+                                   tree_search_worker(plugin, tree_explore, _search_entry, cmdr),
+                                   width=0)
+    search_button3.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
+
+    scrollbar3 = tk.ttk.Scrollbar(tab3,
+                                  orient="vertical",
+                                  command=tree_explore.yview,
+                                  style="AST.Vertical.TScrollbar")
+    tree_explore.configure(yscrollcommand=scrollbar3.set)
+    scrollbar3.grid(row=1, column=1, sticky="nsew")
+
+    text4 = {"#0": "Name", "#1": "Value", "#2": "FSS", "#3": "DSS", "#4": "Sold"}
+    tree_explore_ex = tk.ttk.Treeview(tab4, columns=["#1", "#2", "#3", "#4"])
+
+    tree_explore_ex.heading("#0", text=text4["#0"], command=lambda:
+                            ex_tree_sort_column(tree_explore_ex, "#0", False))
+    tree_explore_ex.heading("#1", text=text4["#1"], command=lambda:
+                            ex_tree_sort_column(tree_explore_ex, "#1", False))
+    tree_explore_ex.heading("#2", text=text4["#2"], command=lambda:
+                            ex_tree_sort_column(tree_explore_ex, "#2", False))
+    tree_explore_ex.heading("#3", text=text4["#3"], command=lambda:
+                            ex_tree_sort_column(tree_explore_ex, "#3", False))
+    tree_explore_ex.heading("#4", text=text4["#4"], command=lambda:
+                            ex_tree_sort_column(tree_explore_ex, "#4", False))
+
+    if plugin.AST_debug.get():
+        logger.debug("Rebuild Exploration Ex Tree")
+
+    # Have to rebuild the exploration tree. this needs a new tree rebuild function.
+    # ex_tree_rebuild(tree_explore_ex, cmdr, "")
+
+    tree_explore_ex.grid(row=1, column=0, sticky="nsew")
+
+    search_label4 = tk.ttk.Label(tab4, text="Search:")
+    search_label4.grid(row=0, column=0, sticky=tk.W)
+
+    search_entry_width = 30
+
+    if sys.platform == 'linux':
+        search_entry_width = 20
+    elif sys.platform == 'win32' and tk_to_ttk_migration:
+        search_entry_width = 25
+
+    search_entry4 = tk.ttk.Entry(tab4, width=search_entry_width)
+    search_entry4.grid(row=0, column=0, padx=(55, 0), sticky=tk.W)
+
+    search_button4 = tk.ttk.Button(tab4,
+                                   text="🔍",
+                                   command=lambda _search_entry=search_entry4:
+                                   tree_search_worker_ex(plugin, tree_explore_ex, _search_entry, cmdr),
+                                   width=0)
+    search_button4.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
+
+    scrollbar4 = tk.ttk.Scrollbar(tab4,
+                                  orient="vertical",
+                                  command=tree_explore_ex.yview,
+                                  style="AST.Vertical.TScrollbar")
+    tree_explore_ex.configure(yscrollcommand=scrollbar4.set)
+    scrollbar4.grid(row=1, column=1, sticky="nsew")
+
     tab1.columnconfigure((1, 0), weight=10)
     tab1.columnconfigure((1, 1), weight=0)
     tab1.rowconfigure((1, 1), weight=10)
@@ -1004,6 +1155,14 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     tab2.columnconfigure((1, 0), weight=10)
     tab2.columnconfigure((1, 1), weight=0)
     tab2.rowconfigure((1, 1), weight=10)
+
+    tab3.columnconfigure((1, 0), weight=10)
+    tab3.columnconfigure((1, 1), weight=0)
+    tab3.rowconfigure((1, 1), weight=10)
+
+    tab4.columnconfigure((1, 0), weight=10)
+    tab4.columnconfigure((1, 1), weight=0)
+    tab4.rowconfigure((1, 1), weight=10)
 
     if plugin.AST_debug.get():
         logger.debug("Going in main loop")
