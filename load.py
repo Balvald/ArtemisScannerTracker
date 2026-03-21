@@ -353,7 +353,7 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
                                                          "body": entry["BodyName"],
                                                          "fss": True,
                                                          "dss": None})
-        
+
                     notsoldexplodata = plugin.notyetsoldexplo
                     f.seek(0)
                     json.dump(notsoldexplodata, f, indent=4)

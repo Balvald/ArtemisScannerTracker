@@ -474,7 +474,7 @@ def init_data() -> None:  # noqa: CCR001
         data_explo[cmdr] = []
     for cmdr in soldexplodata.keys():
         data_explo[cmdr] = []
-    
+
     for cmdr in notsoldexplodata.keys():
         if cmdr != cmdr:
             continue
