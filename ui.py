@@ -380,7 +380,6 @@ data = {}
 data_initialised = False
 
 data_explo = {}
-data_explo_initialised = False
 
 soldbiodata_file = directory + "/soldbiodata.json"
 notsoldbiodata_file = directory + "/notsoldbiodata.json"
@@ -395,6 +394,7 @@ soldexplodata_file_mtime = os.path.getmtime(soldexplodata_file)
 notsoldexplodata_file_mtime = os.path.getmtime(notsoldexplodata_file)
 
 full_ex_tree = None
+full_ex_tree_explo = None
 
 
 def init_data() -> None:  # noqa: CCR001
@@ -410,7 +410,6 @@ def init_data() -> None:  # noqa: CCR001
     global soldexplodata_file_mtime
     global notsoldexplodata_file_mtime
     global data_initialised
-    global data_explo_initialised
 
     logger.info("Initialising data ...")
 
@@ -468,8 +467,6 @@ def init_data() -> None:  # noqa: CCR001
     logger.warning("Finished transcribing sold data.")
     # logger.warning(f"{data}")
 
-    data_initialised = True
-
     for cmdr in notsoldexplodata.keys():
         data_explo[cmdr] = []
     for cmdr in soldexplodata.keys():
@@ -480,18 +477,18 @@ def init_data() -> None:  # noqa: CCR001
             continue
         for item in notsoldexplodata[cmdr]:
             # logger.warning(f"{item}")
-            data_explo[cmdr].append([item["system"], item["body"], item["signal"],
-                                     item["value"], "No"])
+            data_explo[cmdr].append([item["system"], item["body"], item["type"],
+                                     str(item["fss"]), str(item["dss"]), "No"])
 
     for cmdr in soldexplodata.keys():
         if cmdr != cmdr:
             continue
         for item in soldexplodata[cmdr]:
             # logger.warning(f"{item}")
-            data_explo[cmdr].append([item["system"], item["body"], item["signal"],
-                                     item["value"], "Yes"])
+            data_explo[cmdr].append([item["system"], item["body"], item["type"],
+                                     str(item["fss"]), str(item["dss"]), "Yes"])
 
-    data_explo_initialised = True
+    data_initialised = True
 
 
 def shortcreditstring(number) -> str:
@@ -623,6 +620,17 @@ def tree_rebuild(tree, cmdr: str) -> None:
     tree.delete(*tree.get_children())
     try:
         for item in data[cmdr]:
+            tree.insert("", tk.END, values=item)
+    except KeyError:
+        pass
+
+
+def tree_rebuild_explo(tree, cmdr: str) -> None:
+    """Rebuild the Table View for the main window."""
+    global data_explo
+    tree.delete(*tree.get_children())
+    try:
+        for item in data_explo[cmdr]:
             tree.insert("", tk.END, values=item)
     except KeyError:
         pass
@@ -796,13 +804,130 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
         full_ex_tree = save_treeview_state(tree)
 
 
-def tree_search(tree, search_entry, cmdr: str) -> None:  # noqa: CCR001
+def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
+    """Rebuild the treeview for the explorer window."""
+    global data_explo
+    global full_ex_tree_explo
+
+    tree.delete(*tree.get_children())
+    # tree.insert("", tk.END, text="System", iid=0, open=True)
+    iid = 0
+    query_found = False
+
+    new_data_exists = ((os.path.getmtime(soldexplodata_file)
+                        > soldexplodata_file_mtime) or
+                       (os.path.getmtime(notsoldexplodata_file)
+                        > notsoldexplodata_file_mtime))
+
+    if full_ex_tree_explo is not None and query == "" and not new_data_exists:
+        logger.info("Loading tree from saved state ...")
+        load_treeview_state(full_ex_tree_explo, tree)
+        logger.info("Tree loaded from saved state.")
+        return
+
+    try:
+        for item in data_explo[cmdr]:
+            system, body, signal_type, fss, dss = item[:5]
+            # logger.warning(f"Checking {item}")
+            for value in item:
+                if query == "":
+                    query_found = True
+                    break
+                elif query.lower() in str(value).lower():
+                    query_found = True
+                    break
+                else:
+                    query_found = False
+            if not query_found:
+                continue
+            child = 0
+            while True:
+                # check until we find the right child. As it might exist already.
+                try:
+                    if str(system) == tree.item(child)['text']:
+                        try:
+                            subchild = 0
+                            while True:
+                                if str(body) == tree.item(subchild)['text']:
+                                    body_iid = subchild
+                                    tree.insert(body_iid, tk.END, text=str(signal_type),
+                                                values=[fss, dss], iid=iid, open=False)
+                                    tree.move(iid, body_iid, "end")
+                                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
+                                    #  with iid {iid} and moved it to {body_iid}")
+                                    iid += 1
+                                    break
+                                subchild += 1
+                            break
+                        except Exception:
+                            # logger.warning(f"parent: {tree.item(child)}")
+                            parent_iid = child
+                            tree.insert(child, tk.END, text=str(body), values=[0, ""], iid=iid, open=False)
+                            tree.move(iid, parent_iid, "end")
+                            # logger.debug(f"created body {item[1]} in system {item[0]}
+                            #  with iid {iid} and moved it to {parent_iid}")
+                            body_iid = iid
+                            iid += 1
+                            tree.insert(body_iid, tk.END, text=str(signal_type),
+                                        values=[fss, dss], iid=iid, open=False)
+                            tree.move(iid, body_iid, "end")
+                            # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
+                            #  with iid {iid} and moved it to {body_iid}")
+                            iid += 1
+                            # logger.warning(f"Added {item} to {item[0]}")
+                            break
+                except Exception:  # as e:
+                    tree.insert("", tk.END, text=str(system), values=[0, ""], iid=iid, open=False)
+                    # logger.debug(f"created system {item[0]} with iid {iid}")
+                    parent_iid = iid
+                    iid += 1
+                    tree.insert(child, tk.END, text=str(body), values=[0, ""], iid=iid, open=False)
+                    tree.move(iid, parent_iid, "end")
+                    # logger.debug(f"created body {item[1]} in system {item[0]}
+                    #  with iid {iid} and moved it to {parent_iid}")
+                    body_iid = iid
+                    iid += 1
+                    tree.insert(body_iid, tk.END, text=str(signal_type),
+                                values=[fss, dss], iid=iid, open=False)
+                    tree.move(iid, body_iid, "end")
+                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
+                    #  with iid {iid} and moved it to {body_iid}")
+                    iid += 1
+                    # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
+                    break
+                child += 1
+
+        # tree is rebuild. Now update exobio payout values for each body and system.
+
+        systems = tree.get_children()
+        for system in systems:
+            bodies = tree.get_children(system)
+            system_value = 0
+            for body in bodies:
+                signals = tree.get_children(body)
+                body_value = len(signals)
+                tree.item(body, values=[body_value, ""])
+                system_value += body_value
+            tree.item(system, values=[system_value, ""])
+
+    except KeyError as e:
+        logger.error(f"KeyError: {e}")
+        pass
+
+    if query == "" and full_ex_tree_explo is None:
+        full_ex_tree_explo = save_treeview_state(tree)
+
+
+def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CCR001
     """Search items in the table."""
     logger.warning("Searching ...")
     query = search_entry.get()
     logger.warning(f"Query: {query}")
     selections = []
-    tree_rebuild(tree, cmdr)
+    if explo:
+        tree_rebuild_explo(tree, cmdr)
+    else:
+        tree_rebuild(tree, cmdr)
     children = tree.get_children()
     if search_entry.get() == "":
         tree.selection_set([])
@@ -824,13 +949,16 @@ def tree_search(tree, search_entry, cmdr: str) -> None:  # noqa: CCR001
     tree.selection_set(selections)
 
 
-def tree_search_ex(tree, search_entry, cmdr: str) -> None:  # noqa: CCR001
+def tree_search_ex(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CCR001
     """Search the tree."""
     logger.warning("Searching ...")
     query = search_entry.get()
     logger.warning(f"Query: {query}")
     selections = []
-    ex_tree_rebuild(tree, cmdr, query)
+    if explo:
+        ex_tree_rebuild_explo(tree, cmdr, query)
+    else:
+        ex_tree_rebuild(tree, cmdr, query)
     children = tree.get_children()
     if search_entry.get() == "":
         tree.selection_set([])
@@ -852,15 +980,15 @@ def tree_search_ex(tree, search_entry, cmdr: str) -> None:  # noqa: CCR001
     tree.selection_set(selections)
 
 
-def tree_search_worker(plugin, tree, search_entry, cmdr: str) -> None:
+def tree_search_worker(plugin, tree, search_entry, cmdr: str, explo: bool) -> None:
     """Start a thread to search the tree."""
-    plugin.searchthread = threading.Thread(target=tree_search(tree, search_entry, cmdr))
+    plugin.searchthread = threading.Thread(target=tree_search, args=(tree, search_entry, cmdr, explo))
     plugin.searchthread.start()
 
 
-def tree_search_worker_ex(plugin, tree, search_entry, cmdr: str) -> None:
+def tree_search_worker_ex(plugin, tree, search_entry, cmdr: str, explo: bool) -> None:
     """Start a thread to search the tree."""
-    plugin.searchthread = threading.Thread(target=tree_search_ex(tree, search_entry, cmdr))
+    plugin.searchthread = threading.Thread(target=tree_search_ex, args=(tree, search_entry, cmdr, explo))
     plugin.searchthread.start()
 
 
@@ -869,7 +997,6 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     global data
     global data_initialised
     global data_explo
-    global data_explo_initialised
     global tk_to_ttk_migration
 
     logger.info("Opening AST Codex ...")
@@ -877,7 +1004,11 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     new_data_exists = ((os.path.getmtime(soldbiodata_file)
                        > soldbiodata_file_mtime) or
                        (os.path.getmtime(notsoldbiodata_file)
-                       > notsoldbiodata_file_mtime))
+                       > notsoldbiodata_file_mtime) or
+                       (os.path.getmtime(soldexplodata_file)
+                       > soldexplodata_file_mtime) or
+                       (os.path.getmtime(notsoldexplodata_file)
+                       > notsoldexplodata_file_mtime))
 
     # while True:
     if plugin.AST_debug.get():
@@ -1005,7 +1136,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_button = tk.ttk.Button(tab1,
                                   text="🔍",
                                   command=lambda _search_entry=search_entry:
-                                  tree_search_worker(plugin, tree, _search_entry, cmdr),
+                                  tree_search_worker(plugin, tree, _search_entry, cmdr, False),
                                   width=0)
     search_button.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
@@ -1042,7 +1173,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_button2 = tk.ttk.Button(tab2,
                                    text="🔍",
                                    command=lambda _search_entry2=search_entry2:
-                                   tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr),
+                                   tree_search_worker_ex(plugin, ex_tree, _search_entry2, cmdr, False),
                                    width=0)
     search_button2.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
@@ -1068,7 +1199,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
         logger.debug("Rebuild Tree")
 
     # Have to rebuild the exploration tree. this needs a new tree rebuild function.
-    tree_rebuild(tree_explore, cmdr)
+    tree_rebuild_explo(tree_explore, cmdr)
 
     tree_explore.grid(row=1, column=0, sticky="nsew")
 
@@ -1088,7 +1219,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_button3 = tk.ttk.Button(tab3,
                                    text="🔍",
                                    command=lambda _search_entry=search_entry3:
-                                   tree_search_worker(plugin, tree_explore, _search_entry, cmdr),
+                                   tree_search_worker(plugin, tree_explore, _search_entry, cmdr, True),
                                    width=0)
     search_button3.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
@@ -1099,7 +1230,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     tree_explore.configure(yscrollcommand=scrollbar3.set)
     scrollbar3.grid(row=1, column=1, sticky="nsew")
 
-    text4 = {"#0": "Name", "#1": "Value", "#2": "FSS", "#3": "DSS", "#4": "Sold"}
+    text4 = {"#0": "Type", "#1": "FSS", "#2": "DSS", "#3": "Value", "#4": "Sold"}
     tree_explore_ex = tk.ttk.Treeview(tab4, columns=["#1", "#2", "#3", "#4"])
 
     tree_explore_ex.heading("#0", text=text4["#0"], command=lambda:
@@ -1117,7 +1248,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
         logger.debug("Rebuild Exploration Ex Tree")
 
     # Have to rebuild the exploration tree. this needs a new tree rebuild function.
-    # ex_tree_rebuild(tree_explore_ex, cmdr, "")
+    ex_tree_rebuild_explo(tree_explore_ex, cmdr, "")
 
     tree_explore_ex.grid(row=1, column=0, sticky="nsew")
 
@@ -1137,7 +1268,7 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     search_button4 = tk.ttk.Button(tab4,
                                    text="🔍",
                                    command=lambda _search_entry=search_entry4:
-                                   tree_search_worker_ex(plugin, tree_explore_ex, _search_entry, cmdr),
+                                   tree_search_worker_ex(plugin, tree_explore_ex, _search_entry, cmdr, True),
                                    width=0)
     search_button4.grid(row=0, column=0, sticky=tk.W, padx=(250, 0))
 
