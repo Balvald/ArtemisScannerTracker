@@ -620,29 +620,23 @@ def ex_tree_sort_column(ex_tree, col, reverse, explo) -> None:  # noqa: CCR001
                         ex_tree_sort_column(ex_tree, "#4", not reverse, explo))
 
 
-def tree_rebuild(tree, cmdr: str, query: str = "") -> None:
+def tree_rebuild(tree, cmdr: str) -> None:
     """Rebuild the Table View for the main window."""
     global data
     tree.delete(*tree.get_children())
-    query = query.strip().lower()
     try:
         for item in data[cmdr]:
-            if query and not any(query in str(value).lower() for value in item):
-                continue
             tree.insert("", tk.END, values=item)
     except KeyError:
         pass
 
 
-def tree_rebuild_explo(tree, cmdr: str, query: str = "") -> None:
+def tree_rebuild_explo(tree, cmdr: str) -> None:
     """Rebuild the Table View for the main window."""
     global data_explo
     tree.delete(*tree.get_children())
-    query = query.strip().lower()
     try:
         for item in data_explo[cmdr]:
-            if query and not any(query in str(value).lower() for value in item):
-                continue
             tree.insert("", tk.END, values=item)
     except KeyError:
         pass
@@ -725,11 +719,11 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
     try:
         for item in data[cmdr]:
             # logger.warning(f"Checking {item}")
-            for value in item:
+            for value_ in item:
                 if query == "":
                     query_found = True
                     break
-                elif query.lower() in str(value).lower():
+                elif query.lower() in str(value_).lower():
                     query_found = True
                     break
                 else:
@@ -968,7 +962,7 @@ def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CC
     logger.warning(f"Query: {query}")
     selections = []
     if explo:
-        tree_rebuild_explo(tree, cmdr, query)
+        tree_rebuild_explo(tree, cmdr)
     else:
         tree_rebuild(tree, cmdr)
     children = tree.get_children()
@@ -979,12 +973,12 @@ def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CC
     for child in children:
         # logger.info(f"Child: {child}")
         # logger.info(f"Values: {tree.item(child)['values']}")
-        for value in tree.item(child)['values']:
-            if query.lower() in str(value).lower():
+        for value_ in tree.item(child)['values']:
+            if query.lower() in str(value_).lower():
                 # logger.info(f"Found: {tree.item(child)['values']}")
                 selections.append(child)
                 break
-            elif str(value).lower() == "no" or str(value).lower() == "yes":
+            elif str(value_).lower() == "no" or str(value_).lower() == "yes":
                 tree.delete(child)
                 break
     # logger.info(f"Selections: {selections}")
@@ -1042,13 +1036,13 @@ def tree_search_ex(tree, search_entry, cmdr: str, explo: bool) -> None:
 
 def tree_search_worker(plugin, tree, search_entry, cmdr: str, explo: bool) -> None:
     """Start a thread to search the tree."""
-    plugin.searchthread = threading.Thread(target=tree_search, args=(tree, search_entry, cmdr, explo))
+    plugin.searchthread = threading.Thread(target=tree_search(tree, search_entry, cmdr, explo))
     plugin.searchthread.start()
 
 
 def tree_search_worker_ex(plugin, tree, search_entry, cmdr: str, explo: bool) -> None:
     """Start a thread to search the tree."""
-    plugin.searchthread = threading.Thread(target=tree_search_ex, args=(tree, search_entry, cmdr, explo))
+    plugin.searchthread = threading.Thread(target=tree_search_ex(tree, search_entry, cmdr, explo))
     plugin.searchthread.start()
 
 
