@@ -614,23 +614,29 @@ def ex_tree_sort_column(ex_tree, col, reverse) -> None:  # noqa: CCR001
                         ex_tree_sort_column(ex_tree, "#2", not reverse))
 
 
-def tree_rebuild(tree, cmdr: str) -> None:
+def tree_rebuild(tree, cmdr: str, query: str = "") -> None:
     """Rebuild the Table View for the main window."""
     global data
     tree.delete(*tree.get_children())
+    query = query.strip().lower()
     try:
         for item in data[cmdr]:
+            if query and not any(query in str(value).lower() for value in item):
+                continue
             tree.insert("", tk.END, values=item)
     except KeyError:
         pass
 
 
-def tree_rebuild_explo(tree, cmdr: str) -> None:
+def tree_rebuild_explo(tree, cmdr: str, query: str = "") -> None:
     """Rebuild the Table View for the main window."""
     global data_explo
     tree.delete(*tree.get_children())
+    query = query.strip().lower()
     try:
         for item in data_explo[cmdr]:
+            if query and not any(query in str(value).lower() for value in item):
+                continue
             tree.insert("", tk.END, values=item)
     except KeyError:
         pass
@@ -918,78 +924,79 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
         full_ex_tree_explo = save_treeview_state(tree)
 
 
-def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CCR001
+def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:
     """Search items in the table."""
     logger.warning("Searching ...")
-    query = search_entry.get()
+    query = search_entry.get().strip()
     logger.warning(f"Query: {query}")
-    selections = []
+
     if explo:
-        tree_rebuild_explo(tree, cmdr)
+        tree_rebuild_explo(tree, cmdr, query)
     else:
-        tree_rebuild(tree, cmdr)
-    children = tree.get_children()
-    if search_entry.get() == "":
-        tree.selection_set([])
-        return
-    # logger.info(f"Children: {children}")
-    for child in children:
-        # logger.info(f"Child: {child}")
-        # logger.info(f"Values: {tree.item(child)['values']}")
-        for value in tree.item(child)['values']:
-            if query.lower() in str(value).lower():
-                # logger.info(f"Found: {tree.item(child)['values']}")
-                selections.append(child)
-                break
-            elif str(value).lower() == "no" or str(value).lower() == "yes":
-                tree.delete(child)
-                break
-    # logger.info(f"Selections: {selections}")
+        tree_rebuild(tree, cmdr, query)
+
+    tree.selection_set([])
     logger.info("Search complete")
-    tree.selection_set(selections)
 
 
-def tree_search_ex(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CCR001
+def _node_matches_query(tree, node: str, query: str) -> bool:
+    """Return True if node text or values contain query (case-insensitive)."""
+    item = tree.item(node)
+    if query in str(item.get('text', '')).lower():
+        return True
+    for value in item.get('values', []):
+        if query in str(value).lower():
+            return True
+    return False
+
+
+def _collect_matching_tree_nodes(tree, query: str) -> list:
+    """Collect all node ids in tree whose text or values contain the query."""
+    matches = []
+    stack = list(tree.get_children())
+    while stack:
+        node = stack.pop()
+        if _node_matches_query(tree, node, query):
+            matches.append(node)
+        stack.extend(tree.get_children(node))
+    return matches
+
+
+def tree_search_ex(tree, search_entry, cmdr: str, explo: bool) -> None:
     """Search the tree."""
     logger.warning("Searching ...")
-    query = search_entry.get()
+    query = search_entry.get().strip()
     logger.warning(f"Query: {query}")
-    selections = []
+
     if explo:
         ex_tree_rebuild_explo(tree, cmdr, query)
     else:
         ex_tree_rebuild(tree, cmdr, query)
-    children = tree.get_children()
-    if search_entry.get() == "":
+
+    if query == "":
         tree.selection_set([])
         return
-    logger.warning(f"Children: {children}")
-    for child in children:
-        logger.warning(f"Child: {child}")
-        logger.warning(f"Values: {tree.item(child)['values']}")
-        for value in tree.item(child)['values']:
-            if query.lower() in str(value).lower():
-                logger.warning(f"Found: {tree.item(child)['values']}")
-                selections.append(child)
-                break
-            elif str(value).lower() == "no" or str(value).lower() == "yes":
-                tree.delete(child)
-                break
+
+    selections = _collect_matching_tree_nodes(tree, query.lower())
+    tree.selection_set(selections)
+    if selections:
+        tree.focus(selections[0])
+        tree.see(selections[0])
+
     logger.warning(f"Selections: {selections}")
     logger.warning("Search complete")
-    tree.selection_set(selections)
 
 
 def tree_search_worker(plugin, tree, search_entry, cmdr: str, explo: bool) -> None:
-    """Start a thread to search the tree."""
-    plugin.searchthread = threading.Thread(target=tree_search, args=(tree, search_entry, cmdr, explo))
-    plugin.searchthread.start()
+    """Search table data on the Tk main loop."""
+    plugin.searchthread = None
+    tree_search(tree, search_entry, cmdr, explo)
 
 
 def tree_search_worker_ex(plugin, tree, search_entry, cmdr: str, explo: bool) -> None:
-    """Start a thread to search the tree."""
-    plugin.searchthread = threading.Thread(target=tree_search_ex, args=(tree, search_entry, cmdr, explo))
-    plugin.searchthread.start()
+    """Search tree data on the Tk main loop."""
+    plugin.searchthread = None
+    tree_search_ex(tree, search_entry, cmdr, explo)
 
 
 def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
