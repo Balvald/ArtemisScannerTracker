@@ -620,7 +620,6 @@ def ex_tree_sort_column(ex_tree, col, reverse, explo) -> None:  # noqa: CCR001
                         ex_tree_sort_column(ex_tree, "#4", not reverse, explo))
 
 
-
 def tree_rebuild(tree, cmdr: str, query: str = "") -> None:
     """Rebuild the Table View for the main window."""
     global data
@@ -867,11 +866,11 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
         for item in data_explo[cmdr]:
             system, body, signal_type, fss, dss, value, sold = _normalize_explo_item(item)
             # logger.warning(f"Checking {item}")
-            for value in item:
+            for value_ in item:
                 if query == "":
                     query_found = True
                     break
-                elif query.lower() in str(value).lower():
+                elif query.lower() in str(value_).lower():
                     query_found = True
                     break
                 else:
@@ -944,11 +943,12 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
             system_sold = 0
             for body in bodies:
                 signals = tree.get_children(body)
-                body_value = len(signals)
+                body_value = 0
                 body_sold = 0
                 for signal in signals:
                     if str(tree.item(signal)['values'][3]).lower() == "yes":
                         body_sold += 1
+                    body_value += int(tree.item(signal)['values'][2])
                 tree.item(body, values=[body_value, "", "", f"{body_sold}/{body_value}"])
                 system_value += body_value
                 system_sold += body_sold
