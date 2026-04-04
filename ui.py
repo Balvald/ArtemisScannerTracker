@@ -934,7 +934,7 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                     break
                 child += 1
 
-        # tree is rebuild. Now update exobio payout values for each body and system.
+        # tree is rebuild. Now update exploration payout values for each body and system.
 
         systems = tree.get_children()
         for system in systems:
@@ -943,12 +943,11 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
             system_sold = 0
             for body in bodies:
                 signals = tree.get_children(body)
-                body_value = 0
+                body_value = len(signals)
                 body_sold = 0
                 for signal in signals:
                     if str(tree.item(signal)['values'][3]).lower() == "yes":
                         body_sold += 1
-                    body_value += int(tree.item(signal)['values'][2])
                 tree.item(body, values=[body_value, "", "", f"{body_sold}/{body_value}"])
                 system_value += body_value
                 system_sold += body_sold
