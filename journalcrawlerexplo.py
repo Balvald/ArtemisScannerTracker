@@ -1,30 +1,16 @@
 """
-Here resides the journalcrawler that can read through all the journal files.
+Here resides the exploration journalcrawler that can read through all the journal files.
 
-It retraces all exobiology scans and sell actions.
+It retraces all exploration scans and sell actions.
 """
 
 import json
 import os
 
-# Own Modules
-from organicinfo import generaltolocalised, getvistagenomicprices
-
-
 # This goes through a folder of journals that it'll parse
-# and check for analysed bio signals and the selling of it.
+# and check for exploration data and the selling of it.
 
-# This version still assumes that the CMDR will always sell
-# the data in full once its sold.
-# It currently does not account for the case where the CMDR
-# sells the data only for a single system and then dies with the
-# rest of the data still unsold.
-# Losing said exobiology data.
-# In this case the lost data is assumed as sold by this script.
-
-# For best results you can put your whole selection of journals
-# downloaded from Journal limpet into the journaldir
-
+# This is still a work in progress.
 
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
@@ -130,8 +116,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
     for filename in edlogs:
         if filename[0][1] == "3.X":
             if filename[0][0] < "2021-05-17T23:59:59Z" or filename[0][0] > "2022-11-31T00:00:00Z":
-                logger.debug(f"Skipping 3.X file; date: {filename[0][0]} name {filename[1]}")
-                continue
+                logger.debug(f"3.X file; date: {filename[0][0]} name {filename[1]}")
 
         f = os.path.join(journaldir, filename[1])
         logger.debug("Current file: " + f)
@@ -174,39 +159,22 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                             possibly_sold_data[cmdr] = []
 
                     if read_old_journal_limpet_event:
-                        continue
+                        # For exploration we actually want to read old journal files.
+                        # continue
+                        pass
 
                     if entry["event"] in ["Location", "Embark",
                                           "Disembark", "Touchdown",
                                           "Liftoff", "FSDJump"]:
                         try:
                             currentsystem = entry["StarSystem"]
-                            currentbody = entry["Body"]
+                            # currentbody = entry["Body"]
                         except KeyError:
                             # Was playing in old Horizons so
                             # Touchdown and Liftoff don't have body nor system
                             logger.debug("We've encountered a KeyError in the code "
                                          + "for updating the current system and body.")
                             logger.debug(entry)
-                    """
-                    if entry["event"] == "ScanOrganic":
-                        # logger.debug("Scan organic Event!")
-                        if entry["ScanType"] in ["Sample", "Analyse"]:
-                            if entry["ScanType"] == "Analyse":
-                                logger.debug("Scan Organic Event Type: Analyse")
-                                try:
-                                    currententrytowrite["species"] = generaltolocalised(entry["Species"].lower())
-                                    currententrytowrite["system"] = currentsystem
-                                    currententrytowrite["body"] = currentbody
-                                    if currententrytowrite not in possibly_sold_data[cmdr]:
-                                        possibly_sold_data[cmdr].append(currententrytowrite)
-                                    currententrytowrite = {}
-                                    continue
-                                except KeyError as e:
-                                    logger.error("Coulnd't find Species in Analyse event, Skipping")
-                                    logger.error(e)
-                                    logger.error(entry)
-                    """
 
                     if entry["event"] == "FSSDiscoveryScan":
                         # FSS Discovery Scan
@@ -220,7 +188,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         # { "timestamp":"2025-08-24T14:10:32Z", "event":"FSSDiscoveryScan",
                         #   "Progress":0.186954, "BodyCount":11, "NonBodyCount":0,
                         #   "SystemName":"Synuefe PK-V b48-0", "SystemAddress":672027125153 }
-                        print(entry)
+                        logger.debug(entry)
 
                     if entry["event"] == "FSSAllBodiesFound":
                         # found all bodies in system
@@ -233,8 +201,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         #   "event":"FSSAllBodiesFound",
                         #   "SystemName":"Synuefe GX-K c24-11",
                         #   "SystemAddress":3107710603986, "Count":3 }
-                        print(entry)
-                        pass
+                        logger.debug(entry)
 
                     if entry["event"] == "Scan":
                         if entry["ScanType"] == "AutoScan":
@@ -261,7 +228,12 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                                                                  "body": entry["BodyName"],
                                                                  "fss": True,
                                                                  "dss": None})
-                                pass
+                            if "Cluster" in entry["BodyName"]:
+                                possibly_sold_data[cmdr].append({"type": "cluster",
+                                                                 "system": entry["StarSystem"],
+                                                                 "body": entry["BodyName"],
+                                                                 "fss": True,
+                                                                 "dss": None})
                         if entry["ScanType"] == "Detailed":
                             # { "timestamp":"2025-08-24T14:17:28Z", "event":"Scan", "ScanType":"Detailed",
                             # "BodyName":"Synuefe PK-V b48-0 7", "BodyID":8, "Parents":[ {"Star":0} ],
@@ -293,7 +265,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                             # "OrbitalPeriod":962838661.670685, "AscendingNode":-111.238039,
                             # "MeanAnomaly":195.056850, "RotationPeriod":174289.784540,
                             # "AxialTilt":0.870975, "WasDiscovered":false, "WasMapped":false }
-                            print(entry)
+                            logger.debug(entry)
                             # Add Planet to notsoldexplodata
                             # check if we already have this entry in sold_explodata
                             not_found = True
@@ -318,7 +290,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         # "BodyName":"Synuefe PK-V b48-0 7",
                         # "SystemAddress":672027125153, "BodyID":8,
                         # "ProbesUsed":3, "EfficiencyTarget":7 }
-                        print(entry)
+                        logger.debug(entry)
                         # find the scan in possibly_sold_data and mark it as dss = true
                         not_found = True
                         for scan in possibly_sold_data[cmdr]:
@@ -345,7 +317,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         # { "Type":"$SAA_SignalType_Geological;", "Type_Localised":"Geological", "Count":2 } ],
                         # "Genuses":[ { "Genus":"$Codex_Ent_Bacterial_Genus_Name;",
                         # "Genus_Localised":"Bacterium" } ] }
-                        print(entry)
+                        logger.debug(entry)
                         # for AST codex maybe?
                         pass
 
@@ -432,153 +404,6 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                                                         if data["system"] != system]
                         pass
 
-                    """
-                    if entry["event"] == "SellOrganicData":
-                        logger.debug("SellOrganicData event!")
-                        currentbatch = {}
-                        # Lets create a more human readable list of different types
-                        # of sold biodata to see how we can continue from there.
-                        for sold in entry["BioData"]:
-                            if sold["Species_Localised"] in currentbatch.keys():
-                                currentbatch[sold["Species_Localised"]] += 1
-                            else:
-                                currentbatch[sold["Species_Localised"]] = 1
-                        bysystem = {}
-                        for biodata in possibly_sold_data[cmdr]:
-                            if biodata["system"] in bysystem.keys():
-                                if (biodata["species"] in bysystem[biodata["system"]].keys()):
-                                    bysystem[biodata["system"]][biodata["species"]] += 1
-                                else:
-                                    bysystem[biodata["system"]][biodata["species"]] = 1
-                            else:
-                                bysystem[biodata["system"]] = {}
-                                bysystem[biodata["system"]][biodata["species"]] = 1
-                        soldbysystempossible = {}
-                        logger.debug("bysystem:")
-                        logger.debug(bysystem)
-                        logger.debug("Currentbatch:")
-                        logger.debug(currentbatch)
-                        # input()
-
-                        # Get every system
-                        for system in bysystem:
-                            # and we assume every system to be the one that was possibly sold from
-                            soldbysystempossible[system] = True
-                            for species in currentbatch:
-                                if species not in bysystem[system].keys():
-                                    # Species that we are selling does not appear in its bysystem structure
-                                    # so it cant be the system that we sold from
-                                    soldbysystempossible[system] = False
-                                    # since we found out the system can't be the one we sold we break here
-                                    # and continue with the next system
-                                    break
-                                if soldbysystempossible[system] is False:
-                                    continue
-                                # Checking if we have any systems that have too few of a certain species
-                                if bysystem[system][species] < currentbatch[species]:
-                                    soldbysystempossible[system] = False
-                                    break
-
-                        # this is still not perfect because it cannot be.
-                        # if the player sells the data by system and 2 systems
-                        # have the same amount of the same species then no one
-                        # can tell which system was actually sold at
-                        # vista genomics.
-                        # In described case whatever is the first system we
-                        # encounter through iteration will be chosen as the
-                        # system that was sold.
-                        thesystem = ""
-                        for system in soldbysystempossible:
-                            if soldbysystempossible[system] is True:
-                                # We always take the first system that is possible
-                                # If there are two we cannot tell which one was
-                                # sold. Though it should not really matter
-                                # as long as the CMDR hasn't died right
-                                # after without selling the data aswell.
-                                thesystem = system
-                                break
-
-                        # An eligible system was found and we selected the first
-                        if thesystem != "":
-                            logger.debug("CMDR sold by system: " + thesystem)
-                            i = 0
-                            while i < len(possibly_sold_data[cmdr]):
-                                # For the case when we are done when we havent sold everything
-                                done = True
-                                for species in currentbatch:
-                                    if currentbatch[species] != 0:
-                                        done = False
-                                if done:
-                                    break
-
-                                logger.debug(" i = " + str(i))
-
-                                firstletter = possibly_sold_data[cmdr][i]["system"][0].lower()
-                                if firstletter not in alphabet:
-                                    firstletter = "-"
-                                # Checking here more granularily
-                                # which data was sold.
-                                # We do know though that
-                                # the specifc data was sold only
-                                # in one system that at this point
-                                # is saved in the variable "thesystem"
-                                logger.debug("possibly sold data")
-                                # logger.debug(possibly_sold_data[cmdr])
-                                logger.debug("current batch")
-                                logger.debug(currentbatch)
-
-                                if ((thesystem not in sold_exobiology[cmdr][firstletter].keys()
-                                     and (thesystem[0].lower() == firstletter or firstletter == "-"))):
-                                    sold_exobiology[cmdr][firstletter][thesystem] = []
-
-                                check = (possibly_sold_data[cmdr][i]["system"] == thesystem
-                                         and possibly_sold_data[cmdr][i]
-                                         not in sold_exobiology[cmdr][firstletter][thesystem]
-                                         and possibly_sold_data[cmdr][i]["species"] in currentbatch.keys())
-                                if check:
-                                    if currentbatch[possibly_sold_data[cmdr][i]["species"]] > 0:
-                                        logger.debug("We append in specific system")
-                                        sold_exobiology[cmdr][firstletter][thesystem].append(
-                                            possibly_sold_data[cmdr][i])
-                                        currentbatch[possibly_sold_data[cmdr][i]["species"]] -= 1
-                                        thing = possibly_sold_data[cmdr].pop(i)
-                                        logger.debug("Sold:")
-                                        logger.debug(thing)
-                                        logger.debug(" i = " + str(i))
-                                        continue
-                                    else:
-                                        logger.error("currentbatch has negative amount for some species"
-                                                     + " this is a problem")
-                                i += 1
-                        else:
-                            logger.debug("CMDR sold the whole batch.")
-                            logger.debug("possibly sold data")
-                            logger.debug(possibly_sold_data[cmdr])
-                            logger.debug("current batch")
-                            logger.debug(currentbatch)
-
-                            for data in possibly_sold_data[cmdr]:
-                                firstletter = data["system"][0].lower()
-                                if firstletter not in alphabet:
-                                    firstletter = "-"
-
-                                if ((data["system"] not in sold_exobiology[cmdr][firstletter].keys()
-                                     and (data["system"][0].lower() == firstletter or firstletter == "-"))):
-                                    sold_exobiology[cmdr][firstletter][data["system"]] = []
-
-                                if data["species"] not in currentbatch.keys():
-                                    continue
-
-                                if ((data not in sold_exobiology[cmdr][firstletter][data["system"]]
-                                     and currentbatch[data["species"]] > 0)):
-                                    currentbatch[data["species"]] -= 1
-
-                                    logger.debug("We append single bit of whole batch")
-                                    sold_exobiology[cmdr][firstletter][data["system"]].append(data)
-                                    logger.debug("We appended single bit of whole batch")
-                            possibly_sold_data[cmdr] = []
-                    """
-
                 except json.JSONDecodeError as e:
                     logger.error(f"JSONDecodeError: Corrupt journal line found in {filename[1]} at {linepos}")
                     logger.error(f"Corrupt line: {line}")
@@ -649,8 +474,6 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
         f.truncate()
 
     unsoldvalues = {}
-
-    vistagenomicsprices = getvistagenomicprices()
 
     for cmdr in notsolddata.keys():
         unsoldvalue = 0
