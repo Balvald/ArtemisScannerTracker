@@ -8,6 +8,7 @@ import tkinter as tk
 from typing import Optional
 
 # Own modules
+from journalcrawlerexplo import build_explodata_json
 from journalcrawler import build_biodata_json
 import organicinfo as orgi
 import saving
@@ -310,6 +311,18 @@ class ArtemisScannerTracker:
 
         current_row += 1
 
+        text = "Scan game journals for exploration"
+        ui.prefs_button(frame, text, self.buildsoldbiodatajsonworker, current_row, 0, tk.W)
+        text = "Scan local journal folder for exploration"
+        ui.prefs_button(frame, text, self.buildsoldbiodatajsonlocalworker, current_row, 1, tk.W)
+
+        current_row += 1
+
+        ui.prefs_label(frame, line, current_row, 0, tk.W)
+        ui.prefs_label(frame, line, current_row, 1, tk.W)
+
+        current_row += 1
+
         text = "To reset the status, body, system and species"
         ui.prefs_label(frame, text, current_row, 0, tk.W)
 
@@ -459,6 +472,18 @@ class ArtemisScannerTracker:
 
         self.rawvalue = build_biodata_json(logger, os.path.join(directory, "journals"))[self.AST_current_CMDR]
 
+    def buildsoldexplodatajsonlocalworker(self) -> None:
+        """Start the thread to build the soldbiodata.json using the local journal folder."""
+        self.thread = threading.Thread(target=self.buildsoldexplodatajsonlocal, name="buildsoldexplodatajsonlocal")
+        self.thread.start()
+
+    def buildsoldexplodatajsonlocal(self) -> None:
+        """Build the soldexplodata.json using the neighboring journalcrawler.py searching through local journal folder."""
+        global logger
+        directory, filename = os.path.split(os.path.realpath(__file__))
+
+        build_explodata_json(logger, os.path.join(directory, "journals"))[self.AST_current_CMDR]
+
     def buildsoldbiodatajsonworker(self) -> None:
         """Start the thread to build the soldbiodata.json using the game journal directory."""
         self.thread = threading.Thread(target=self.buildsoldbiodatajson, name="buildsoldbiodatajson")
@@ -478,6 +503,26 @@ class ArtemisScannerTracker:
             journaldir = config.default_journal_dir
 
         self.rawvalue = build_biodata_json(logger, journaldir)[self.AST_current_CMDR]
+
+    def buildsoldexplodatajsonworker(self) -> None:
+        """Start the thread to build the soldexplodata.json using the game journal directory."""
+        self.thread = threading.Thread(target=self.buildsoldexplodatajson, name="buildsoldexplodatajson")
+        self.thread.start()
+
+    def buildsoldexplodatajson(self) -> None:
+        """Build the soldexplodata.json using the neighboring journalcrawler.py."""
+        # Always uses the game journal directory
+
+        global logger
+
+        # this the actual path from the config.
+        journaldir = config.get_str('journaldir')
+
+        if journaldir in [None, "", "None"]:
+            # config.default_journal_dir is a fallback that won't work in a linux context
+            journaldir = config.default_journal_dir
+
+        self.rawvalue = build_explodata_json(logger, journaldir)[self.AST_current_CMDR]
 
     def update_last_scan_plant(self, entry) -> tuple[str, int]:
         """."""
