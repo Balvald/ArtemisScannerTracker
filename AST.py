@@ -478,7 +478,10 @@ class ArtemisScannerTracker:
         self.thread.start()
 
     def buildsoldexplodatajsonlocal(self) -> None:
-        """Build the soldexplodata.json using the neighboring journalcrawler.py searching through local journal folder."""
+        """Build the soldexplodata.json using the neighboring journalcrawler.py.
+
+        Searching through local journal folder.
+        """
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 

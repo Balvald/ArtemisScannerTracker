@@ -69,11 +69,11 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
 
     cmdr = ""
     currentsystem = ""
-    currentbody = ""
+    # currentbody = ""
 
     totalcmdrlist = []
 
-    currententrytowrite = {}
+    # currententrytowrite = {}
 
     logger.debug(directory)
 
@@ -220,7 +220,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                                 # "OrbitalPeriod":638497835.397720, "AscendingNode":93.603429,
                                 # "MeanAnomaly":21.500488, "RotationPeriod":270961.664832,
                                 # "AxialTilt":0.000000, "WasDiscovered":false, "WasMapped":false }
-                                print(entry)
+                                logger.debug(entry)
                                 # Add Star to notsoldexplodata
                                 # check if we already have this entry in sold_explodata
                                 possibly_sold_data[cmdr].append({"type": "star",
@@ -333,7 +333,8 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         # { "timestamp":"2025-08-24T14:38:03Z",
                         # "event":"SellExplorationData", "Systems":[ "Synuefe GX-K c24-11" ],
                         # "Discovered":[  ], "BaseValue":3440, "Bonus":0, "TotalEarnings":3096 }
-                        print(entry)
+                        logger.debug(entry)
+                        # input()
                         for system in entry["Systems"]:
                             firstletter = system[0].lower()
                             if firstletter not in alphabet:
@@ -344,8 +345,8 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
 
                             for data in possibly_sold_data[cmdr]:
                                 if data["system"] == system:
-                                    print("We sold data in system")
-                                    print(system)
+                                    logger.debug("We sold data in system")
+                                    logger.debug(system)
 
                                     not_found = True
                                     for i in range(len(sold_exploration[cmdr][firstletter][system])):
@@ -373,7 +374,8 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                         # { "SystemName":"Col 285 Sector RN-K c8-10", "NumBodies":1 },
                         # { "SystemName":"Col 285 Sector BP-Y b14-1", "NumBodies":1 } ],
                         # "BaseValue":17235, "Bonus":0, "TotalEarnings":15513 }
-                        print(entry)
+                        logger.debug(entry)
+                        # input()
                         for systementry in entry["Discovered"]:
                             system = systementry["SystemName"]
                             firstletter = system[0].lower()
@@ -403,6 +405,9 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                                                         in possibly_sold_data[cmdr]
                                                         if data["system"] != system]
                         pass
+
+                        logger.debug(sold_exploration)
+                        # input()
 
                 except json.JSONDecodeError as e:
                     logger.error(f"JSONDecodeError: Corrupt journal line found in {filename[1]} at {linepos}")
@@ -479,7 +484,7 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
         unsoldvalue = 0
 
         for element in notsolddata[cmdr]:
-            print(element)
+            logger.debug(element)
             # Don't have prices for stars and planets yet
             # TODO get prices for stars and planets
             # unsoldvalue += vistagenomicsprices[element["species"]]

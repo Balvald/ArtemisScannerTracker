@@ -299,7 +299,7 @@ clonalcolonialranges = {
     "Tussock": 200,
     "Crystalline Shards": 100,  # According to fandom. Gotta check it.
     "Amphora Plant": 100,
-    "Radicoida": 0  # Its so close its rarely a problem to just grab all 3 samples right next to each other.
+    "Radicoida": 15  # Its about 15 meters.
 }
 
 
