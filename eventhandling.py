@@ -20,7 +20,7 @@ logger = logging.getLogger(f"{appname}.{os.path.basename(os.path.dirname(__file_
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
-def resurrection_event(plugin) -> None:
+def resurrection_event(plugin) -> list:
     """Handle resurrection event aka dying."""
     plugin.rawvalue = 0
     plugin.AST_value.set("0 Cr.")

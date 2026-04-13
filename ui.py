@@ -835,10 +835,30 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                 return True
         return False
 
+    def _query_matches(item, normalized_query: str) -> bool:
+        """Check whether any field in item contains the query."""
+        if normalized_query == "":
+            return True
+        for value_ in item:
+            if normalized_query in str(value_).lower():
+                return True
+        return False
+
+    def _find_parent_body(body_name: str, body_names: set) -> str:
+        """Find best parent body by longest existing prefix in the same system."""
+        parts = str(body_name).split(" ")
+        for i in range(len(parts) - 1, 0, -1):
+            candidate = " ".join(parts[:i])
+            if candidate in body_names:
+                return candidate
+        return ""
+
+    def _signal_is_sold(signal_values: list) -> bool:
+        """Return True if signal sold marker is yes."""
+        return len(signal_values) > 3 and str(signal_values[3]).lower() == "yes"
+
     tree.delete(*tree.get_children())
-    # tree.insert("", tk.END, text="System", iid=0, open=True)
     iid = 0
-    query_found = False
 
     new_data_exists = ((os.path.getmtime(soldexplodata_file)
                         > soldexplodata_file_mtime) or
@@ -857,95 +877,86 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
         return
 
     try:
+        normalized_query = query.lower()
+        grouped_data = {}
+
         for item in data_explo[cmdr]:
-            system, body, signal_type, fss, dss, value, sold = _normalize_explo_item(item)
-            # logger.warning(f"Checking {item}")
-            for value_ in item:
-                if query == "":
-                    query_found = True
-                    break
-                elif query.lower() in str(value_).lower():
-                    query_found = True
-                    break
-                else:
-                    query_found = False
-            if not query_found:
+            if not _query_matches(item, normalized_query):
                 continue
-            child = 0
-            while True:
-                # check until we find the right child. As it might exist already.
-                try:
-                    if str(system) == tree.item(child)['text']:
-                        try:
-                            subchild = 0
-                            while True:
-                                if str(body) == tree.item(subchild)['text']:
-                                    body_iid = subchild
-                                    tree.insert(body_iid, tk.END, text=str(signal_type),
-                                                values=[fss, dss, value, sold], iid=iid, open=False)
-                                    tree.move(iid, body_iid, "end")
-                                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
-                                    #  with iid {iid} and moved it to {body_iid}")
-                                    iid += 1
-                                    break
-                                subchild += 1
-                            break
-                        except Exception:
-                            # logger.warning(f"parent: {tree.item(child)}")
-                            parent_iid = child
-                            tree.insert(child, tk.END, text=str(body), values=[0, "", "", ""], iid=iid, open=False)
-                            tree.move(iid, parent_iid, "end")
-                            # logger.debug(f"created body {item[1]} in system {item[0]}
-                            #  with iid {iid} and moved it to {parent_iid}")
-                            body_iid = iid
-                            iid += 1
-                            tree.insert(body_iid, tk.END, text=str(signal_type),
-                                        values=[fss, dss, value, sold], iid=iid, open=False)
-                            tree.move(iid, body_iid, "end")
-                            # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
-                            #  with iid {iid} and moved it to {body_iid}")
-                            iid += 1
-                            # logger.warning(f"Added {item} to {item[0]}")
-                            break
-                except Exception:  # as e:
-                    tree.insert("", tk.END, text=str(system), values=[0, "", "", ""], iid=iid, open=False)
-                    # logger.debug(f"created system {item[0]} with iid {iid}")
-                    parent_iid = iid
-                    iid += 1
-                    tree.insert(child, tk.END, text=str(body), values=[0, "", "", ""], iid=iid, open=False)
-                    tree.move(iid, parent_iid, "end")
-                    # logger.debug(f"created body {item[1]} in system {item[0]}
-                    #  with iid {iid} and moved it to {parent_iid}")
-                    body_iid = iid
-                    iid += 1
-                    tree.insert(body_iid, tk.END, text=str(signal_type),
-                                values=[fss, dss, value, sold], iid=iid, open=False)
-                    tree.move(iid, body_iid, "end")
-                    # logger.debug(f"created signal {item[2:]} for body {item[1]} in system {item[0]}
-                    #  with iid {iid} and moved it to {body_iid}")
-                    iid += 1
-                    # logger.warning(f"Added {item} to {item[0]} and created parent {item[0]} in same step, Error {e}")
-                    break
-                child += 1
 
-        # tree is rebuild. Now update exploration payout values for each body and system.
+            system, body, signal_type, fss, dss, value, sold = _normalize_explo_item(item)
+            system = str(system)
+            body = str(body)
+            signal = [str(fss), str(dss), value, str(sold)]
 
-        systems = tree.get_children()
-        for system in systems:
-            bodies = tree.get_children(system)
-            system_value = 0
-            system_sold = 0
-            for body in bodies:
-                signals = tree.get_children(body)
-                body_value = len(signals)
-                body_sold = 0
-                for signal in signals:
-                    if str(tree.item(signal)['values'][3]).lower() == "yes":
-                        body_sold += 1
-                tree.item(body, values=[body_value, "", "", f"{body_sold}/{body_value}"])
-                system_value += body_value
-                system_sold += body_sold
-            tree.item(system, values=[system_value, "", "", f"{system_sold}/{system_value}"])
+            system_data = grouped_data.setdefault(system, {})
+            body_data = system_data.setdefault(body, {"signals": []})
+            body_data["signals"].append((str(signal_type), signal))
+
+        for system_name in sorted(grouped_data.keys(), key=str.lower):
+            system_bodies = grouped_data[system_name]
+            body_names = set(system_bodies.keys())
+
+            parent_by_body = {}
+            children_by_parent = {}
+            for body_name in sorted(body_names, key=lambda b: (len(str(b).split(" ")), str(b).lower())):
+                parent = _find_parent_body(body_name, body_names)
+                parent_by_body[body_name] = parent
+                children_by_parent.setdefault(parent, []).append(body_name)
+
+            for parent in children_by_parent:
+                children_by_parent[parent].sort(key=str.lower)
+
+            body_totals = {}
+
+            def _calculate_body_totals(body_name: str) -> tuple:
+                signals = system_bodies[body_name]["signals"]
+                total = len(signals)
+                sold_total = sum(1 for _, signal_values in signals if _signal_is_sold(signal_values))
+
+                for child_body in children_by_parent.get(body_name, []):
+                    child_total, child_sold = _calculate_body_totals(child_body)
+                    total += child_total
+                    sold_total += child_sold
+
+                body_totals[body_name] = (total, sold_total)
+                return total, sold_total
+
+            for root_body in children_by_parent.get("", []):
+                _calculate_body_totals(root_body)
+
+            system_iid = iid
+            tree.insert("", tk.END, text=system_name, values=[0, "", "", ""], iid=system_iid, open=False)
+            iid += 1
+
+            system_total = 0
+            system_sold_total = 0
+
+            def _insert_body_subtree(parent_iid: int, body_name: str) -> None:
+                nonlocal iid
+
+                body_total, body_sold_total = body_totals.get(body_name, (0, 0))
+                body_iid = iid
+                tree.insert(parent_iid, tk.END, text=body_name,
+                            values=[body_total, "", "", f"{body_sold_total}/{body_total}"],
+                            iid=body_iid, open=False)
+                iid += 1
+
+                for signal_type, signal_values in system_bodies[body_name]["signals"]:
+                    tree.insert(body_iid, tk.END, text=signal_type,
+                                values=signal_values, iid=iid, open=False)
+                    iid += 1
+
+                for child_body in children_by_parent.get(body_name, []):
+                    _insert_body_subtree(body_iid, child_body)
+
+            for root_body in children_by_parent.get("", []):
+                root_total, root_sold = body_totals.get(root_body, (0, 0))
+                system_total += root_total
+                system_sold_total += root_sold
+                _insert_body_subtree(system_iid, root_body)
+
+            tree.item(system_iid, values=[system_total, "", "", f"{system_sold_total}/{system_total}"])
 
     except KeyError as e:
         logger.error(f"KeyError: {e}")
@@ -1303,6 +1314,9 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
 
     # Have to rebuild the exploration tree. this needs a new tree rebuild function.
     ex_tree_rebuild_explo(tree_explore_ex, cmdr, "")
+
+    if plugin.AST_debug.get():
+        logger.debug("Finished Rebuild Exploration Ex Tree")
 
     tree_explore_ex.grid(row=1, column=0, sticky="nsew")
 

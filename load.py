@@ -294,10 +294,10 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry, st
         eventhandling.biosell_event(cmdr, entry, plugin)
 
     if entry["event"] == "SAASignalsFound":
+        flag = True
         if plugin.AST_debug.get():
             logger.debug(entry)
         eventhandling.SAASignalsFound_event(entry, plugin)
-        flag = True
 
     if entry["event"] == "FSSDiscoveryScan":
         # FSS Discovery Scan
