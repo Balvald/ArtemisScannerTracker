@@ -474,7 +474,7 @@ def init_data() -> None:  # noqa: CCR001
         for item in notsoldexplodata[cmdr]:
             # logger.warning(f"{item}")
             data_explo[cmdr].append([item["system"], item["body"], str(item["type"]).capitalize(),
-                                     str(item["fss"]), str(item["dss"]), 42, "No"])
+                                     bool(item["fss"]), bool(item["dss"]), 0, False])
 
     for cmdr in soldexplodata.keys():
         for letter in soldexplodata[cmdr].keys():
@@ -484,7 +484,7 @@ def init_data() -> None:  # noqa: CCR001
                 for item in soldexplodata[cmdr][letter][system]:
                     # logger.warning(f"{item}")
                     data_explo[cmdr].append([system, item["body"], str(item["type"]).capitalize(),
-                                             str(item["fss"]), str(item["dss"]), 69, "Yes"])
+                                             bool(item["fss"]), bool(item["dss"]), 0, True])
 
     data_initialised = True
 
@@ -533,91 +533,65 @@ def tree_sort_column(tree, col, reverse) -> None:
 
 def ex_tree_sort_column(ex_tree, col, reverse, explo) -> None:  # noqa: CCR001
     """Sort the columns of the Tree View."""
-    # in this tree there is the #0 column Name with all System names.
-    # and the #1 column Value with all the values.
-    # and the #2 column Sold only with Yes or No on signals.
-
     logger.warning(f"Sorting by {col} in reverse: {reverse}")
 
-    if col == "#0":
-        table = [(ex_tree.item(k)['text'], k) for k in ex_tree.get_children("")]
-        table.sort(key=lambda x: str(x[0]), reverse=reverse)
-        # rearrange items in sorted positions
-        for index, (val, k) in enumerate(table):
-            children = ex_tree.get_children(k)
-            if children:
-                children_table = [(ex_tree.item(child)['text'], child)
-                                  for child in children]
-                # logger.warning(f"Children: {children_table}")
-                children_table.sort(key=lambda x: str(x[0]), reverse=False)
-                for child_index, (child_val, child_k) in enumerate(children_table):
-                    grand_children = ex_tree.get_children(child_k)
-                    if grand_children:
-                        grand_children_table = [(ex_tree.item(grand_child)['text'], grand_child)
-                                                for grand_child in grand_children]
-                        # logger.warning(f"Grandchildren: {grand_children_table}")
-                        grand_children_table.sort(key=lambda x: str(x[0]), reverse=False)
-                        for grand_child_index, (grand_child_val, grand_child_k) in enumerate(grand_children_table):
-                            ex_tree.move(grand_child_k, child_k, grand_child_index)
-                            grand_child_val = grand_child_val
-                    ex_tree.move(child_k, k, child_index)
-                    child_val = child_val
-            ex_tree.move(k, "", index)
-            val = val
-    else:
-        # get column index char and cast to int.
-        col_index = int(col[1])-1
-        table = [(ex_tree.item(k)['values'][col_index], k) for k in ex_tree.get_children("")]
+    def _explo_sort_key(node: str):
+        item = ex_tree.item(node)
+        values = item.get("values", [])
 
-        if col_index == 0:
-            table.sort(key=lambda x: int(x[0]), reverse=reverse)
-        # rearrange items in sorted positions
-        for index, (val, k) in enumerate(table):
-            children = ex_tree.get_children(k)
-            if children:
-                children_table = [(ex_tree.item(child)['values'][col_index], child)
-                                  for child in children]
-                # logger.warning(f"Children: {children_table}")
-                if col_index == 0:
-                    children_table.sort(key=lambda x: int(x[0]), reverse=reverse)
-                for child_index, (child_val, child_k) in enumerate(children_table):
-                    grand_children = ex_tree.get_children(child_k)
-                    if grand_children:
-                        grand_children_table = [(ex_tree.item(grand_child)['values'][col_index], grand_child)
-                                                for grand_child in grand_children]
-                        # logger.warning(f"Grandchildren: {grand_children_table}")
-                        if col_index == 0:
-                            grand_children_table.sort(key=lambda x: int(x[0]), reverse=reverse)
-                        elif col_index == 1:
-                            grand_children_table.sort(key=lambda x: str(x[0]), reverse=reverse)
-                        for grand_child_index, (grand_child_val, grand_child_k) in enumerate(grand_children_table):
-                            ex_tree.move(grand_child_k, child_k, grand_child_index)
-                            grand_child_val = grand_child_val
-                    ex_tree.move(child_k, k, child_index)
-                    child_val = child_val
-            ex_tree.move(k, "", index)
-            val = val
+        if col == "#0":
+            return str(item.get("text", "")).lower()
 
-    # reverse sort next time
+        column_index_map = {"#1": 0, "#2": 1, "#3": 2, "#4": 3, "#5": 4, "#6": 5}
+        index = column_index_map.get(col)
+        if index is None:
+            return ""
+
+        raw_value = values[index] if len(values) > index else ""
+        if col == "#5":
+            try:
+                return float(raw_value)
+            except (TypeError, ValueError):
+                return 0
+        return str(raw_value).lower()
+
+    def _safe_int(value) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 0
+
+    def _table_sort_key(node: str):
+        item = ex_tree.item(node)
+        values = item.get("values", [])
+
+        if col == "#0":
+            return str(item.get("text", "")).lower()
+        if col == "#1":
+            return _safe_int(values[0]) if len(values) > 0 else 0
+        if col == "#2":
+            return str(values[1]).lower() if len(values) > 1 else ""
+        return ""
+
+    def _sort_key(node: str):
+        return _explo_sort_key(node) if explo else _table_sort_key(node)
+
+    def _sort_children(parent: str) -> None:
+        children = list(ex_tree.get_children(parent))
+        if children:
+            children.sort(key=_sort_key, reverse=reverse)
+            for index, child in enumerate(children):
+                _sort_children(child)
+                ex_tree.move(child, parent, index)
+
+    _sort_children("")
+
     text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
     if explo:
-        text2 = {"#0": "Type/Name", "#1": "FSS", "#2": "DSS", "#3": "Value", "#4": "Sold"}
+        text2 = {"#0": "Orbit", "#1": "Type", "#2": "Name", "#3": "FSS", "#4": "DSS", "#5": "Value", "#6": "Sold"}
 
-    if col == "#0":
-        ex_tree.heading("#0", text=text2["#0"], command=lambda:
-                        ex_tree_sort_column(ex_tree, "#0", not reverse, explo))
-    elif col == "#1":
-        ex_tree.heading("#1", text=text2["#1"], command=lambda:
-                        ex_tree_sort_column(ex_tree, "#1", not reverse, explo))
-    elif col == "#2":
-        ex_tree.heading("#2", text=text2["#2"], command=lambda:
-                        ex_tree_sort_column(ex_tree, "#2", not reverse, explo))
-    elif col == "#3":
-        ex_tree.heading("#3", text=text2["#3"], command=lambda:
-                        ex_tree_sort_column(ex_tree, "#3", not reverse, explo))
-    elif col == "#4":
-        ex_tree.heading("#4", text=text2["#4"], command=lambda:
-                        ex_tree_sort_column(ex_tree, "#4", not reverse, explo))
+    ex_tree.heading(col, text=text2.get(col, col), command=lambda:
+                    ex_tree_sort_column(ex_tree, col, not reverse, explo))
 
 
 def tree_rebuild(tree, cmdr: str) -> None:
@@ -1295,8 +1269,8 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     tree_explore.configure(yscrollcommand=scrollbar3.set)
     scrollbar3.grid(row=1, column=1, sticky="nsew")
 
-    text4 = {"#0": "Type/Name", "#1": "FSS", "#2": "DSS", "#3": "Value", "#4": "Sold"}
-    tree_explore_ex = tk.ttk.Treeview(tab4, columns=["#1", "#2", "#3", "#4"])
+    text4 = {"#0": "Orbit", "#1": "Type", "#2": "Name", "#3": "FSS", "#4": "DSS", "#5": "Value", "#6": "Sold"}
+    tree_explore_ex = tk.ttk.Treeview(tab4, columns=["#1", "#2", "#3", "#4", "#5", "#6"], show="tree headings")
 
     tree_explore_ex.heading("#0", text=text4["#0"], command=lambda:
                             ex_tree_sort_column(tree_explore_ex, "#0", False, True))
@@ -1308,6 +1282,18 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
                             ex_tree_sort_column(tree_explore_ex, "#3", False, True))
     tree_explore_ex.heading("#4", text=text4["#4"], command=lambda:
                             ex_tree_sort_column(tree_explore_ex, "#4", False, True))
+    tree_explore_ex.heading("#5", text=text4["#5"], command=lambda:
+                            ex_tree_sort_column(tree_explore_ex, "#5", False, True))
+    tree_explore_ex.heading("#6", text=text4["#6"], command=lambda:
+                            ex_tree_sort_column(tree_explore_ex, "#6", False, True))
+
+    tree_explore_ex.column("#0", width=220, stretch=True)
+    tree_explore_ex.column("#1", width=90, stretch=True)
+    tree_explore_ex.column("#2", width=180, stretch=True)
+    tree_explore_ex.column("#3", width=70, stretch=True)
+    tree_explore_ex.column("#4", width=70, stretch=True)
+    tree_explore_ex.column("#5", width=90, stretch=True)
+    tree_explore_ex.column("#6", width=70, stretch=True)
 
     if plugin.AST_debug.get():
         logger.debug("Rebuild Exploration Ex Tree")
