@@ -542,13 +542,13 @@ def ex_tree_sort_column(ex_tree, col, reverse, explo) -> None:  # noqa: CCR001
         if col == "#0":
             return str(item.get("text", "")).lower()
 
-        column_index_map = {"#1": 0, "#2": 1, "#3": 2, "#4": 3, "#5": 4, "#6": 5}
+        column_index_map = {"#1": 0, "#2": 1, "#3": 2, "#4": 3, "#5": 4}
         index = column_index_map.get(col)
         if index is None:
             return ""
 
         raw_value = values[index] if len(values) > index else ""
-        if col == "#5":
+        if col == "#4":
             try:
                 return float(raw_value)
             except (TypeError, ValueError):
@@ -588,7 +588,7 @@ def ex_tree_sort_column(ex_tree, col, reverse, explo) -> None:  # noqa: CCR001
 
     text2 = {"#0": "Name", "#1": "Value", "#2": "Sold"}
     if explo:
-        text2 = {"#0": "Orbit", "#1": "Type", "#2": "Name", "#3": "FSS", "#4": "DSS", "#5": "Value", "#6": "Sold"}
+        text2 = {"#0": "Orbit", "#1": "Type", "#2": "FSS", "#3": "DSS", "#4": "Value", "#5": "Sold"}
 
     ex_tree.heading(col, text=text2.get(col, col), command=lambda:
                     ex_tree_sort_column(ex_tree, col, not reverse, explo))
@@ -800,14 +800,16 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
         sold = item[6] if len(item) > 6 else "No"
         return system, body, signal_type, fss, dss, value, sold
 
-    def _tree_state_has_sold_column(tree_state) -> bool:
-        """Check if cached exploration tree state contains sold values on signal rows."""
+    def _tree_state_is_flat_explo(tree_state) -> bool:
+        """Check if cached exploration tree state already matches the flattened body layout."""
         nodes = tree_state[0]
-        for node in nodes.values():
-            values = node.get("values", [])
-            if len(values) >= 4 and str(values[3]).strip() != "":
-                return True
-        return False
+        parent_of_child = tree_state[1]
+
+        parents_with_children = {parent for parent in parent_of_child.values() if parent is not None}
+        if any(node in parents_with_children for node, parent in parent_of_child.items() if parent is not None):
+            return False
+
+        return any(len(node.get("values", [])) >= 5 for node in nodes.values())
 
     def _query_matches(item, normalized_query: str) -> bool:
         """Check whether any field in item contains the query."""
@@ -843,7 +845,7 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
         full_ex_tree_explo is not None
         and query == ""
         and not new_data_exists
-        and _tree_state_has_sold_column(full_ex_tree_explo)
+        and _tree_state_is_flat_explo(full_ex_tree_explo)
     ):
         logger.info("Loading tree from saved state ...")
         load_treeview_state(full_ex_tree_explo, tree)
@@ -861,11 +863,18 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
             system, body, signal_type, fss, dss, value, sold = _normalize_explo_item(item)
             system = str(system)
             body = str(body)
-            signal = [str(fss), str(dss), value, str(sold)]
+            signal = {
+                "type": signal_type,
+                "fss": str(fss),
+                "dss": str(dss),
+                "value": value,
+                "sold": bool(sold),
+            }
 
             system_data = grouped_data.setdefault(system, {})
-            body_data = system_data.setdefault(body, {"signals": []})
-            body_data["signals"].append((str(signal_type), signal))
+            body_data = system_data.setdefault(body, {"entry": None, "sold": False})
+            body_data["entry"] = signal
+            body_data["sold"] = bool(sold)
 
         for system_name in sorted(grouped_data.keys(), key=str.lower):
             system_bodies = grouped_data[system_name]
@@ -884,9 +893,9 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
             body_totals = {}
 
             def _calculate_body_totals(body_name: str) -> tuple:
-                signals = system_bodies[body_name]["signals"]
-                total = len(signals)
-                sold_total = sum(1 for _, signal_values in signals if _signal_is_sold(signal_values))
+                body_entry = system_bodies[body_name].get("entry")
+                total = 1 if body_entry is not None else 0
+                sold_total = 1 if system_bodies[body_name].get("sold") else 0
 
                 for child_body in children_by_parent.get(body_name, []):
                     child_total, child_sold = _calculate_body_totals(child_body)
@@ -900,7 +909,7 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                 _calculate_body_totals(root_body)
 
             system_iid = iid
-            tree.insert("", tk.END, text=system_name, values=[0, "", "", ""], iid=system_iid, open=False)
+            tree.insert("", tk.END, text=system_name, values=[0, "", "", "", "0/0"], iid=system_iid, open=False)
             iid += 1
 
             system_total = 0
@@ -910,16 +919,13 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                 nonlocal iid
 
                 body_total, body_sold_total = body_totals.get(body_name, (0, 0))
+                body_entry = system_bodies[body_name].get("entry") or {"type": "", "fss": "", "dss": "", "value": 0}
                 body_iid = iid
                 tree.insert(parent_iid, tk.END, text=body_name,
-                            values=[body_total, "", "", f"{body_sold_total}/{body_total}"],
+                            values=[body_entry["type"], body_entry["fss"], body_entry["dss"],
+                                    body_entry["value"], f"{body_sold_total}/{body_total}"],
                             iid=body_iid, open=False)
                 iid += 1
-
-                for signal_type, signal_values in system_bodies[body_name]["signals"]:
-                    tree.insert(body_iid, tk.END, text=signal_type,
-                                values=signal_values, iid=iid, open=False)
-                    iid += 1
 
                 for child_body in children_by_parent.get(body_name, []):
                     _insert_body_subtree(body_iid, child_body)
@@ -930,7 +936,7 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
                 system_sold_total += root_sold
                 _insert_body_subtree(system_iid, root_body)
 
-            tree.item(system_iid, values=[system_total, "", "", f"{system_sold_total}/{system_total}"])
+            tree.item(system_iid, values=[system_total, "", "", "", f"{system_sold_total}/{system_total}"])
 
     except KeyError as e:
         logger.error(f"KeyError: {e}")
@@ -1269,8 +1275,8 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
     tree_explore.configure(yscrollcommand=scrollbar3.set)
     scrollbar3.grid(row=1, column=1, sticky="nsew")
 
-    text4 = {"#0": "Orbit", "#1": "Type", "#2": "Name", "#3": "FSS", "#4": "DSS", "#5": "Value", "#6": "Sold"}
-    tree_explore_ex = tk.ttk.Treeview(tab4, columns=["#1", "#2", "#3", "#4", "#5", "#6"], show="tree headings")
+    text4 = {"#0": "Orbit", "#1": "Type", "#2": "FSS", "#3": "DSS", "#4": "Value", "#5": "Sold"}
+    tree_explore_ex = tk.ttk.Treeview(tab4, columns=["#1", "#2", "#3", "#4", "#5"], show="tree headings")
 
     tree_explore_ex.heading("#0", text=text4["#0"], command=lambda:
                             ex_tree_sort_column(tree_explore_ex, "#0", False, True))
@@ -1284,16 +1290,13 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
                             ex_tree_sort_column(tree_explore_ex, "#4", False, True))
     tree_explore_ex.heading("#5", text=text4["#5"], command=lambda:
                             ex_tree_sort_column(tree_explore_ex, "#5", False, True))
-    tree_explore_ex.heading("#6", text=text4["#6"], command=lambda:
-                            ex_tree_sort_column(tree_explore_ex, "#6", False, True))
 
     tree_explore_ex.column("#0", width=220, stretch=True)
-    tree_explore_ex.column("#1", width=90, stretch=True)
-    tree_explore_ex.column("#2", width=180, stretch=True)
+    tree_explore_ex.column("#1", width=140, stretch=True)
+    tree_explore_ex.column("#2", width=70, stretch=True)
     tree_explore_ex.column("#3", width=70, stretch=True)
-    tree_explore_ex.column("#4", width=70, stretch=True)
-    tree_explore_ex.column("#5", width=90, stretch=True)
-    tree_explore_ex.column("#6", width=70, stretch=True)
+    tree_explore_ex.column("#4", width=90, stretch=True)
+    tree_explore_ex.column("#5", width=70, stretch=True)
 
     if plugin.AST_debug.get():
         logger.debug("Rebuild Exploration Ex Tree")

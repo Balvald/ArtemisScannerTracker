@@ -15,6 +15,7 @@ sys.path.append(directory[:-5])
 
 # Own Modules
 from AST import ArtemisScannerTracker as AST  # noqa: E402 N817
+import ui as ui_module  # noqa: E402
 
 # import eventhandling
 
@@ -24,6 +25,60 @@ root.withdraw()  # <== this prevented garbage window.
 cmdrstates = {}
 notsold = {}
 sold = {}
+
+
+class FakeTree:
+    """Minimal Treeview stand-in for tree rebuild tests."""
+
+    def __init__(self) -> None:
+        """Initialize the in-memory tree structure."""
+        self.nodes = {}
+        self.children = {"": []}
+
+    def delete(self, *items: int) -> None:
+        """Delete one or more nodes from the fake tree."""
+        if not items:
+            self.nodes.clear()
+            self.children = {"": []}
+            return
+        for item in items:
+            parent = self.nodes.get(item, {}).get("parent")
+            if parent in self.children and item in self.children[parent]:
+                self.children[parent].remove(item)
+            self.nodes.pop(item, None)
+            self.children.pop(item, None)
+
+    def get_children(self, item: int | str = "") -> list:
+        """Return child node ids for the requested parent."""
+        return list(self.children.get(item, []))
+
+    def insert(self, parent: int | str, index: str, text: str = "", values=None, iid=None, open: bool = False):
+        """Insert a new node into the fake tree."""
+        node_id = iid if iid is not None else len(self.nodes)
+        self.nodes[node_id] = {
+            "text": text,
+            "values": list(values or []),
+            "parent": parent,
+            "open": open,
+        }
+        self.children.setdefault(parent, []).append(node_id)
+        self.children.setdefault(node_id, [])
+        return node_id
+
+    def move(self, item: int, parent: int | str, index: str) -> None:
+        """Move a node to a new parent."""
+        old_parent = self.nodes[item]["parent"]
+        if old_parent in self.children and item in self.children[old_parent]:
+            self.children[old_parent].remove(item)
+        self.nodes[item]["parent"] = parent
+        self.children.setdefault(parent, []).append(item)
+
+    def item(self, item: int, **kwargs) -> dict:
+        """Get or update a fake tree node."""
+        if kwargs:
+            self.nodes[item].update(kwargs)
+        return self.nodes[item]
+
 
 filenames = ["/soldbiodata.json", "/notsoldbiodata.json", "/cmdrstates.json"]
 
@@ -122,6 +177,27 @@ def test_AST_setup_main_ui() -> None:  # noqa: N802
     ast.setup_preferences(notebook, "Jameson", False)
     ast.setup_main_ui(parent)
     assert True
+
+
+def test_ex_tree_rebuild_explo_flattens_body_rows() -> None:
+    """Exploration tree should render one row per body with type data merged in."""
+    ui_module.data_explo = {
+        "Jameson": [["Sol", "37 Capricorni A", "Star", True, False, 1234, True]],
+    }
+    ui_module.full_ex_tree_explo = None
+
+    tree = FakeTree()
+
+    ui_module.ex_tree_rebuild_explo(tree, "Jameson", "")
+
+    assert tree.get_children("") == [0]
+    assert tree.item(0)["text"] == "Sol"
+    assert tree.item(0)["values"] == [1, "", "", "", "1/1"]
+
+    assert tree.get_children(0) == [1]
+    assert tree.item(1)["text"] == "37 Capricorni A"
+    assert tree.item(1)["values"] == ["Star", "True", "False", 1234, "1/1"]
+    assert tree.get_children(1) == []
 
 
 def test_AST_on_preferences_closed() -> None:  # noqa: N802
