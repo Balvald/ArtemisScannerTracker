@@ -980,6 +980,7 @@ def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CC
         # logger.info(f"Values: {tree.item(child)['values']}")
         for value_ in tree.item(child)['values']:
             if query.lower() in str(value_).lower():
+                # logger.info(f"Found: {tree.item(child)['values']}")
                 selections.append(child)
                 break
             elif str(value_).lower() == "no" or str(value_).lower() == "yes":
