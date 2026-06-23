@@ -489,6 +489,26 @@ def init_data() -> None:  # noqa: CCR001
     data_initialised = True
 
 
+def _codex_data_needs_reload() -> bool:
+    """Return True if one of the AST data files changed since last init."""
+    return ((os.path.getmtime(soldbiodata_file) > soldbiodata_file_mtime)
+            or (os.path.getmtime(notsoldbiodata_file) > notsoldbiodata_file_mtime)
+            or (os.path.getmtime(soldexplodata_file) > soldexplodata_file_mtime)
+            or (os.path.getmtime(notsoldexplodata_file) > notsoldexplodata_file_mtime))
+
+
+def _ensure_codex_data_current() -> None:
+    """Reload cached AST Codex data when the source files changed."""
+    global data_initialised
+    global full_ex_tree
+    global full_ex_tree_explo
+
+    if not data_initialised or _codex_data_needs_reload():
+        init_data()
+        full_ex_tree = None
+        full_ex_tree_explo = None
+
+
 def shortcreditstring(number) -> str:
     """Create string given given number of credits with SI symbol prefix and money unit e.g. KCr. MCr. GCr. TCr."""
     if number is None:
@@ -597,6 +617,7 @@ def ex_tree_sort_column(ex_tree, col, reverse, explo) -> None:  # noqa: CCR001
 def tree_rebuild(tree, cmdr: str) -> None:
     """Rebuild the Table View for the main window."""
     global data
+    _ensure_codex_data_current()
     tree.delete(*tree.get_children())
     try:
         for item in data[cmdr]:
@@ -612,6 +633,7 @@ def tree_rebuild_explo(tree, cmdr: str, query: str = "") -> None:
     will be inserted.
     """
     global data_explo
+    _ensure_codex_data_current()
     tree.delete(*tree.get_children())
     try:
         normalized_query = query.lower()
@@ -688,6 +710,7 @@ def ex_tree_rebuild(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
     global data
     global full_ex_tree
 
+    _ensure_codex_data_current()
     tree.delete(*tree.get_children())
     # tree.insert("", tk.END, text="System", iid=0, open=True)
     iid = 0
@@ -802,6 +825,8 @@ def ex_tree_rebuild_explo(tree, cmdr: str, query: str) -> None:  # noqa: CCR001
     """Rebuild the treeview for the explorer window."""
     global data_explo
     global full_ex_tree_explo
+
+    _ensure_codex_data_current()
 
     def _normalize_explo_item(item) -> tuple:
         """Normalize exploration rows to system, body, type, fss, dss, value, sold."""
@@ -1079,6 +1104,8 @@ def show_codex_window(plugin, cmdr: str) -> None:  # noqa: CCR001
 
         logger.debug(os.path.getmtime(soldbiodata_file))
         logger.debug(os.path.getmtime(notsoldbiodata_file))
+
+    _ensure_codex_data_current()
 
     if new_data_exists:
         data_initialised = False
