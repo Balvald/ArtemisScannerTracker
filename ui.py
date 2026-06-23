@@ -605,12 +605,26 @@ def tree_rebuild(tree, cmdr: str) -> None:
         pass
 
 
-def tree_rebuild_explo(tree, cmdr: str) -> None:
-    """Rebuild the Table View for the main window."""
+def tree_rebuild_explo(tree, cmdr: str, query: str = "") -> None:
+    """Rebuild the Table View for the main window.
+
+    If `query` is provided, only rows matching the query (case-insensitive)
+    will be inserted.
+    """
     global data_explo
     tree.delete(*tree.get_children())
     try:
+        normalized_query = query.lower()
         for item in data_explo[cmdr]:
+            if normalized_query != "":
+                # skip rows that do not match any field
+                found = False
+                for value_ in item:
+                    if normalized_query in str(value_).lower():
+                        found = True
+                        break
+                if not found:
+                    continue
             tree.insert("", tk.END, values=item)
     except KeyError:
         pass
@@ -953,7 +967,7 @@ def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CC
     logger.warning(f"Query: {query}")
     selections = []
     if explo:
-        tree_rebuild_explo(tree, cmdr)
+        tree_rebuild_explo(tree, cmdr, query)
     else:
         tree_rebuild(tree, cmdr)
     children = tree.get_children()
@@ -966,7 +980,6 @@ def tree_search(tree, search_entry, cmdr: str, explo: bool) -> None:  # noqa: CC
         # logger.info(f"Values: {tree.item(child)['values']}")
         for value_ in tree.item(child)['values']:
             if query.lower() in str(value_).lower():
-                # logger.info(f"Found: {tree.item(child)['values']}")
                 selections.append(child)
                 break
             elif str(value_).lower() == "no" or str(value_).lower() == "yes":
