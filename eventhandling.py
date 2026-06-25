@@ -33,7 +33,7 @@ def explo_resurrection_event() -> list:
     return []
 
 
-def explo_autoscan_event(entry, cmdr, plugin):
+def explo_autoscan_event(entry, cmdr, plugin) -> None:
     if "Cluster" not in entry["BodyName"]:
         # Ignore Cluster scans so we should only get Stars or starlike objects
         # { "timestamp":"2025-08-24T14:20:10Z", "event":"Scan", "ScanType":"AutoScan",
@@ -71,7 +71,7 @@ def explo_autoscan_event(entry, cmdr, plugin):
                                              "dss": None})
 
 
-def explo_detailedscan_event(entry, cmdr, plugin):
+def explo_detailedscan_event(entry, cmdr, plugin) -> None:
     # { "timestamp":"2025-08-24T14:17:28Z", "event":"Scan", "ScanType":"Detailed",
     # "BodyName":"Synuefe PK-V b48-0 7", "BodyID":8, "Parents":[ {"Star":0} ],
     # "StarSystem":"Synuefe PK-V b48-0", "SystemAddress":672027125153,
@@ -127,7 +127,7 @@ def explo_detailedscan_event(entry, cmdr, plugin):
         f.truncate()
 
 
-def explo_saascancomplete_event(entry, cmdr, plugin):
+def explo_saascancomplete_event(entry, cmdr, plugin) -> None:
     # SAAScanComplete
     # { "timestamp":"2025-08-24T14:17:28Z",
     # "event":"SAAScanComplete",
@@ -159,7 +159,7 @@ def explo_saascancomplete_event(entry, cmdr, plugin):
         f.truncate()
 
 
-def explo_sellexplorationdata_event(entry, cmdr, plugin):
+def explo_sellexplorationdata_event(entry, cmdr, plugin) -> None:
     with open(plugin.AST_DIR + "/notsoldexplodata.json", "r+", encoding="utf8") as f:
         notsoldexplodata = json.load(f)
 
@@ -211,7 +211,7 @@ def explo_sellexplorationdata_event(entry, cmdr, plugin):
                 fs.truncate()
 
 
-def explo_multisellexplorationdata_event(entry, cmdr, plugin):
+def explo_multisellexplorationdata_event(entry, cmdr, plugin) -> None:
     # MultiSellExplorationData
     # { "timestamp":"2025-08-24T14:38:55Z", "event":"MultiSellExplorationData",
     # "Discovered":[ { "SystemName":"Synuefe PK-V b48-0", "NumBodies":11 },

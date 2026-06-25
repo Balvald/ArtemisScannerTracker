@@ -496,12 +496,9 @@ def build_explodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
 
 
 # to use it as standalone
-
+"""
 class Loggingthing:
-    """Points all logger calls to print."""
-
     def __init__(self) -> None:
-        """Point all logger calls to print."""
         self.info = print
         self.debug = print
         self.warning = print
@@ -515,3 +512,4 @@ if __name__ == "__main__":
     build_explodata_json(logger, journaldir)
     # journaldir = "<Path>"
     # build_explodata_json(logger, journaldir)
+"""

@@ -440,7 +440,6 @@ class loggingthing:
         self.debug = print
         self.warning = print
         self.error = print
-        pass
 
 
 if __name__ == "__main__":

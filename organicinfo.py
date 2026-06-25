@@ -303,7 +303,7 @@ clonalcolonialranges = {
 }
 
 
-def getvistagenomicprices():
+def getvistagenomicprices() -> dict[str, int]:
     """Get price table."""
     return vistagenomicsprices
 
@@ -345,7 +345,7 @@ def computedistance(lat1: float, long1: float, lat2: float, long2: float, r: flo
     return angle * r
 
 
-def bearing(lat1: float, lon1: float, lat2: float, lon2: float):
+def bearing(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Compute the bearing to lat2, lon2 from the pos lat1, lon1."""
     # Convert latitude and longitude to radians
     lat1 = math.radians(lat1)
