@@ -5,7 +5,7 @@ import os
 import requests
 import threading
 import tkinter as tk
-from typing import Optional
+from typing import Optional, Any
 
 # Own modules
 from journalcrawlerexplo import build_explodata_json
@@ -604,7 +604,7 @@ class ArtemisScannerTracker:
         """Show the Codex window."""
         ui.show_codex_window(self, self.AST_current_CMDR)
 
-    def debug_config(self) -> any:
+    def debug_config(self) -> Any:
         """
         Return the current configuration only used for testing purposes.
 
