@@ -1,4 +1,4 @@
-# ArtemisScannerTracker v0.3.3
+# ArtemisScannerTracker v0.3.4
  An [EDMC](https://github.com/EDCD/EDMarketConnector) plugin that keeps track of the exobiology scanner of a CMDRs Artemis suit in ED:Odyssey
 
 
@@ -18,10 +18,9 @@ You will need to re-start EDMC if EDMC was open while you installed the plugin. 
 > best for biology ever.  13/10.
 >     — CMDR SlippyCheeze
 
-## New in v0.3.3
+## New in v0.3.4
 
-- Bugfix: Journal Files that do not get scanned due to JSON Decode Errors get now skipped.
-- Updated Feature: Tree View is out of being experimental.
+- Basic Exploration Data Support for AST Codex and Journal Crawling.
 
 ## Features
 
@@ -72,12 +71,14 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
     - Distance to a Scan is red while being closer than the Clonal Colonial Range of the exobiological biology
     - Distance to a Scan turns green once you ventured further on the planet from the scan than its Clonal Colonial Range
     - Once both Scans are green the Current position will light up green as well.
-- #8 Finished Scan display. Shows how many Scans are in the current system.
+- #8 AST Codex Button
+    - Opens a new window that shows all the scanned and sold exobiological and exploration data the plugin has tracked.
+- #9 Finished Scan display. Shows how many Scans are in the current system.
     - Lists them by Planet names assigned to their respective species.
     - The Button expands and collapses the list of finished scans.
     - Scans with "*" around the Planet name have not been sold yet and will be lost upon death.
-    - _New_ Shows how many Scans are finished on the planet you're located on and shows how many exobiology scans are left.
-    - _New_ Names of Species that you've already scanned on a planet will be green once you're located on said planet.
+    - Shows how many Scans are finished on the planet you're located on and shows how many exobiology scans are left.
+    - Names of Species that you've already scanned on a planet will be green once you're located on said planet.
 
 ### Settings
 ![Preferences](./pictures/ASTsettingsV031dev.png "settings page/preferences ui")
@@ -93,6 +94,9 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - "Shorten credit values": Will shorten the credit values displayed. e.g. "134,534,909 Cr." will become "134.5 MCr." etc.
 - "Scan game journals for exobiology": Will update the plugins' "soldbiodata.json" and "notsoldbiodata.json" by crawling through all journals in the folder specified in the EDMC Configuration.
 - "Scan local journal folder for exobiology": Will update the plugins' "soldbiodata.json" and "notsoldbiodata.json" by crawling through all journals placed in the journal folder.
+    -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly, and please wait a good second or two when scanning through a lot of journal files.
+- "Scan game journals for exobiology": 
+- "Scan local journal folder for exobiology":
     -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly, and please wait a good second or two when scanning through a lot of journal files.
 - "Reset" Clears fields that are connected to scanning exobiological plants.
 - "Debug Mode" If ticked the plugin will write nearly everything it does into the EDMarketConnector-debug.log. Keep it unchecked unless you are debugging yourself or asked to log what the plugin does for a bug report.
