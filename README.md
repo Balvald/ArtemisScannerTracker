@@ -43,12 +43,14 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 
 - Additional feature to automatically hide values with a through a few preference settings.
 
+- A whole Codex that shows what you've already scanned and sold!
+
 
 ## Usage
 
 - You have to do mostly _nothing_ (yay) apart from having to play Elite Dangerous while using this plugin with EDMC.
 
-- For the sake of making it impossible for the exobiology data tracking to accidentally assume the wrong system as already sold please do sell your whole batch of data.
+- For the sake of making it impossible for the exobiology and exploration data tracking to accidentally assume the wrong system as already sold please do sell your whole batch of data.
 
 ### Main UI
 ![AST UI](./pictures/ASTmainUI.png "main plugin ui pic annotated")
@@ -105,16 +107,16 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 ![Table_View](./pictures/ASTCodexTableView.png "AST Codex Window in Table view")
 ![Tree_View](./pictures/ASTCodexTreeView.png "AST Codex Window in Tree/Hierarchical view")
 
-- Tabs: Table View, Tree View
-    - Enables switching between the two views to look at the data. The Tree view is due to undergo some changes in the near future.
+- Tabs: Exobiology Table, Exobiology Tree, Exploration Table, Exploration Tree
+    - Enables switching between the two views to look at the two different datasets. The Values for the Exploration views are not set at all as of right now.
 - Search
     - Write your search term for any System, Planet, Species into the text field and press the button with the "🔍" to search for that term in the data you have collected.
-- Table View
+- Exobiology Table
     - Only visible when the Table view tab is selected.
     - Can sort all data alphabetically for systems, bodies (planets) or species by clicking their respective columns.
     - Can sort for sold or unsold data with the "Sold" column.
     - Sort for the base value of an exobiology scan by clicking the "Value" column.
-- Tree View
+- Exobiology Tree
     - Only visible when the Tree view tab is selected.
     - Individual entries are found under their respective system node.
     - Each system node denotes the known amount that the system is worth at the least.
@@ -128,6 +130,6 @@ while being several thousand light-years away from Sol. And you'll know which pl
 Sadly that type of information is impossible to get from the Exobiology scanner itself. 
 The only thing that it can tell us even despite not telling us _what_ or on which _body_ we last scanned is that the last scan is _incomplete_. The horror. Damn you Supratech! You damn Scoundrels!
 
-Anyway with this plugin these kinds of problems are hopefully becoming a thing of the past for our all most favourite recreational activity of scanning space grass while binging Star Trek TNG I guess.
+Anyway with this plugin these kinds of problems are hopefully becoming a thing of the past for our all most favourite recreational activity of scanning space grass and space marbles while binging Star Trek TNG I guess.
 
 That's the current extent of this little project.
