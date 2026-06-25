@@ -146,10 +146,10 @@ def explo_saascancomplete_event(entry, cmdr, plugin):
                 break
         if not_found:
             plugin.notyetsoldexplo[cmdr].append({"type": "planet",
-                                                    "system": entry["StarSystem"],
-                                                    "body": entry["BodyName"],
-                                                    "fss": False,
-                                                    "dss": True})
+                                                 "system": entry["StarSystem"],
+                                                 "body": entry["BodyName"],
+                                                 "fss": False,
+                                                 "dss": True})
             # We didn't have the dss scan before so we sell just the dss scan.
             # but we might have had the fss scan before.
 
