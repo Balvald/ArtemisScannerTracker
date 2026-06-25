@@ -312,9 +312,9 @@ class ArtemisScannerTracker:
         current_row += 1
 
         text = "Scan game journals for exploration"
-        ui.prefs_button(frame, text, self.buildsoldbiodatajsonworker, current_row, 0, tk.W)
+        ui.prefs_button(frame, text, self.buildsoldexplodatajsonworker, current_row, 0, tk.W)
         text = "Scan local journal folder for exploration"
-        ui.prefs_button(frame, text, self.buildsoldbiodatajsonlocalworker, current_row, 1, tk.W)
+        ui.prefs_button(frame, text, self.buildsoldexplodatajsonlocalworker, current_row, 1, tk.W)
 
         current_row += 1
 
