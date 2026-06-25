@@ -95,7 +95,7 @@ It tracks which species (Tussock, Fungoida, ...), and on which body the last exo
 - "Scan game journals for exobiology": Will update the plugins' "soldbiodata.json" and "notsoldbiodata.json" by crawling through all journals in the folder specified in the EDMC Configuration.
 - "Scan local journal folder for exobiology": Will update the plugins' "soldbiodata.json" and "notsoldbiodata.json" by crawling through all journals placed in the journal folder.
     -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly, and please wait a good second or two when scanning through a lot of journal files.
-- "Scan game journals for exobiology": 
+- "Scan game journals for exobiology": Will update the plugins' "soldexplodata.json" and "notsoldexplodata.json" by crawling through all journals in the folder specified in the EDMC Configuration.
 - "Scan local journal folder for exobiology":
     -  Make sure you're not missing a journal in between two other journal files as one of those missing _could_ mean that the sold exobiology scans are not getting tracked properly, and please wait a good second or two when scanning through a lot of journal files.
 - "Reset" Clears fields that are connected to scanning exobiological plants.
