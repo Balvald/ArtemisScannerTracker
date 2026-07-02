@@ -7,6 +7,8 @@ It retraces all exobiology scans and sell actions.
 import json
 import os
 
+from typing import Any
+
 # Own Modules
 from organicinfo import generaltolocalised, getvistagenomicprices
 
@@ -29,7 +31,7 @@ from organicinfo import generaltolocalised, getvistagenomicprices
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
-def get_date(f_name: str, logger: any) -> str:
+def get_date(f_name: str, logger: Any) -> str:
     """
     Get the date from a filename in form of a stanardized string.
 
@@ -71,10 +73,15 @@ def get_date(f_name: str, logger: any) -> str:
     return [f"{year}-{month}-{day}T{hour}:{minute}:{second}Z", version]
 
 
-def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
+def build_biodata_json(logger: Any, journaldir: str, progress_callback: Any = None) -> int:  # noqa: CCR001
     """Build a soldbiodata.json and a notsoldbiodata that includes all sold organic scans that the player sold.
 
     Also return the value of still unsold scans.
+
+    :param progress_callback: Optional callable invoked as
+        progress_callback(current_file_index, total_files, filename) right after
+        each journal file has been fully read, so callers can display progress
+        while the (potentially long-running) scan is in progress.
     """
     # logger.debug = print
 
@@ -123,7 +130,9 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
     # version 3.8 files are only relevant if they are from 2021-05-18 till 2022-11-30
     logger.debug(directory)
 
-    for filename in edlogs:
+    total_files = len(edlogs)
+
+    for file_index, filename in enumerate(edlogs, start=1):
         if filename[0][1] == "3.X":
             if filename[0][0] < "2021-05-17T23:59:59Z" or filename[0][0] > "2022-11-31T00:00:00Z":
                 logger.debug(f"Skipping 3.X file; date: {filename[0][0]} name {filename[1]}")
@@ -362,6 +371,12 @@ def build_biodata_json(logger: any, journaldir: str) -> int:  # noqa: CCR001
                 linepos += 1
 
             file.close()
+
+        if progress_callback is not None:
+            try:
+                progress_callback(file_index, total_files, filename[1])
+            except Exception as e:
+                logger.error(f"progress_callback failed: {e}")
 
     logger.debug("Saving file now")
 

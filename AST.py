@@ -5,6 +5,7 @@ import os
 import requests
 import threading
 import tkinter as tk
+from tkinter import ttk
 from typing import Optional, Any
 
 # Own modules
@@ -176,6 +177,14 @@ class ArtemisScannerTracker:
         self.searchthread = None
 
         self.AST_Codex_window = None
+
+        self.AST_explo_progress_window = None
+        self.AST_explo_progress_label_var = None
+        self.AST_explo_progress_bar = None
+
+        self.AST_bio_progress_window = None
+        self.AST_bio_progress_label_var = None
+        self.AST_bio_progress_bar = None
 
         if not testmode:
             try:
@@ -460,8 +469,18 @@ class ArtemisScannerTracker:
         self.AST_hide_scans_in_system.set(int(not (state)))
         ui.rebuild_ui(self, self.AST_current_CMDR)
 
+    def journal_crawler_running(self) -> bool:
+        """Return True if a journal crawling worker thread is currently running."""
+        if self.thread is not None and self.thread.is_alive():
+            logger.warning("journal_crawler_running: a journal crawling worker is already running, ignoring button press")
+            return True
+        return False
+
     def buildsoldbiodatajsonlocalworker(self) -> None:
         """Start the thread to build the soldbiodata.json using the local journal folder."""
+        # ignore the button press if a journal crawling worker is already running
+        if self.journal_crawler_running():
+            return
         self.thread = threading.Thread(target=self.buildsoldbiodatajsonlocal, name="buildsoldbiodatajsonlocal")
         self.thread.start()
 
@@ -470,10 +489,13 @@ class ArtemisScannerTracker:
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 
-        self.rawvalue = build_biodata_json(logger, os.path.join(directory, "journals"))[self.AST_current_CMDR]
+        self.rawvalue = self.run_build_biodata_json_with_progress(os.path.join(directory, "journals"))
 
     def buildsoldexplodatajsonlocalworker(self) -> None:
         """Start the thread to build the soldbiodata.json using the local journal folder."""
+        # ignore the button press if a journal crawling worker is already running
+        if self.journal_crawler_running():
+            return
         self.thread = threading.Thread(target=self.buildsoldexplodatajsonlocal, name="buildsoldexplodatajsonlocal")
         self.thread.start()
 
@@ -485,10 +507,13 @@ class ArtemisScannerTracker:
         global logger
         directory, filename = os.path.split(os.path.realpath(__file__))
 
-        build_explodata_json(logger, os.path.join(directory, "journals"))[self.AST_current_CMDR]
+        self.run_build_explodata_json_with_progress(os.path.join(directory, "journals"))
 
     def buildsoldbiodatajsonworker(self) -> None:
         """Start the thread to build the soldbiodata.json using the game journal directory."""
+        # ignore the button press if a journal crawling worker is already running
+        if self.journal_crawler_running():
+            return
         self.thread = threading.Thread(target=self.buildsoldbiodatajson, name="buildsoldbiodatajson")
         self.thread.start()
 
@@ -505,10 +530,13 @@ class ArtemisScannerTracker:
             # config.default_journal_dir is a fallback that won't work in a linux context
             journaldir = config.default_journal_dir
 
-        self.rawvalue = build_biodata_json(logger, journaldir)[self.AST_current_CMDR]
+        self.rawvalue = self.run_build_biodata_json_with_progress(journaldir)[self.AST_current_CMDR]
 
     def buildsoldexplodatajsonworker(self) -> None:
         """Start the thread to build the soldexplodata.json using the game journal directory."""
+        # ignore the button press if a journal crawling worker is already running
+        if self.journal_crawler_running():
+            return
         self.thread = threading.Thread(target=self.buildsoldexplodatajson, name="buildsoldexplodatajson")
         self.thread.start()
 
@@ -525,7 +553,155 @@ class ArtemisScannerTracker:
             # config.default_journal_dir is a fallback that won't work in a linux context
             journaldir = config.default_journal_dir
 
-        self.rawvalue = build_explodata_json(logger, journaldir)[self.AST_current_CMDR]
+        self.rawvalue = self.run_build_explodata_json_with_progress(journaldir)[self.AST_current_CMDR]
+
+    def run_build_explodata_json_with_progress(self, journaldir: str) -> dict:
+        """Run build_explodata_json while showing a window with the scan's progress.
+
+        Opens a small window that shows how far
+        through the found journal files the scan has gotten
+        and closes the window again once the scan has finished.
+        """
+        global logger
+
+        total_files = 0
+        try:
+            total_files = len([f for f in os.listdir(journaldir) if f.endswith(".log")])
+        except OSError as e:
+            logger.error(f"run_build_explodata_json_with_progress: could not list journal dir: {e}")
+
+        self.show_explo_progress_window(total_files)
+
+        try:
+            result = build_explodata_json(logger, journaldir, progress_callback=self.update_explo_progress_window)
+        finally:
+            self.close_explo_progress_window()
+
+        return result
+
+    def show_explo_progress_window(self, total_files: int) -> None:
+        """Show a window displaying the progress of the exploration journal scan."""
+        try:
+            self.AST_explo_progress_window = tk.Toplevel()
+            self.AST_explo_progress_window.title("Scanning journals for exploration data")
+            self.AST_explo_progress_window.attributes("-topmost", True)
+            self.AST_explo_progress_window.protocol("WM_DELETE_WINDOW", lambda: None)
+
+            self.AST_explo_progress_label_var = tk.StringVar(
+                master=self.AST_explo_progress_window,
+                value=f"Scanning journal file 0 / {total_files}")
+
+            tk.Label(self.AST_explo_progress_window, textvariable=self.AST_explo_progress_label_var,
+                     padx=20, pady=10).pack()
+
+            self.AST_explo_progress_bar = ttk.Progressbar(self.AST_explo_progress_window, orient="horizontal",
+                                                          length=300, mode="determinate",
+                                                          maximum=max(total_files, 1))
+            self.AST_explo_progress_bar.pack(padx=20, pady=(0, 20))
+
+            self.AST_explo_progress_window.update_idletasks()
+            self.AST_explo_progress_window.update()
+        except tk.TclError as e:
+            logger.error(f"show_explo_progress_window: {e}")
+            self.AST_explo_progress_window = None
+
+    def update_explo_progress_window(self, current_file: int, total_files: int, filename: str) -> None:
+        """Update the progress window with how far through the journal files we've gone."""
+        if self.AST_explo_progress_window is None:
+            return
+        try:
+            self.AST_explo_progress_label_var.set(f"Scanning journal file {current_file} / {total_files}\n{filename}")
+            self.AST_explo_progress_bar["value"] = current_file
+            self.AST_explo_progress_window.update_idletasks()
+            self.AST_explo_progress_window.update()
+        except tk.TclError:
+            # window was likely closed already, nothing more to do here
+            self.AST_explo_progress_window = None
+
+    def close_explo_progress_window(self) -> None:
+        """Close the exploration journal scan progress window once the scan is done."""
+        if self.AST_explo_progress_window is not None:
+            try:
+                self.AST_explo_progress_window.destroy()
+            except tk.TclError:
+                pass
+            self.AST_explo_progress_window = None
+            self.AST_explo_progress_label_var = None
+            self.AST_explo_progress_bar = None
+
+    def run_build_biodata_json_with_progress(self, journaldir: str) -> dict:
+        """Run build_biodata_json while showing a window with the scan's progress.
+
+        Opens a small window that shows how far
+        through the found journal files the scan has gotten
+        and closes the window again once the scan has finished.
+        """
+        global logger
+
+        total_files = 0
+        try:
+            total_files = len([f for f in os.listdir(journaldir) if f.endswith(".log")])
+        except OSError as e:
+            logger.error(f"run_build_biodata_json_with_progress: could not list journal dir: {e}")
+
+        self.show_bio_progress_window(total_files)
+
+        try:
+            result = build_biodata_json(logger, journaldir, progress_callback=self.update_bio_progress_window)
+        finally:
+            self.close_bio_progress_window()
+
+        return result
+
+    def show_bio_progress_window(self, total_files: int) -> None:
+        """Show a window displaying the progress of the biology journal scan."""
+        try:
+            self.AST_bio_progress_window = tk.Toplevel()
+            self.AST_bio_progress_window.title("Scanning journals for biology data")
+            self.AST_bio_progress_window.attributes("-topmost", True)
+            self.AST_bio_progress_window.protocol("WM_DELETE_WINDOW", lambda: None)
+
+            self.AST_bio_progress_label_var = tk.StringVar(
+                master=self.AST_bio_progress_window,
+                value=f"Scanning journal file 0 / {total_files}")
+
+            tk.Label(self.AST_bio_progress_window, textvariable=self.AST_bio_progress_label_var,
+                     padx=20, pady=10).pack()
+
+            self.AST_bio_progress_bar = ttk.Progressbar(self.AST_bio_progress_window, orient="horizontal",
+                                                        length=300, mode="determinate",
+                                                        maximum=max(total_files, 1))
+            self.AST_bio_progress_bar.pack(padx=20, pady=(0, 20))
+
+            self.AST_bio_progress_window.update_idletasks()
+            self.AST_bio_progress_window.update()
+        except tk.TclError as e:
+            logger.error(f"show_bio_progress_window: {e}")
+            self.AST_bio_progress_window = None
+
+    def update_bio_progress_window(self, current_file: int, total_files: int, filename: str) -> None:
+        """Update the progress window with how far through the journal files we've gone."""
+        if self.AST_bio_progress_window is None:
+            return
+        try:
+            self.AST_bio_progress_label_var.set(f"Scanning journal file {current_file} / {total_files}\n{filename}")
+            self.AST_bio_progress_bar["value"] = current_file
+            self.AST_bio_progress_window.update_idletasks()
+            self.AST_bio_progress_window.update()
+        except tk.TclError:
+            # window was likely closed already, nothing more to do here
+            self.AST_bio_progress_window = None
+
+    def close_bio_progress_window(self) -> None:
+        """Close the biology journal scan progress window once the scan is done."""
+        if self.AST_bio_progress_window is not None:
+            try:
+                self.AST_bio_progress_window.destroy()
+            except tk.TclError:
+                pass
+            self.AST_bio_progress_window = None
+            self.AST_bio_progress_label_var = None
+            self.AST_bio_progress_bar = None
 
     def update_last_scan_plant(self, entry) -> tuple[str, int]:
         """."""
